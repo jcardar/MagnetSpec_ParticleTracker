@@ -401,7 +401,7 @@ void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& t
             boris(electron, magnet, del_time); //updates particle velocity in magnetic field 
 
             time += del_time;
-            std::cerr << del_time << std::endl;
+//            std::cerr << del_time << std::endl;
 
             electron.set_time(time);
 

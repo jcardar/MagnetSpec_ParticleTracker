@@ -23,8 +23,8 @@
 int main(int argc, char *argv[])
 {
     double time     {0.0};                            //Define a variable time in which will be stepped over
-    double del_time {2};                              //Define a time step
-    bool time_step_test = false;
+    double del_time {60};                              //Define a time step
+    bool time_step_test = true;
 
     // std::ifstream bmap( "bmap_in.txt" );   
     std::ofstream outfile_readme  ("../data/README.txt");
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
 ///////////////////
     //Define Particle Beam:
-    int num_par          {1};
+    int num_par          {10};
     double charge        {-1.0};
     double mass          {1.0};
     double energy0       {10.0};              //Normalized Energy = gamma
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 
         outfile_part_writeAndComma(electron); 
 
-        double particle_time_limit = 2*M_PI*10;
+        double particle_time_limit = 8*M_PI*10;
         step_through_magnet_mag_boris(electron,magnet[magnet_counter],time,del_time,particle_time_limit);
         
         while(++magnet_counter < num_magnets)
