@@ -23,7 +23,7 @@
 int main(int argc, char *argv[])
 {
     double time     {0.0};                            //Define a variable time in which will be stepped over
-    double del_time {60};                              //Define a time step
+    double del_time {30};                              //Define a time step
     bool time_step_test = true;
 
     // std::ifstream bmap( "bmap_in.txt" );   
