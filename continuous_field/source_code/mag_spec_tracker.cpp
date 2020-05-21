@@ -1,9 +1,9 @@
 /*Leap Frog Numerical Method Code
- *for tracking a particle in static B and possible E field
+ *for tracking a particle in static B field
  *Author: Jason Cardarelli
- *NERS 574: Computational Plasma Physics
  *Prof. Alexander Thomas
  */
+/////Development notes: currently the code assumes that particle beam starts in the region of the magnet. Got to fix that!
 
 #include <iostream>
 #include <fstream>
@@ -14,21 +14,17 @@
 #include "threevector.h"
 #include "threematrix.h"
 #include "particle.h"
+#include "beam.h"
 #include "screen.h"
 #include "magnet.h"
 
 
-//double M_c = 299792458;           //SPEED OF LIGHT
-//double globe_central_energy_x = 1000/0.511;     //MeV/E0
-//double globe_central_gamma_x  = globe_central_energy_x/0.511;
-
-//double globe_gamma = 90.0/0.511;
 
 int main(int argc, char *argv[])
 {
-    int num_par     {5};
     double time     {0.0};                            //Define a variable time in which will be stepped over
-    double del_time {0.25};                           //Define a time step
+    double del_time {2};                              //Define a time step
+    bool time_step_test = false;
 
     // std::ifstream bmap( "bmap_in.txt" );   
     std::ofstream outfile_readme  ("../data/README.txt");
@@ -42,10 +38,22 @@ int main(int argc, char *argv[])
     std::ofstream outfile_energy  ("../data/ENERGY.csv");
     std::ofstream outfile_magnets ("../data/MAGNETS.csv");
 	std::ofstream outfile_screens ("../data/SCREENS.csv");
-    //std::ofstream outfile_array_size ("../data/ARRAY_SIZE.csv");
     std::ofstream outfile_del_t   ("../data/DEL_T.csv");
 	std::ofstream outfile_dump;
     //std::ifstream infile;
+
+///////////////////
+    //Define Particle Beam:
+    int num_par          {1};
+    double charge        {-1.0};
+    double mass          {1.0};
+    double energy0       {10.0};              //Normalized Energy = gamma
+    double energy_spread {0.0};
+    ThreeVec initial_position(0.0, 0.0, 0.0);
+    ThreeVec initial_position_spread(0.0, 0.0, 0.0);
+    ThreeVec initial_angular_direction(0.0, M_PI/2.000000, M_PI/2.000000);
+    ThreeVec initial_angular_spread(0.0, 0.0, 0.0);
+    Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread);
 
 
 /////////////////////
@@ -58,10 +66,10 @@ int main(int argc, char *argv[])
             {
             case 0:
                 magnet[ii].set_B0(0, 0.0); magnet[ii].set_B0(1, 0.0); magnet[ii].set_B0(2, 1.0);
-                magnet[ii].set_pos(0, -1958.0-2.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
-                magnet[ii].set_length(1958.0*2.1);
-                magnet[ii].set_width(1957.95*8.0);
-                magnet[ii].set_height(17.597*2.0);
+                magnet[ii].set_pos(0, -1958.0*3.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
+                magnet[ii].set_length(1958.0*50.0);
+                magnet[ii].set_width(1957.95*20.0);
+                magnet[ii].set_height(1957.95*8.0);
                 magnet[ii].set_outfile(outfile_magnets);
                 outfile_uniform_magnet(magnet[ii], ii);
                 break;
@@ -111,259 +119,67 @@ int main(int argc, char *argv[])
     }   //<---END OF SCREEN 'FOR' LOOP//
 
 
-///////////////////////
-    //Define Particles:
-
-    double energy0 = (1000.0+0.511)/0.511;            //Normalized Central Energy (gamma)
-    double p0_mag = sqrt(energy0*energy0 - 1);
-    //std::cerr << p0_mag << '\n';
-    ThreeVec p0(p0_mag, 0.0, 0.0);            //Kinetic energy (in MeV)
-    ThreeVec radius_p0;
-    {
-    double percent_en_spread_x = 0.50;
-    double percent_en_spread_y = 0.00;
-    double percent_en_spread_z = 0.00;
-    double p0_spread_x = energy0*(percent_en_spread_x*energy0)/p0_mag;
-    double p0_spread_y = energy0*(percent_en_spread_y*energy0)/p0_mag;
-    double p0_spread_z = energy0*(percent_en_spread_z*energy0)/p0_mag;
-    radius_p0.setX(p0_spread_x);
-    radius_p0.setY(p0_spread_y);
-    radius_p0.setZ(p0_spread_z);
-    }
-    
-    ThreeVec r0(magnet[0].get_pos(0),magnet[0].get_pos(1),magnet[0].get_pos(2));                   //INITIAL CENTRAL POSTIION OF // //
-    ThreeVec radius_r0(0.0,0.0,0.0);            //RADIUS OF INT POSITIIONS IN PHASE SPACE
-    int qe = -1;                                //CHARGE OF PARTICLE SPECIES (normalizd to charge of proton)
-
-    //ThreeVec energy;
-
-    //Particle electron(r0, v0, qe, time, outfile_time, outfile_xpos, outfile_ypos, outfile_zpos, outfile_px, outfile_py, outfile_pz, outfile_energy);
-    Particle electron(r0, p0, qe, time, outfile_time, outfile_xpos, outfile_ypos, outfile_zpos, outfile_px, outfile_py, outfile_pz, outfile_energy);
-    
-    double initial_x;
-    double initial_y;
-    double initial_z;
-    double initial_px;
-    double initial_py;
-    double initial_pz;
-
-    Particle::InitializationTypes initialize = electron.INITIALIZE_UNIFORM_EN_DIST;
-        if(initialize == electron.INITIALIZE_POINT_SOURCE_GAUS || initialize == electron.INITIALIZE_POINT_SOURCE_UNI)
-                {num_par = num_par * 5;}
-
-    //VALUES FOR UNIFORM DISTRIBUTION
-    int posx_counter = 0;
-    int posy_counter = 0;
-    int posz_counter = 0;
-    int velx_counter = 0;
-    int vely_counter = 0;
-    int velz_counter = 0;
-
-    //VALUES FOR POINT SOURCE DISTRIBUTION
-    const double length_before  = 17.5; //1cm
-    double divergence           = 0.01; //10 mrad
-    int energy_cycle            = 0;
-    double tot_p;
-    double p_x_val;
-    double p_y_val;
-    double p_z_val;
 
 
 
 
 
-    int array_counter_max_cols=0;
+
+
+
+    //MAIN LOOP FOR STEPPING PARTICLES THROUGH SYSTEM:
     for(int ii{0}; ii < num_par; ii++)
     {
         int magnet_counter = 0;
         int screen_counter = 0;
-        time = 0.0;
+        time               = 0.0;
         std::cout << "particle number " << (ii+1) << '\n';
+
+        if(ii>0)
+            {electron_beam.next_particle(electron_beam.m_particle_counter);}
         
-        switch (initialize)
-        {
-        case electron.INITIALIZE_GAUSSIAN:
-            initial_x  = 0.0;
-            initial_y  = gaussian()*(radius_r0.getY() ) + r0.getY();
-            initial_z  = gaussian()*(radius_r0.getZ() ) + r0.getZ();
-            initial_px = gaussian()*(radius_p0.getX() ) + p0.getX();
-            initial_py = gaussian()*(radius_p0.getY() ) + p0.getY();
-            initial_pz = gaussian()*(radius_p0.getZ() ) + p0.getZ();
-            break;
-        
-        case electron.INITIALIZE_UNIFORM_EN_DIST:   //sweeps initial position from (0,-y_max,-z_max) to (0,y_max,z_max), keeping total energy the central energy
-            uniform_en_dist(initial_x, initial_y, initial_z, initial_px, initial_py, initial_pz, length_before, &posy_counter, &posz_counter, r0, radius_r0, p0, num_par);
-            break;    
-        
-        case electron.INITIALIZE_UNIFORM_POS_DIST:
-            //add later
-            break;
+        Particle electron = electron_beam.get_particle();
+        electron.set_outfiles(outfile_time, outfile_xpos, outfile_ypos, outfile_zpos, outfile_px, outfile_py, outfile_pz, outfile_energy);
 
-        case electron.INITIALIZE_POINT_SOURCE_GAUS:
-            initial_x = 0.0;
-            if(ii-(5*energy_cycle) == 0)
-            {
-                p_x_val = gaussian()*(radius_p0.getX() ) + p0.getX();
-                p_y_val = gaussian()*(radius_p0.getY() ) + p0.getY();
-                p_z_val = gaussian()*(radius_p0.getZ() ) + p0.getZ();
-                tot_p       = sqrt(p_x_val*p_x_val + p_y_val*p_y_val + p_z_val*p_z_val);
-                initial_y   = 0.0;
-                initial_z   = 0.0;
-                initial_px  = tot_p;
-                initial_py  = 0.0;
-                initial_pz  = 0.0;
-            }
-            else if(ii-(5*energy_cycle) == 1)
-            {
-                initial_y   = length_before*tan(divergence/2);
-                initial_z   = 0.0;
-                initial_px = tot_p*cos(divergence/2.0);
-                initial_py = tot_p*sin(divergence/2.0);
-                initial_pz = 0.0;
-            }
-            else if(ii-(5*energy_cycle) == 2)
-            {
-                initial_y = -length_before*tan(divergence/2);
-                initial_z = 0.0;
-                initial_px = tot_p*cos(divergence/2.0);
-                initial_py = -tot_p*sin(divergence/2.0);
-                initial_pz = 0.0;
-            }
-            else if(ii-(5*energy_cycle) == 3)
-            {
-                initial_y = 0.0;
-                initial_z = length_before*tan(divergence/2);
-                initial_px = tot_p*cos(divergence/2.0);
-                initial_py = 0.0;
-                initial_pz = tot_p*sin(divergence/2.0);
-            }
-            else if(ii-(5*energy_cycle) == 4)
-            {
-                initial_y = 0.0;
-                initial_z = -length_before*tan(divergence/2);
-                initial_px = tot_p*cos(divergence/2.0);
-                initial_py = 0.0;
-                initial_pz = -tot_p*sin(divergence/2.0);
-                energy_cycle += 1;
-            }
-            electron.set_pos(-length_before,0.0,0.0);
-            electron.set_p(initial_px, initial_py, initial_pz);
-            electron.set_time(time);
-            outfile_part_writeAndComma(electron);
-            break;
-
-        case Particle::INITIALIZE_POINT_SOURCE_UNI:
-            initial_x   = 0.0;
-            bool x_dist = true;
-            bool y_dist = false;
-            bool z_dist = false;
-            if(ii-(5*energy_cycle) == 0)
-            {
-                p_x_val     = 0.0;
-                p_y_val     = 0.0;
-                p_z_val     = 0.0;
-                if(x_dist) { p_x_val = uniform_dist_single(num_par/5, p0.getX(), radius_p0.getX(), velx_counter); }
-                if(y_dist) { p_y_val = uniform_dist_single(num_par/5, p0.getY(), radius_p0.getY(), vely_counter); }
-                if(z_dist) { p_z_val = uniform_dist_single(num_par/5, p0.getZ(), radius_p0.getZ(), velz_counter); }
-                tot_p       = sqrt(p_x_val*p_x_val + p_y_val*p_y_val + p_z_val*p_z_val);
-                initial_y   = 0.0;
-                initial_z   = 0.0;
-                initial_px  = tot_p;
-                initial_py  = 0.0;
-                initial_pz  = 0.0;
-            }
-            else if(ii-(5*energy_cycle) == 1)
-            {
-                initial_y   = length_before*tan(divergence/2);
-                initial_z   = 0.0;
-                initial_px = tot_p*cos(divergence/2.0);
-                initial_py = tot_p*sin(divergence/2.0);
-                initial_pz = 0.0;
-
-                //del_time = del_time*0.5;
-            }
-            else if(ii-(5*energy_cycle) == 2)
-            {
-                initial_y = -length_before*tan(divergence/2);
-                initial_z = 0.0;
-                initial_px = tot_p*cos(divergence/2.0);
-                initial_py = -tot_p*sin(divergence/2.0);
-                initial_pz = 0.0;
-
-                //del_time = del_time*0.5;
-            }
-            else if(ii-(5*energy_cycle) == 3)
-            {
-                initial_y = 0.0;
-                initial_z = length_before*tan(divergence/2);
-                initial_px = tot_p*cos(divergence/2.0);
-                initial_py = 0.0;
-                initial_pz = tot_p*sin(divergence/2.0);
-
-                //del_time = 0.5*del_time;
-            }
-            else if(ii-(5*energy_cycle) == 4)
-            {
-                initial_y = 0.0;
-                initial_z = -length_before*tan(divergence/2);
-                initial_px = tot_p*cos(divergence/2.0);
-                initial_py = 0.0;
-                initial_pz = -tot_p*sin(divergence/2.0);
-
-                //del_time = del_time*0.5;
-                energy_cycle += 1;
-            }
-            electron.set_pos(-length_before,0.0,0.0);
-            electron.set_p(initial_px, initial_py, initial_pz);
-            electron.set_time(time);
-            outfile_part_writeAndComma(electron);
-            break;
-        }
+        electron.set_time(time);
 
         outfile_del_t << del_time << '\n';
-        if(initial_px == 0)
-            { initial_px = 0.000000000001; }
-        
-        ThreeVec r_int(initial_x, initial_y, initial_z);
-        ThreeVec p_init(initial_px, initial_py, initial_pz);
-        electron.set_pos(r_int);
-        electron.set_p(p_init);
-        electron.set_time(time);
-        outfile_part_writeAndComma(electron);        
 
-        //step_through_magnet(electron, vn_plus, vn_minus, B0, rn_plus, rn_minus, time, del_time, width_bmap[magnet_counter], length_bmap[magnet_counter]);
-        //step_through_magnet_mag_leap(electron, magnet[magnet_counter], vn_plus, vn_minus, rn_plus, rn_minus, time, del_time);
-        step_through_magnet_mag_boris(electron,magnet[magnet_counter],time,del_time);
+        outfile_part_writeAndComma(electron); 
+
+        double particle_time_limit = 2*M_PI*10;
+        step_through_magnet_mag_boris(electron,magnet[magnet_counter],time,del_time,particle_time_limit);
         
         while(++magnet_counter < num_magnets)
-        {               //Loop through magnets after first magnet
-            
-            double dist_x_to_mag = magnet[(magnet_counter)].get_pos(0) - magnet[magnet_counter-1].get_pos(0);
-
-            if( ( (dist_x_to_mag > 0) && ((electron.get_vel(0)) > 0) ) || ( (dist_x_to_mag < 0) && ((electron.get_vel(0)) < 0) ) )
+        {               
+                //Loop through magnets after first magnet
+                //First check that the magnet is heading toward the next magnet in the x-direction.
+                //Determine if next magnet is in front of or behind the particle's position in the x-dimension:
+            double dist_x_to_mag = magnet[(magnet_counter)].get_pos(0) - electron.get_pos(0);
+                //Then check if particle is heading in that direection
+            if( ( (dist_x_to_mag > 0) && ((electron.get_vel(0)) > 0) ) || ( (dist_x_to_mag < 0) && ((electron.get_vel(0)) < 0) ) || ( dist_x_to_mag == 0) )
             {           //First check that electron is moving toward next magnet
                 double time_btwn_mags = 0.0;
-                time_btwn_mags        = (((magnet[magnet_counter].get_pos(0))) - (electron.get_pos(0)))/(electron.get_vel(0)); 
+                if(dist_x_to_mag !=0)
+                    { time_btwn_mags        = (((magnet[magnet_counter].get_pos(0))) - (electron.get_pos(0)))/(electron.get_vel(0)); }
                 double y_at_time      = 0.0;
                 y_at_time             = (electron.get_pos(1)) + ((electron.get_vel(1))*(time_btwn_mags));
                 double z_at_time      = 0.0;
                 z_at_time             = (electron.get_pos(2)) + ((electron.get_vel(2))*(time_btwn_mags));
                 time                  = time + time_btwn_mags;
 
-                if( ((y_at_time >= (magnet[magnet_counter].get_pos(1) - (magnet[magnet_counter].get_width()/2.0) ) ) && (y_at_time <= (magnet[magnet_counter].get_pos(1) + (magnet[magnet_counter].get_width()/2.0) ))))
+                bool check_y_bound, check_z_bound;
+                check_y_bound = ((y_at_time >= (magnet[magnet_counter].get_pos(1) - (magnet[magnet_counter].get_width()/2.0) ) ) && (y_at_time <= (magnet[magnet_counter].get_pos(1) + (magnet[magnet_counter].get_width()/2.0) )));
+                check_z_bound = ((z_at_time >= (magnet[magnet_counter].get_pos(2) - (magnet[magnet_counter].get_height()/2.0) ) ) && (z_at_time <= (magnet[magnet_counter].get_pos(2) + (magnet[magnet_counter].get_height()/2.0) )));
+                if( check_y_bound && check_z_bound )
                 {       //Then check that particle ends up in magnet region
-                //uncomment if using leapfrog method
-                    //vn_minus = (electron.get_vel() ) - (((electron.get_vel())^B0)*del_time);
-                    //vn_minus = electron.get_vel();
+
                     electron.set_pos(0 ,(magnet[magnet_counter].get_pos(0))); 
                     electron.set_pos(1, y_at_time);
                     electron.set_pos(2, z_at_time);
-                    //rn_minus = (electron.get_pos() ) - ((electron.get_vel())*del_time);
-                    //rn_minus = electron.get_pos();
                     
                     outfile_part_comma(electron);
-                    //step_through_magnet_mag_leap(electron, magnet[magnet_counter], time, del_time);
-                    step_through_magnet_mag_boris(electron, magnet[magnet_counter], time, del_time);
+                    step_through_magnet_mag_boris(electron, magnet[magnet_counter], time, del_time, particle_time_limit);
                     
                 }
             }
@@ -393,9 +209,9 @@ int main(int argc, char *argv[])
         
 
         outfile_part_newline(electron);
-    }   //<-END OF PARTICLE 'FOR' LOOP
-
-//outfile_array_size << array_counter_max_cols <<','<< num_par;
+        if(time_step_test)
+            {half_time_step(del_time);}
+    }   //<-END OF PARTICLE STEPPING 'FOR' LOOP
 
     outfile_readme. close();
     //outfile_grid. close();

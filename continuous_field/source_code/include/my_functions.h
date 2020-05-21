@@ -43,6 +43,8 @@ void step_through_magnet_mag_leap(Particle *electron, Magnet &magnet, double& ti
 
 void boris(Particle &electron_t, Magnet &magnet_t, const double del_t);
 
-void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time);
+void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double time_out = 2200);
+
+void half_time_step(double &time_step);
 
 #endif

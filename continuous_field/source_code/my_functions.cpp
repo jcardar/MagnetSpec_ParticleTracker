@@ -37,14 +37,25 @@ void outfile_part_writeAndTab(Particle& particle)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void outfile_part_writeAndComma(Particle& particle)
 {
+//        std::cerr << "outfile prompt entered.\n";
     *(particle.m_out_time) << (particle.get_time()) << ",";
+//        std::cerr << "particle time written\n";
     *(particle.m_out_posx) << (particle.get_pos(0)) << ",";
+//       std::cerr << "particle pos0 written\n";
+//       std::cerr << "pos1 should be " << particle.get_pos(1) << '\n';
     *(particle.m_out_posy) << (particle.get_pos(1)) << ",";
+//       std::cerr << "particle pos1 written\n";
+//       std::cerr << "pos2 should be " << particle.get_pos(2) << '\n';
     *(particle.m_out_posz) << (particle.get_pos(2)) << ",";
+//       std::cerr << "particle pos2 written\n";
     *(particle.m_out_px) << (particle.get_p(0)) << ",";
+//       std::cerr << "particle mom0 written\n";
     *(particle.m_out_py) << (particle.get_p(1)) << ",";
+//       std::cerr << "particle mom1 written\n";
     *(particle.m_out_pz) << (particle.get_p(2)) << ",";
+//       std::cerr << "particle mom2 written\n";
     *(particle.m_out_energy) << particle.get_energy() << ",";
+//       std::cerr << "particle energy written\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,7 +158,7 @@ double gaussian()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 double uniform_dist_single(int num_par_t, double vel0_t, double radius_v0_t, int &counter_t)
 {
-    //From v_min to v_max, iterates for each particle
+    //From v_min to v_max in evenly divided intervals, iterates for each particle
     double del_vel = (2*radius_v0_t)/(static_cast<double>(num_par_t));
 
     double counter_d = static_cast<double>(counter_t);
@@ -339,11 +350,12 @@ void boris(Particle &electron_t, Magnet &magnet_t, const double del_t)
       
     Bsquared  = ( ( (magnet_t.get_B0(0))*(magnet_t.get_B0(0)) ) + ( (magnet_t.get_B0(1))*(magnet_t.get_B0(1)) )
                 + ( (magnet_t.get_B0(2))*(magnet_t.get_B0(2)) ) );
+    //std::cerr << "Bsquared is " << Bsquared << std::endl;
     
     psquared  = ((electron_t.get_p(0) * electron_t.get_p(0)) + (electron_t.get_p(1) * electron_t.get_p(1)) 
                 + (electron_t.get_p(2) * electron_t.get_p(2)));
     igamma    = 1.0/(sqrt(1.0+psquared)); 
-    alpha     = sqrt( 1.0/(1 + ((del_t/2)*(del_t/2))) ); //SHOULD DEL_T/2 BE MULTIPLIED BY GAMMA???
+    //alpha     = sqrt( 1.0/(1 + ((del_t/2)*(del_t/2))) ); //SHOULD DEL_T/2 BE MULTIPLIED BY GAMMA???
     ttsquared = 0.0;
     for (x1=0;x1<3;x1++)
         {
@@ -369,66 +381,61 @@ void boris(Particle &electron_t, Magnet &magnet_t, const double del_t)
     vstar[2] = vperp[2]+(vperp[0]*tt[1]-vperp[1]*tt[0])*igamma;
 
     //Finally update momentum
-    /*
+    // /*
     electron_t.set_p(0, ( (electron_t.get_p(0)) + (( (vstar[1]*ss[2]) - (vstar[2]*ss[1]) ) * igamma) ));
     electron_t.set_p(1, ( (electron_t.get_p(1)) + (( (vstar[2]*ss[0]) - (vstar[0]*ss[2]) ) * igamma) ));
     electron_t.set_p(2, ( (electron_t.get_p(2)) + (( (vstar[0]*ss[1]) - (vstar[1]*ss[0]) ) * igamma) ));
     electron_t.set_pos( 0, electron_t.get_pos(0) + (electron_t.get_p(0) * igamma * del_t) );
     electron_t.set_pos( 1, electron_t.get_pos(1) + (electron_t.get_p(1) * igamma * del_t) );
     electron_t.set_pos( 2, electron_t.get_pos(2) + (electron_t.get_p(2) * igamma * del_t) );
-    */
-
-    // /*
-    double v_fin[3];
-    v_fin[0] = ((( (vstar[1]*ss[2]) - (vstar[2]*ss[1]) ) ) + ((1- alpha)*(0) )); //UPDATE 0 IF GRAD B IS PRESENT
-    v_fin[1] = ((( (vstar[2]*ss[0]) - (vstar[0]*ss[2]) ) ) + ((1- alpha)*(0) ));
-    v_fin[2] = ((( (vstar[0]*ss[1]) - (vstar[1]*ss[0]) ) ) + ((1- alpha)*(0) ));
-
-    electron_t.set_p(0, ( (electron_t.get_p(0)) + (v_fin[0] * igamma))); 
-    electron_t.set_p(1, ( (electron_t.get_p(1)) + (v_fin[1] * igamma)));
-    electron_t.set_p(2, ( (electron_t.get_p(2)) + (v_fin[2] * igamma)));
-
-    double vpar[3];
-    double v_drift[3];
-    double v_eff[3];
-    for(x1=0;x1<3;x1++)
-    {
-        v_drift[x1] = 0; //correct if drift is added (non-uniform B)
-        //vperp_eff[x1]   = (alpha * ) + ((1-alpha) * v_drift[x1]);
-        vperp[x1]   = (electron_t.get_p(x1)) * (1.0 - (magnet_t.get_B0(x1))/sqrt(Bsquared))*igamma;
-        vpar[x1]    = (electron_t.get_p(x1)) * ((magnet_t.get_B0(x1))/sqrt(Bsquared))*igamma;
-        v_eff[x1]   = vpar[x1] + (alpha*vperp[x1]) + ((1-alpha)*v_drift[x1]);
-    }
-    electron_t.set_pos( 0, electron_t.get_pos(0) + (v_eff[0] * del_t) );
-    electron_t.set_pos( 1, electron_t.get_pos(1) + (v_eff[1] * del_t) );
-    electron_t.set_pos( 2, electron_t.get_pos(2) + (v_eff[2] * del_t) );
-    // */
-    
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time)
+void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double time_out)
 {
-    bool check;
+    bool check_x, check_y, check_z;
     double psquared;
     do
         {
             boris(electron, magnet, del_time); //updates particle velocity in magnetic field 
 
             time += del_time;
+            std::cerr << del_time << std::endl;
 
             electron.set_time(time);
 
             
-            check = ((electron.get_pos(0) >= (magnet.get_pos(0))) && (electron.get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0)))) && (electron.get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0))) && (electron.get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0)));
-            //std::cerr << "Check Boris: " << check << '\n';
-            if(check)
+            check_x = (electron.get_pos(0) >= (magnet.get_pos(0))) && (electron.get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0))));
+            check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0));
+            check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
+
+            if((check_x && check_y && check_z))
                 { outfile_part_writeAndComma(electron); }
-            else if(!(check))
-                { outfile_part_write(electron); }    
+            else if( (!( check_x && check_y && check_z )) || (time >= time_out) )
+                {
+                    outfile_part_write(electron); 
+                }
+            if(time >= time_out)
+                { std::cout << "Particle Timed-Out.\n"; }
+            if( (check_x && check_y && check_z) == false )
+                {
+                    std::cout << "Particle Out of Magnet.\n";
+                    if(check_x == false)
+                        { std::cout << "Out of bounds in x.\n"; } 
+                    if(check_y == false)
+                        { std::cout << "Out of bounds in y.\n"; } 
+                    if(check_z == false)
+                        { std::cout << "Out of bounds in z.\n"; } 
+                }
             
-            
-        } while(check);
+        } while((check_x && check_y && check_z) && (time < time_out));
 }
  
+
+
+void half_time_step(double &time_step)
+{
+    time_step = time_step * 0.5;
+    //return time_step;
+}
