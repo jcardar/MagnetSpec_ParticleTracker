@@ -336,8 +336,8 @@ void stepThroughMagnet_Leap(Particle *electron, Magnet &magnet, double& time, co
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void boris(Particle &electron_t, Magnet &magnet_t, const double del_t)
 {
-  long unsigned parnum,x1;
-  double igamma, psquared, Bsquared, alpha;
+  unsigned long parnum,x1;
+  double igamma, psquared, Bsquared;// alpha;
 
   // t vector in Boris method
   double tt[3],ttsquared;
@@ -357,19 +357,20 @@ void boris(Particle &electron_t, Magnet &magnet_t, const double del_t)
     igamma    = 1.0/(sqrt(1.0+psquared)); 
     //alpha     = sqrt( 1.0/(1 + ((del_t/2)*(del_t/2))) ); //SHOULD DEL_T/2 BE MULTIPLIED BY GAMMA???
     ttsquared = 0.0;
-    for (x1=0;x1<3;x1++)
+    /*
+    for (x1=0; x1<3; ++x1)
         {
-        tt[x1]     = (magnet_t.get_B0(x1) )*del_t*0.5;
+        tt[x1]     = (magnet_t.get_B0(x1) )*del_t*0.5; //igamma here???
         ttsquared += (tt[x1]*tt[x1]);
         }
     
-    for (x1=0;x1<3;x1++)
+    for (x1=0; x1<3; ++x1)
         {
         ss[x1]     = 2.0*tt[x1]/(1.0+ttsquared);
         }
     
     // calculated vperp
-    for (x1=0;x1<3;++x1)
+    for (x1=0; x1<3; ++x1)
         {
         vperp[x1]  = (electron_t.get_p(x1)) * (1.0 - (magnet_t.get_B0(x1))/sqrt(Bsquared));
         }
@@ -381,10 +382,36 @@ void boris(Particle &electron_t, Magnet &magnet_t, const double del_t)
     vstar[2] = vperp[2]+(vperp[0]*tt[1]-vperp[1]*tt[0])*igamma;
 
     //Finally update momentum
-    // /*
     electron_t.set_p(0, ( (electron_t.get_p(0)) + (( (vstar[1]*ss[2]) - (vstar[2]*ss[1]) ) * igamma) ));
     electron_t.set_p(1, ( (electron_t.get_p(1)) + (( (vstar[2]*ss[0]) - (vstar[0]*ss[2]) ) * igamma) ));
     electron_t.set_p(2, ( (electron_t.get_p(2)) + (( (vstar[0]*ss[1]) - (vstar[1]*ss[0]) ) * igamma) ));
+    electron_t.set_pos( 0, electron_t.get_pos(0) + (electron_t.get_p(0) * igamma * del_t) );
+    electron_t.set_pos( 1, electron_t.get_pos(1) + (electron_t.get_p(1) * igamma * del_t) );
+    electron_t.set_pos( 2, electron_t.get_pos(2) + (electron_t.get_p(2) * igamma * del_t) );
+    */
+   for (x1=0; x1<3; ++x1)
+        {
+        tt[x1]     = (magnet_t.get_B0(x1) )*del_t*0.5*igamma;
+        ttsquared += (tt[x1]*tt[x1]);
+        }
+    
+    for (x1=0; x1<3; ++x1)
+        {
+        ss[x1]     = 2.0*tt[x1]/(1.0+ttsquared);
+        }
+    double u_cross_tt_plus_u[3];
+    u_cross_tt_plus_u[0] = electron_t.get_p(0) + ((electron_t.get_p(1) * tt[2]) - (electron_t.get_p(2) * tt[1]));
+    u_cross_tt_plus_u[1] = electron_t.get_p(1) + ((electron_t.get_p(2) * tt[0]) - (electron_t.get_p(0) * tt[2]));
+    u_cross_tt_plus_u[2] = electron_t.get_p(2) + ((electron_t.get_p(0) * tt[1]) - (electron_t.get_p(1) * tt[0]));
+
+    double all_cross_ss[3];
+    all_cross_ss[0] = (u_cross_tt_plus_u[1]*ss[2]) - (u_cross_tt_plus_u[2]*ss[1]);
+    all_cross_ss[1] = (u_cross_tt_plus_u[2]*ss[0]) - (u_cross_tt_plus_u[0]*ss[2]);
+    all_cross_ss[2] = (u_cross_tt_plus_u[0]*ss[1]) - (u_cross_tt_plus_u[1]*ss[0]);
+
+    electron_t.set_p( 0, ( (electron_t.get_p(0)) + (all_cross_ss[0])));
+    electron_t.set_p( 1, ( (electron_t.get_p(1)) + (all_cross_ss[1])));
+    electron_t.set_p( 2, ( (electron_t.get_p(2)) + (all_cross_ss[2])));
     electron_t.set_pos( 0, electron_t.get_pos(0) + (electron_t.get_p(0) * igamma * del_t) );
     electron_t.set_pos( 1, electron_t.get_pos(1) + (electron_t.get_p(1) * igamma * del_t) );
     electron_t.set_pos( 2, electron_t.get_pos(2) + (electron_t.get_p(2) * igamma * del_t) );
@@ -394,11 +421,14 @@ void boris(Particle &electron_t, Magnet &magnet_t, const double del_t)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double time_out)
 {
+    //TESTING CHANING TIME STEP:
+    //const double del_time = del_time_1 * 0.5;
+
     bool check_x, check_y, check_z;
     double psquared;
     do
         {
-            boris(electron, magnet, del_time); //updates particle velocity in magnetic field 
+            boris(electron, magnet, del_time); //updates particle velocity & position in magnetic field 
 
             time += del_time;
 //            std::cerr << del_time << std::endl;
@@ -437,5 +467,6 @@ void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& t
 void half_time_step(double &time_step)
 {
     time_step = time_step * 0.5;
+    //time_step = time_step - 0.1;
     //return time_step;
 }
