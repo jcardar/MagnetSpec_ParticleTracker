@@ -31,12 +31,22 @@ number_of_magnets = widgets.BoundedIntText(
 )
 
 
-def dynamicFloatTextWidgets(num_of_widgets):
+def dynamicFloatValue_Magnet_Position(num_of_widgets):
     listOfWidgets = [];
     for i in range(num_of_widgets):
-        widget = widgets.FloatText(
+        widgetx = widgets.FloatText(
             value=0,
             description=f'x of Mag {i+1}',
         )
-        listOfWidgets.append(widget)
+        widgety = widgets.FloatText(
+            value=0,
+            description=f'y of Mag {i+1}',
+        )
+        widgetz = widgets.FloatText(
+            value=0,
+            description=f'z of Mag {i+1}',
+        )
+        listOfWidgets.append(widgetx)
+        listOfWidgets.append(widgety)
+        listOfWidgets.append(widgetz)
     return listOfWidgets
