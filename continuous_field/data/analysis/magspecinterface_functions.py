@@ -234,3 +234,11 @@ def dynamicFloatValue_Screen_Angles(num_of_screens):
         listOfWidgets.append(widgetz)
         listOfWidgets.append(widgetx)
     return listOfWidgets
+
+# Functions to aid in output
+def createlist(widgets_list):
+    newlist = []
+    for i in range(len(widgets_list)):
+        newlist.append(f'{widgets_list[i].value}')
+        newlist.append(' ')
+    return newlist
