@@ -58,7 +58,7 @@ void Particle::set_p(double x, double y, double z)
     m_p.setX(x);
     m_p.setY(y);
     m_p.setZ(z);
-    //set_energy(sqrt(m_p.mag()*m_p.mag() + 1));
+    set_energy(sqrt(m_p.mag()*m_p.mag() + 1));
     m_vel = m_p/m_energy;
 }
 
