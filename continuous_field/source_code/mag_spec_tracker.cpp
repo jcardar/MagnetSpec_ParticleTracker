@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     ThreeVec initial_position(-134.819, 0.0, 0.0);
     ThreeVec initial_position_spread(0.00586169, 0.00586169, 0.00586169);
     ThreeVec initial_angular_direction(0.0, M_PI/2.000000, M_PI/2.000000);
-    ThreeVec initial_angular_spread(0.0, 1, 1);
+    ThreeVec initial_angular_spread(0.0, 0.1, 0.1);
     Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread);
 
 
@@ -141,11 +141,6 @@ int main(int argc, char *argv[])
 
 
 
-
-
-
-
-
     //MAIN LOOP FOR STEPPING PARTICLES THROUGH SYSTEM:
     for(int ii{0}; ii < num_par; ii++)
     {
@@ -164,7 +159,7 @@ int main(int argc, char *argv[])
 
         outfile_del_t << del_time << '\n';
 
-        outfile_part_writeAndComma(electron);
+        outfile_part_write(electron);
 
         double particle_time_limit = (2*M_PI*energy0)*10.0;
 

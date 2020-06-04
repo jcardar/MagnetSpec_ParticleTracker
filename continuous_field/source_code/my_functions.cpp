@@ -57,6 +57,27 @@ void outfile_part_writeAndComma(Particle& particle)
 //       std::cerr << "particle energy written\n";
 }
 
+void outfile_part_commaAndWrite(Particle& particle)
+{
+//        std::cerr << "outfile prompt entered.\n";
+    *(particle.m_out_time) << "," << (particle.get_time());
+//        std::cerr << "particle time written\n";
+    *(particle.m_out_posx)  << "," << (particle.get_pos(0));
+//       std::cerr << "particle pos0 written\n";
+    *(particle.m_out_posy) << "," << (particle.get_pos(1));
+//       std::cerr << "particle pos1 written\n";
+    *(particle.m_out_posz) << "," << (particle.get_pos(2));
+//       std::cerr << "particle pos2 written\n";
+    *(particle.m_out_px) << "," << (particle.get_p(0));
+//       std::cerr << "particle mom0 written\n";
+    *(particle.m_out_py) << "," << (particle.get_p(1));
+//       std::cerr << "particle mom1 written\n";
+    *(particle.m_out_pz) << "," << (particle.get_p(2)) ;
+//       std::cerr << "particle mom2 written\n";
+    *(particle.m_out_energy) << "," << particle.get_energy();
+//       std::cerr << "particle energy written\n";
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void outfile_part_write(Particle& particle)
 {
@@ -98,10 +119,13 @@ void outfile_part_newline(Particle& particle)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void outfile_part_comma(Particle& particle)
 {
-    *(particle.m_out_time) << ",";
+    *(particle.m_out_time) << ","; 
     *(particle.m_out_posx) << ",";
+    //std::cerr << "wrote comma on x\n";
     *(particle.m_out_posy) << ",";
+    //std::cerr << "wrote comma on y\n";
     *(particle.m_out_posz) << ",";
+    //std::cerr << "wrote comma on z\n";
     *(particle.m_out_px) << ",";
     *(particle.m_out_py) << ",";
     *(particle.m_out_pz) << ",";
@@ -390,47 +414,11 @@ void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter)
         old_py = electron_t.get_p(1);
         old_pz = electron_t.get_p(2);
 
-        //first_half_position_step(electron_t, del_t);
 
         electron_t.set_p( 0, ( (electron_t.get_p(0)) + (all_cross_ss[0])));
         electron_t.set_p( 1, ( (electron_t.get_p(1)) + (all_cross_ss[1])));
         electron_t.set_p( 2, ( (electron_t.get_p(2)) + (all_cross_ss[2])));
-    //}
-    /*
-    else if(counter == 0)
-    {
-        double del_t_0 = 1.0*del_t;
-        for (x1=0; x1<3; ++x1)
-            {
-            tt[x1]     = (magnet_t.get_B0(x1) )*del_t_0*0.5*igamma;
-            ttsquared += (tt[x1]*tt[x1]);
-            }
-        
-        for (x1=0; x1<3; ++x1)
-            {
-            ss[x1]     = 2.0*tt[x1]/(1.0+ttsquared);
-            }
-        double u_cross_tt_plus_u[3];
-        u_cross_tt_plus_u[0] = electron_t.get_p(0) + ((electron_t.get_p(1) * tt[2]) - (electron_t.get_p(2) * tt[1]));
-        u_cross_tt_plus_u[1] = electron_t.get_p(1) + ((electron_t.get_p(2) * tt[0]) - (electron_t.get_p(0) * tt[2]));
-        u_cross_tt_plus_u[2] = electron_t.get_p(2) + ((electron_t.get_p(0) * tt[1]) - (electron_t.get_p(1) * tt[0]));
 
-        double all_cross_ss[3];
-        all_cross_ss[0] = (u_cross_tt_plus_u[1]*ss[2]) - (u_cross_tt_plus_u[2]*ss[1]);
-        all_cross_ss[1] = (u_cross_tt_plus_u[2]*ss[0]) - (u_cross_tt_plus_u[0]*ss[2]);
-        all_cross_ss[2] = (u_cross_tt_plus_u[0]*ss[1]) - (u_cross_tt_plus_u[1]*ss[0]);
-
-        old_px = electron_t.get_p(0);
-        old_py = electron_t.get_p(1);
-        old_pz = electron_t.get_p(2);
-
-        //first_half_position_step(electron_t, del_t);
-
-        electron_t.set_p( 0, ( (electron_t.get_p(0)) + (all_cross_ss[0])));
-        electron_t.set_p( 1, ( (electron_t.get_p(1)) + (all_cross_ss[1])));
-        electron_t.set_p( 2, ( (electron_t.get_p(2)) + (all_cross_ss[2])));
-    }
-    */
     //Do average velocity to update position
 
     ThreeVec average_vel((old_px+electron_t.get_p(0))*igamma*0.5, (old_py+electron_t.get_p(1))*igamma*0.5, (old_pz+electron_t.get_p(2))*igamma*0.5);
@@ -477,10 +465,10 @@ void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& t
             check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
 
             if((check_x && check_y && check_z) && !(time>=time_out))
-                { outfile_part_writeAndComma(electron); }
+                { outfile_part_commaAndWrite(electron); }
             else if( (!( check_x && check_y && check_z )) || (time >= time_out) )
                 {
-                    outfile_part_write(electron); 
+                    outfile_part_commaAndWrite(electron); 
                 }
             if(time >= time_out)
                 { std::cout << "Particle Timed-Out.\n"; }
@@ -685,11 +673,6 @@ void move_particle_to_magnet(Magnet magnet_t, Particle &particle_t)
 
 void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double time_limit)
 {
-    //Check if initially in magnet -> boris if so -> check all intersects if not
-    //After EVERY Boris start this loop over (start with the checks if particle is inside of any of the magnets to start)
-    //Then move on to check distance to every manget (check intersect, if true then populate distance)
-    //Smallest distance will be the magnet to move into.
-    //If no magnet is intersected or within particle position at end of loop, leave funciton.
     bool check_inside_magnet = false;
     bool check_intersect_magnet = false;
     double distance_to_mag_ii[num_mags];
@@ -699,6 +682,7 @@ void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
         check_inside_magnet = inside_of_mag(magnet_t[ii], particle_t);
         if(check_inside_magnet==true)
         {
+           //outfile_part_comma(particle_t);
             step_through_magnet_mag_boris(particle_t, magnet_t[ii], time, del_time, time_limit);
             boris_counter++;
             ii = -1; //restart loop (which will iterate ii by 1, to zero)
@@ -731,20 +715,19 @@ void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
 
             if(index_of_shortest != -1)
             {
-                if(boris_counter != 0)
-                {
-                    outfile_part_comma(particle_t);
+                //if(boris_counter != 0)
+                //{
+                    //outfile_part_comma(particle_t);
                     //std::cerr << "Writing Comma" << std::endl;
-                }
+                //}
                 
                 move_particle_to_magnet(magnet_t[index_of_shortest], particle_t);
                 std::cerr << "Sending to next magnet" << std::endl;
-                outfile_part_writeAndComma(particle_t);
+                outfile_part_commaAndWrite(particle_t);
                 //boris_counter++;
 
                 double particle_time = particle_t.get_time();
                 time = time + particle_time;
-                //step_through_magnet_mag_boris(particle_t,magnet_t[index_of_shortest], particle_time, del_time, time_limit);
                 continue;
             }
         }
