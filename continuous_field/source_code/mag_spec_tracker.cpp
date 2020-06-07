@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     double time     {0.0};                            //Define a variable time in which will be stepped over
-    double del_time {0.00586169};                              //Define a time step
+    double del_time {0.05};                              //Define a time step
     //Hard-coded:
     bool time_step_test = false;
 
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
                 magnet[ii].set_length(175.851);
                 //magnet[ii].set_width(1957.95*20000.0);
                 magnet[ii].set_width(134.819);
-                magnet[ii].set_height(58.6);
+                magnet[ii].set_height(200.6);
                 magnet[ii].set_outfile(outfile_magnets);
                 outfile_uniform_magnet(magnet[ii], ii);
                 break;
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
                 magnet[ii].set_pos(0, 300); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
                 magnet[ii].set_length(175.972);
                 magnet[ii].set_width(134.819);
-                magnet[ii].set_height(58.6);
+                magnet[ii].set_height(200.6);
                 magnet[ii].set_outfile(outfile_magnets);
                 outfile_uniform_magnet(magnet[ii], ii);
                 break;
@@ -113,10 +113,11 @@ int main(int argc, char *argv[])
                 double srn_x_pos = (magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+50;
                 double srn_y_pos = -58.6 + magnet[num_magnets-1].get_pos(1);
                 double srn_z_pos = magnet[num_magnets-1].get_pos(2);
-                screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
+                screen[ii].set_pos(0, srn_x_pos+50); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
                 screen[ii].set_length(80);
-                screen[ii].set_height(50);
-                screen[ii].set_angle(45.0);
+                screen[ii].set_height(500);
+                screen[ii].set_angle_x(90.0, 'd');
+                screen[ii].set_angle_z(45.0, 'd');
                 screen[ii].set_outfile(outfile_screens);
                 outfile_screen_single (screen[ii], ii);
                 break;
@@ -128,14 +129,24 @@ int main(int argc, char *argv[])
                 screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
                 screen[ii].set_length(500);
                 screen[ii].set_height(500);
-                screen[ii].set_angle(90.0);
+                screen[ii].set_angle_x(90.0,'d');
+                screen[ii].set_angle_z(0.0);
                 screen[ii].set_outfile(outfile_screens);
-                outfile_screen_single (screen[ii], ii);
-                break;
                 outfile_screen_single (screen[ii], ii);
                 break;
         }   //<---END OF SWITCH STATEMENT//
     }   //<---END OF SCREEN 'FOR' LOOP//
+    if(num_screens <= 0)
+    {
+        Screen null_screen;
+        null_screen.set_pos(0.0, 0.0, 0.0);
+        null_screen.set_length(0.0);
+        null_screen.set_height(0.0);
+        null_screen.set_angle_x(0.0);
+        null_screen.set_angle_z(0.0);
+        null_screen.set_outfile(outfile_screens);
+        outfile_screen_single(null_screen, 0);
+    }
 
 
 
@@ -164,28 +175,7 @@ int main(int argc, char *argv[])
         double particle_time_limit = (2*M_PI*energy0)*10.0;
 
         move_through_magnets(magnet, num_magnets, electron, time, del_time, particle_time_limit);
-
-        do
-        {
-            double x_intersect = (electron.get_pos(1) - (electron.get_pos(0)*electron.get_vel(1)/electron.get_vel(0)) - (screen[screen_counter].get_pos(1)) + (screen[screen_counter].get_pos(0)*tan(screen[screen_counter].get_angle('r'))))/(tan(screen[screen_counter].get_angle('r')) - (electron.get_vel(1)/electron.get_vel(0)));
-            double y_intersect  = x_intersect*electron.get_vel(1)/electron.get_vel(0) + (electron.get_pos(1) - (electron.get_pos(0)*electron.get_vel(1)/electron.get_vel(0)));
-            bool check1, check2;
-            check1 = (screen[screen_counter].get_angle()==90 && y_intersect > screen[screen_counter].get_pos(1) && y_intersect < screen[screen_counter].get_pos(1)+screen[screen_counter].get_length() );
-            check2 = ((x_intersect > screen[screen_counter].get_pos(0)) && (x_intersect < (screen[screen_counter].get_pos(0) + (screen[screen_counter].get_length()*cos(screen[screen_counter].get_angle('r'))))));
-            if(check1 || check2)
-            {
-                double time_to_scrn = (x_intersect - electron.get_pos(0)) / (electron.get_vel(0));
-                double z_intersect  = (electron.get_pos(2)) + ((electron.get_vel(2))*(time_to_scrn));
-                time                = time + time_to_scrn;
-
-                electron.set_pos(0, x_intersect);
-                electron.set_pos(1, y_intersect);
-                electron.set_pos(2, z_intersect);
-                outfile_part_comma(electron);
-                outfile_part_write(electron);
-            }
-        } while (++screen_counter < num_screens);
-        
+        move_to_screens(screen, num_screens, electron);
 
         outfile_part_newline(electron);
         if(time_step_test)
