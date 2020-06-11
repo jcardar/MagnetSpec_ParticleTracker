@@ -60,4 +60,6 @@ void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
 
 void half_time_step(double &time_step);
 
+void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t);
+
 #endif

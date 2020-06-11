@@ -151,11 +151,11 @@ void outfile_screen_single(Screen& screen, int counter)
 {
     if(counter==0)
     {
-        *(screen.m_out_screen) << "Num ," << "screen_low_energy_edgex ," << "screen_low_energy_edgey ," << "screen_low_energy_edgez ," << "degrees from x-axis ," << "degrees from z-axis ," << "length ," << "height" << "\n";
+        *(screen.m_out_screen) << "Num," << "screen_low_energy_edgex," << "screen_low_energy_edgey," << "screen_low_energy_edgez," << "degrees about x-axis," << "degrees about y-axis," << "degrees about z-axis," << "length," << "height" << "\n";
     }
     *(screen.m_out_screen) << (++counter) << ","
                             << screen.get_pos(0) << "," << screen.get_pos(1) << "," << screen.get_pos(2) << ","
-                            << screen.get_angle_x('d') << "," << screen.get_angle_z('d') << "," << screen.get_length() << "," << screen.get_height() << '\n';
+                            << screen.get_angle_about_x('d') << "," << screen.get_angle_about_y('d') << "," << screen.get_angle_about_z('d') << "," << screen.get_length() << "," << screen.get_height() << '\n';
 } 
 
 
@@ -734,34 +734,99 @@ void half_time_step(double &time_step)
     //return time_step;
 }
 
+
+
+
+double screen_plane_half_equation(Screen screen_t, double x_pos, double y_pos, double z_pos)
+{
+    double alpha = screen_t.get_angle_about_z();
+    double beta  = screen_t.get_angle_about_y();
+    double gamma = screen_t.get_angle_about_x();
+    double i_hat = x_pos*(sin(alpha)*cos(beta)*cos(beta)*cos(gamma) + (sin(beta)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma))));
+    double j_hat = y_pos*(cos(alpha)*cos(beta)*cos(beta)*cos(gamma) + (sin(beta)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma))));
+    double k_hat = z_pos*(cos(alpha)*cos(beta)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)) - sin(alpha)*cos(beta)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma)));
+    return (i_hat - j_hat + k_hat);
+}
+
+
+
+
 double t_line_particle(Screen screen_t, Particle particle_t)
 {
-    double t_numerator = (sin(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(screen_t.get_pos(0) - particle_t.get_pos(0)) - (((cos(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(1 - sin(screen_t.get_angle_z())) - cos(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*sin(screen_t.get_angle_z()))*(screen_t.get_pos(1) - particle_t.get_pos(1)))) - (sin(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*(screen_t.get_pos(2) - particle_t.get_pos(2))) );
-    double t_denom     = particle_t.get_vel(0)*sin(screen_t.get_angle_x())*cos(screen_t.get_angle_z()) - particle_t.get_vel(1)*(cos(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(1 - sin(screen_t.get_angle_z())) - cos(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*sin(screen_t.get_angle_z())) - particle_t.get_vel(2)*sin(screen_t.get_angle_x())*sin(screen_t.get_angle_z());
+    double t_numerator = screen_plane_half_equation(screen_t, (screen_t.get_pos(0) - particle_t.get_pos(0)), (screen_t.get_pos(1) - particle_t.get_pos(1)), (screen_t.get_pos(2) - particle_t.get_pos(2)));
+    double t_denom     = screen_plane_half_equation(screen_t, particle_t.get_vel(0), particle_t.get_vel(1), particle_t.get_vel(2));
+    // double t_numerator = (sin(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(screen_t.get_pos(0) - particle_t.get_pos(0)) - (((cos(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(1 - sin(screen_t.get_angle_z())) - cos(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*sin(screen_t.get_angle_z()))*(screen_t.get_pos(1) - particle_t.get_pos(1)))) - (sin(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*(screen_t.get_pos(2) - particle_t.get_pos(2))) );
+    // double t_denom     = particle_t.get_vel(0)*sin(screen_t.get_angle_x())*cos(screen_t.get_angle_z()) - particle_t.get_vel(1)*(cos(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(1 - sin(screen_t.get_angle_z())) - cos(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*sin(screen_t.get_angle_z())) - particle_t.get_vel(2)*sin(screen_t.get_angle_x())*sin(screen_t.get_angle_z());
     return (t_numerator / t_denom);
 }
+
+
+
+void min_max_x(double corner1_x, double corner2_x, double corner3_x, double corner4_x, double min_max_array[])
+{
+    double max = corner1_x; /* assume x is the largest */
+	if (corner2_x > max) { /* if y is larger than max, assign y to max */
+		max = corner2_x;
+	} /* end if */
+	if (corner3_x > max) { /* if z is larger than max, assign z to max */
+		max = corner3_x;
+	} /* end if */
+    if (corner4_x > max) { /* if z is larger than max, assign z to max */
+		max = corner3_x;
+	} /* end if */
+
+    double min = corner1_x; /* assume x is the smallest */
+	if (corner2_x < min) { /* if y is larger than max, assign y to max */
+		min = corner2_x;
+	} /* end if */
+	if (corner3_x < min) { /* if z is larger than max, assign z to max */
+		min = corner3_x;
+	} /* end if */
+    if (corner4_x < min) { /* if z is larger than max, assign z to max */
+		min = corner3_x;
+	} /* end if */
+
+    min_max_array[0] = min;
+    min_max_array[1] = max;
+    //return min_max;
+}
+
+
 
 bool check_if_intersect_screen(Screen screen_t, Particle particle_t)
 {
     bool intersect = false;
-    double t_line      = t_line_particle(screen_t, particle_t);
+    double t_line  = t_line_particle(screen_t, particle_t);
 
     if(t_line < 0.0)
     {
         return false;
     }
+    double alpha = screen_t.get_angle_about_z();
+    double beta  = screen_t.get_angle_about_y();
+    double gamma = screen_t.get_angle_about_x();
+    ThreeVec corner1(screen_t.get_pos(0) + (screen_t.get_height()*0.5)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma)), screen_t.get_pos(1) + (screen_t.get_height()*0.5)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)), screen_t.get_pos(2) + (screen_t.get_height()*0.5)*(cos(beta)*cos(gamma)));
+    ThreeVec corner2(screen_t.get_pos(0) - (screen_t.get_height()*0.5)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma)), screen_t.get_pos(1) - (screen_t.get_height()*0.5)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)), screen_t.get_pos(2) - (screen_t.get_height()*0.5)*(cos(beta)*cos(gamma)));
+    ThreeVec corner3(screen_t.get_pos(0) + screen_t.get_length()*cos(alpha)*cos(beta) + (screen_t.get_height()*0.5)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma)), screen_t.get_pos(1) + screen_t.get_length()*sin(alpha)*cos(beta) + (screen_t.get_height()*0.5)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)), screen_t.get_pos(2) - screen_t.get_length()*sin(beta) + (screen_t.get_height()*0.5)*(cos(beta)*cos(gamma)));
+    ThreeVec corner4(screen_t.get_pos(0) + screen_t.get_length()*cos(alpha)*cos(beta) - (screen_t.get_height()*0.5)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma)), screen_t.get_pos(1) + screen_t.get_length()*sin(alpha)*cos(beta) - (screen_t.get_height()*0.5)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)), screen_t.get_pos(2) - screen_t.get_length()*sin(beta) - (screen_t.get_height()*0.5)*(cos(beta)*cos(gamma)));
     double x_intersect = particle_t.get_pos(0) + particle_t.get_vel(0)*t_line;
-    double check_x     = (x_intersect >= screen_t.get_pos(0) - abs(screen_t.get_height()*0.5*sin(screen_t.get_angle_z()))) && (x_intersect <= (screen_t.get_pos(0) + screen_t.get_length()*cos(screen_t.get_angle_x()) + abs(screen_t.get_height()*0.5*sin(screen_t.get_angle_z()))));
+    
+    double x_min_max[2];
+    min_max_x(corner1.getX(), corner2.getX(), corner3.getX(), corner4.getX(), x_min_max);
+    
+    double check_x     = (x_intersect >= x_min_max[0]) && (x_intersect <= x_min_max[1]);
     if(check_x)
     {
-        double y_intersect    = particle_t.get_pos(1) + particle_t.get_vel(1)*t_line;
-        bool check_y          = (y_intersect >= (screen_t.get_pos(1))) && (y_intersect <= (screen_t.get_pos(1) + screen_t.get_length()*sin(screen_t.get_angle_x())));
+        double y_intersect = particle_t.get_pos(1) + particle_t.get_vel(1)*t_line;
+        double y_min_max[2];
+        min_max_x(corner1.getY(), corner2.getY(), corner3.getY(), corner4.getY(), y_min_max);
+        bool check_y       = (y_intersect >= y_min_max[0]) && (y_intersect <= y_min_max[1]);
         if(check_y)
         {
             double z_intersect = particle_t.get_pos(2) + particle_t.get_vel(2)*t_line;
-            // bool check_z       = ((sin(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(screen_t.get_pos(0) - x_intersect) - (cos(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(1-sin(screen_t.get_angle_z())) - cos(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*sin(screen_t.get_angle_z()))*(screen_t.get_pos(1) - y_intersect) - sin(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*(screen_t.get_pos(2) - z_intersect) ) == 0);
-            // bool check_z       = ((sin(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(screen_t.get_pos(0))) - (cos(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(screen_t.get_pos(1))) - (sin(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*(screen_t.get_pos(2))) ) == (sin(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(x_intersect) - cos(screen_t.get_angle_x())*cos(screen_t.get_angle_z())*(y_intersect) - sin(screen_t.get_angle_x())*sin(screen_t.get_angle_z())*(z_intersect) );
-            bool check_z        = (z_intersect >= (screen_t.get_pos(2) - abs(screen_t.get_height()*0.5*cos(screen_t.get_angle_z())) ) ) && (z_intersect <= (screen_t.get_pos(2) + abs(screen_t.get_height()*0.5*cos(screen_t.get_angle_z())) ));
+            double z_min_max[2];
+            min_max_x(corner1.getZ(), corner2.getZ(), corner3.getZ(), corner4.getZ(), z_min_max);
+            bool check_z       = (z_intersect >=  z_min_max[0]) && (z_intersect <= z_min_max[1]);
             if(check_z)
             {
                 intersect = true;
@@ -784,6 +849,7 @@ void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t)
         bool intersect_check = check_if_intersect_screen(screen_t[ii], particle_t);
         if(intersect_check && (jj != ii))
         {
+            intersected = true;
             t_line      = t_line_particle(screen_t[ii], particle_t);
 
             double x_intersect = particle_t.get_pos(0) + particle_t.get_vel(0)*t_line;
@@ -791,7 +857,6 @@ void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t)
             double z_intersect = particle_t.get_pos(2) + particle_t.get_vel(2)*t_line;
 
             dist_to_screen_ii[ii] = sqrt((x_intersect - particle_t.get_pos(0))*(x_intersect - particle_t.get_pos(0)) + (y_intersect - particle_t.get_pos(1))*(y_intersect - particle_t.get_pos(1)) + (z_intersect - particle_t.get_pos(2))*(z_intersect - particle_t.get_pos(2)));
-            intersected = true;
         }
         else
         {
