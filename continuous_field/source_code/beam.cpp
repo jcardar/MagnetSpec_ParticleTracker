@@ -43,7 +43,11 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
         switch(energy_init)
         {
             case EnergyInitializationTypes::INITIALIZE_GAUSSIAN_EN:
-                m_particle.set_energy(gaussian_init(m_energy_central, m_energy_spread));
+                //m_particle.set_energy(gaussian_init(m_energy_central, m_energy_spread));
+                /*
+                 * First particle will have central energy)
+                 */
+                m_particle.set_energy(m_energy_central);
                 break;
         }
 
@@ -57,18 +61,34 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
                 double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
                 double pz      = p_mag*cos(angle_z);
                 double py      = p_mag*cos(angle_y);
-                double px      = sqrt(p_mag*p_mag - py*py - pz*pz );
+                double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
                 //double pz      = p_mag*cos(angle_z);
                 m_particle.set_p(px, py, pz);
                 break;
         }
 }
 
+
+
+
+
+
+
+
+
 double Beam::gaussian_init( double initializiation_central_value, double initialization_radius_of_values )
 {
     double value = gaussian()*initialization_radius_of_values + initializiation_central_value;
     return value;
 }
+
+
+
+
+
+
+
+
 
 void Beam::next_particle(int& particle_counter,
                 PositionInitializationTypes pos_init, 
@@ -104,10 +124,10 @@ void Beam::next_particle(int& particle_counter,
                 double angle_z = gaussian_init(m_angle_central.getZ(), m_angle_spread.getZ());
                 
                 double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                double px      = p_mag*cos(angle_x);
+                //double px      = p_mag*cos(angle_x);
                 double py      = p_mag*cos(angle_y);
                 double pz      = p_mag*cos(angle_z);
-                //std::cerr << "particle momentums are " << px << ", " << py << ", " << pz << std::endl;
+                double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
                 m_particle.set_p(px, py, pz);
                 break;
         }

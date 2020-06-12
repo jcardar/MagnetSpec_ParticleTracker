@@ -17,14 +17,16 @@
 #include "beam.h"
 #include "screen.h"
 #include "magnet.h"
+#include <iomanip>
 
 
 
 int main(int argc, char *argv[])
 {
     double time     {0.0};                            //Define a variable time in which will be stepped over
-    double del_time {30};                              //Define a time step
-    bool time_step_test = true;
+    double del_time {0.05};                              //Define a time step
+    //Hard-coded:
+    bool time_step_test = false;
 
     // std::ifstream bmap( "bmap_in.txt" );   
     std::ofstream outfile_readme  ("../data/README.txt");
@@ -44,32 +46,40 @@ int main(int argc, char *argv[])
 
 ///////////////////
     //Define Particle Beam:
-    int num_par          {10};
-    double charge        {-1.0};
-    double mass          {1.0};
-    double energy0       {10.0};              //Normalized Energy = gamma
+    int num_par          {20};
+    double charge        {-1.0};    //hard-coded, no input from user
+    double mass          {1.0};    //hard-coded, no input from user
+    double energy0       {2000.0};   //Normalized Energy = gamma
     double energy_spread {0.0};
-    ThreeVec initial_position(0.0, 0.0, 0.0);
-    ThreeVec initial_position_spread(0.0, 0.0, 0.0);
+    //double int_y = sqrt(-(1.0 - energy0*energy0)/(energy0*energy0))*energy0;
+    //std::cout << std::setprecision(15);
+    //del_time = 2*M_PI*energy0*100;
+    //std::cout << int_y << std::endl;
+    ThreeVec initial_position(-134.819, 0.0, 0.0);
+    ThreeVec initial_position_spread(0.00586169, 0.00586169, 0.00586169);
     ThreeVec initial_angular_direction(0.0, M_PI/2.000000, M_PI/2.000000);
-    ThreeVec initial_angular_spread(0.0, 0.0, 0.0);
+    ThreeVec initial_angular_spread(0.0, 0.1, 0.1);
     Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread);
 
 
 /////////////////////
     //Define Magnets:
-    const int num_magnets{1};
+    const int num_magnets{2};
     Magnet magnet[num_magnets];
         for(int ii{0}; ii<num_magnets; ii++)
         {
+            //magnet[ii]
             switch(ii)
             {
             case 0:
                 magnet[ii].set_B0(0, 0.0); magnet[ii].set_B0(1, 0.0); magnet[ii].set_B0(2, 1.0);
-                magnet[ii].set_pos(0, -1958.0*3.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
-                magnet[ii].set_length(1958.0*50.0);
-                magnet[ii].set_width(1957.95*20.0);
-                magnet[ii].set_height(1957.95*8.0);
+                //magnet[ii].set_pos(0, -1958.0*3000.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
+                magnet[ii].set_pos(0, 0.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
+                //magnet[ii].set_length(1958.0*50000.0);
+                magnet[ii].set_length(175.851);
+                //magnet[ii].set_width(1957.95*20000.0);
+                magnet[ii].set_width(134.819);
+                magnet[ii].set_height(200.6);
                 magnet[ii].set_outfile(outfile_magnets);
                 outfile_uniform_magnet(magnet[ii], ii);
                 break;
@@ -78,10 +88,10 @@ int main(int argc, char *argv[])
                 {
                 magnet[ii].set_B0(0, 0.0); magnet[ii].set_B0(1, 0.0); magnet[ii].set_B0(2, 1.0);
                 double mag_x_pos = 17.597 + magnet[0].get_pos(0) + magnet[0].get_length();
-                magnet[ii].set_pos(0, mag_x_pos); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
+                magnet[ii].set_pos(0, 300); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
                 magnet[ii].set_length(175.972);
-                magnet[ii].set_width(58.657);
-                magnet[ii].set_height(17.597);
+                magnet[ii].set_width(134.819);
+                magnet[ii].set_height(200.6);
                 magnet[ii].set_outfile(outfile_magnets);
                 outfile_uniform_magnet(magnet[ii], ii);
                 break;
@@ -92,7 +102,7 @@ int main(int argc, char *argv[])
 
 ////////////////////
     //Define Screens:
-    const int num_screens = 1;
+    const int num_screens = 2;
     Screen screen[num_screens];
     for(int ii{0}; ii < num_screens; ii++)
     {
@@ -100,28 +110,43 @@ int main(int argc, char *argv[])
         {
             case 0:
             {
-                double srn_x_pos = 58.65 + magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length();
-                double srn_y_pos = -17.597 + magnet[num_magnets-1].get_pos(1);
+                double srn_x_pos = (magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+50;
+                double srn_y_pos = -58.6 + magnet[num_magnets-1].get_pos(1);
                 double srn_z_pos = magnet[num_magnets-1].get_pos(2);
-                screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
-                screen[ii].set_length(55);
-                screen[ii].set_height(17.597);
-                screen[ii].set_angle(90.0);
+                screen[ii].set_pos(0, srn_x_pos+50); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
+                screen[ii].set_length(80);
+                screen[ii].set_height(500);
+                screen[ii].set_angle_x(90.0, 'd');
+                screen[ii].set_angle_z(45.0, 'd');
                 screen[ii].set_outfile(outfile_screens);
                 outfile_screen_single (screen[ii], ii);
                 break;
             }   //<---END OF CASE 0//
             case 1:
+                double srn_x_pos = (magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+1000;
+                double srn_y_pos = -400.0;
+                double srn_z_pos = 0.0;
+                screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
+                screen[ii].set_length(500);
+                screen[ii].set_height(500);
+                screen[ii].set_angle_x(90.0,'d');
+                screen[ii].set_angle_z(0.0);
                 screen[ii].set_outfile(outfile_screens);
                 outfile_screen_single (screen[ii], ii);
                 break;
         }   //<---END OF SWITCH STATEMENT//
     }   //<---END OF SCREEN 'FOR' LOOP//
-
-
-
-
-
+    if(num_screens <= 0)
+    {
+        Screen null_screen;
+        null_screen.set_pos(0.0, 0.0, 0.0);
+        null_screen.set_length(0.0);
+        null_screen.set_height(0.0);
+        null_screen.set_angle_x(0.0);
+        null_screen.set_angle_z(0.0);
+        null_screen.set_outfile(outfile_screens);
+        outfile_screen_single(null_screen, 0);
+    }
 
 
 
@@ -145,68 +170,12 @@ int main(int argc, char *argv[])
 
         outfile_del_t << del_time << '\n';
 
-        outfile_part_writeAndComma(electron); 
+        outfile_part_write(electron);
 
-        double particle_time_limit = 8*M_PI*10;
-        step_through_magnet_mag_boris(electron,magnet[magnet_counter],time,del_time,particle_time_limit);
-        
-        while(++magnet_counter < num_magnets)
-        {               
-                //Loop through magnets after first magnet
-                //First check that the magnet is heading toward the next magnet in the x-direction.
-                //Determine if next magnet is in front of or behind the particle's position in the x-dimension:
-            double dist_x_to_mag = magnet[(magnet_counter)].get_pos(0) - electron.get_pos(0);
-                //Then check if particle is heading in that direection
-            if( ( (dist_x_to_mag > 0) && ((electron.get_vel(0)) > 0) ) || ( (dist_x_to_mag < 0) && ((electron.get_vel(0)) < 0) ) || ( dist_x_to_mag == 0) )
-            {           //First check that electron is moving toward next magnet
-                double time_btwn_mags = 0.0;
-                if(dist_x_to_mag !=0)
-                    { time_btwn_mags        = (((magnet[magnet_counter].get_pos(0))) - (electron.get_pos(0)))/(electron.get_vel(0)); }
-                double y_at_time      = 0.0;
-                y_at_time             = (electron.get_pos(1)) + ((electron.get_vel(1))*(time_btwn_mags));
-                double z_at_time      = 0.0;
-                z_at_time             = (electron.get_pos(2)) + ((electron.get_vel(2))*(time_btwn_mags));
-                time                  = time + time_btwn_mags;
+        double particle_time_limit = (2*M_PI*energy0)*10.0;
 
-                bool check_y_bound, check_z_bound;
-                check_y_bound = ((y_at_time >= (magnet[magnet_counter].get_pos(1) - (magnet[magnet_counter].get_width()/2.0) ) ) && (y_at_time <= (magnet[magnet_counter].get_pos(1) + (magnet[magnet_counter].get_width()/2.0) )));
-                check_z_bound = ((z_at_time >= (magnet[magnet_counter].get_pos(2) - (magnet[magnet_counter].get_height()/2.0) ) ) && (z_at_time <= (magnet[magnet_counter].get_pos(2) + (magnet[magnet_counter].get_height()/2.0) )));
-                if( check_y_bound && check_z_bound )
-                {       //Then check that particle ends up in magnet region
-
-                    electron.set_pos(0 ,(magnet[magnet_counter].get_pos(0))); 
-                    electron.set_pos(1, y_at_time);
-                    electron.set_pos(2, z_at_time);
-                    
-                    outfile_part_comma(electron);
-                    step_through_magnet_mag_boris(electron, magnet[magnet_counter], time, del_time, particle_time_limit);
-                    
-                }
-            }
-        }   //<- end of magnetic while loop
-
-        do
-        {
-            double x_intersect = (electron.get_pos(1) - (electron.get_pos(0)*electron.get_vel(1)/electron.get_vel(0)) - (screen[screen_counter].get_pos(1)) + (screen[screen_counter].get_pos(0)*tan(screen[screen_counter].get_angle('r'))))/(tan(screen[screen_counter].get_angle('r')) - (electron.get_vel(1)/electron.get_vel(0)));
-            double y_intersect  = x_intersect*electron.get_vel(1)/electron.get_vel(0) + (electron.get_pos(1) - (electron.get_pos(0)*electron.get_vel(1)/electron.get_vel(0)));
-            bool check1, check2;
-            check1 = (screen[screen_counter].get_angle()==90 && y_intersect > screen[screen_counter].get_pos(1) && y_intersect < screen[screen_counter].get_pos(1)+screen[screen_counter].get_length() );
-            check2 = ((x_intersect > screen[screen_counter].get_pos(0)) && (x_intersect < (screen[screen_counter].get_pos(0) + (screen[screen_counter].get_length()*cos(screen[screen_counter].get_angle('r'))))));
-            if(check1 || check2)
-            {
-                
-                double time_to_scrn = (x_intersect - electron.get_pos(0)) / (electron.get_vel(0));
-                double z_intersect  = (electron.get_pos(2)) + ((electron.get_vel(2))*(time_to_scrn));
-                time                = time + time_to_scrn;
-
-                electron.set_pos(0, x_intersect);
-                electron.set_pos(1, y_intersect);
-                electron.set_pos(2, z_intersect);
-                outfile_part_comma(electron);
-                outfile_part_write(electron);
-            }
-        } while (++screen_counter < num_screens);
-        
+        move_through_magnets(magnet, num_magnets, electron, time, del_time, particle_time_limit);
+        move_to_screens(screen, num_screens, electron);
 
         outfile_part_newline(electron);
         if(time_step_test)
