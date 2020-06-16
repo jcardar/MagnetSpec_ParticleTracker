@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
 ////////////////////
     //Define Screens:
-    const int num_screens = 2;
+    const int num_screens = 1;
     Screen screen[num_screens];
     for(int ii{0}; ii < num_screens; ii++)
     {
@@ -110,14 +110,15 @@ int main(int argc, char *argv[])
         {
             case 0:
             {
-                double srn_x_pos = (magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+50;
-                double srn_y_pos = -58.6 + magnet[num_magnets-1].get_pos(1);
+                double srn_x_pos = round((magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+50);
+                double srn_y_pos = -58 + magnet[num_magnets-1].get_pos(1);
                 double srn_z_pos = magnet[num_magnets-1].get_pos(2);
                 screen[ii].set_pos(0, srn_x_pos+50); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
-                screen[ii].set_length(80);
-                screen[ii].set_height(500);
-                screen[ii].set_angle_x(90.0, 'd');
-                screen[ii].set_angle_z(45.0, 'd');
+                screen[ii].set_length(400);
+                screen[ii].set_height(200);
+                screen[ii].set_angle_about_z(45.0, 'd');
+                screen[ii].set_angle_about_y(45.0, 'd');
+                screen[ii].set_angle_about_x(0.0, 'd');
                 screen[ii].set_outfile(outfile_screens);
                 outfile_screen_single (screen[ii], ii);
                 break;
@@ -129,8 +130,9 @@ int main(int argc, char *argv[])
                 screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
                 screen[ii].set_length(500);
                 screen[ii].set_height(500);
-                screen[ii].set_angle_x(90.0,'d');
-                screen[ii].set_angle_z(0.0);
+                screen[ii].set_angle_about_z(90.0,'d');
+                screen[ii].set_angle_about_y(0.0);
+                screen[ii].set_angle_about_x(0.0);
                 screen[ii].set_outfile(outfile_screens);
                 outfile_screen_single (screen[ii], ii);
                 break;
@@ -142,8 +144,9 @@ int main(int argc, char *argv[])
         null_screen.set_pos(0.0, 0.0, 0.0);
         null_screen.set_length(0.0);
         null_screen.set_height(0.0);
-        null_screen.set_angle_x(0.0);
-        null_screen.set_angle_z(0.0);
+        null_screen.set_angle_about_x(0.0);
+        null_screen.set_angle_about_y(0.0);
+        null_screen.set_angle_about_z(0.0);
         null_screen.set_outfile(outfile_screens);
         outfile_screen_single(null_screen, 0);
     }
