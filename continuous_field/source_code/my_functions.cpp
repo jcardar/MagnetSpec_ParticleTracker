@@ -139,7 +139,7 @@ void outfile_uniform_magnet(Magnet& magnet, int counter)
 {
     if(counter==0)
     {
-        *(magnet.m_out_magnet) << "Num ," << "Bz(norm) ," << "mag_posx ," << "mag_posy ," << "mag_posz ," << "length ," << "width ," << "height" << "\n";
+        *(magnet.m_out_magnet) << "Num ," << "Bz(norm)," << "mag_posx," << "mag_posy," << "mag_posz," << "length," << "width," << "height" << "\n";
     }
     *(magnet.m_out_magnet) << (++counter) << "," << magnet.get_B0(2) << "," 
                             << magnet.get_pos(0) << "," << magnet.get_pos(1) << "," << magnet.get_pos(2) << ","
@@ -774,7 +774,7 @@ void min_max_x(double corner1_x, double corner2_x, double corner3_x, double corn
 		max = corner3_x;
 	} /* end if */
     if (corner4_x > max) { /* if z is larger than max, assign z to max */
-		max = corner3_x;
+		max = corner4_x;
 	} /* end if */
 
     double min = corner1_x; /* assume x is the smallest */
@@ -785,7 +785,7 @@ void min_max_x(double corner1_x, double corner2_x, double corner3_x, double corn
 		min = corner3_x;
 	} /* end if */
     if (corner4_x < min) { /* if z is larger than max, assign z to max */
-		min = corner3_x;
+		min = corner4_x;
 	} /* end if */
 
     min_max_array[0] = min;
@@ -811,30 +811,47 @@ bool check_if_intersect_screen(Screen screen_t, Particle particle_t)
     ThreeVec corner2(screen_t.get_pos(0) - (screen_t.get_height()*0.5)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma)), screen_t.get_pos(1) - (screen_t.get_height()*0.5)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)), screen_t.get_pos(2) - (screen_t.get_height()*0.5)*(cos(beta)*cos(gamma)));
     ThreeVec corner3(screen_t.get_pos(0) + screen_t.get_length()*cos(alpha)*cos(beta) + (screen_t.get_height()*0.5)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma)), screen_t.get_pos(1) + screen_t.get_length()*sin(alpha)*cos(beta) + (screen_t.get_height()*0.5)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)), screen_t.get_pos(2) - screen_t.get_length()*sin(beta) + (screen_t.get_height()*0.5)*(cos(beta)*cos(gamma)));
     ThreeVec corner4(screen_t.get_pos(0) + screen_t.get_length()*cos(alpha)*cos(beta) - (screen_t.get_height()*0.5)*(cos(alpha)*sin(beta)*cos(gamma) + sin(alpha)*sin(gamma)), screen_t.get_pos(1) + screen_t.get_length()*sin(alpha)*cos(beta) - (screen_t.get_height()*0.5)*(sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)), screen_t.get_pos(2) - screen_t.get_length()*sin(beta) - (screen_t.get_height()*0.5)*(cos(beta)*cos(gamma)));
-    double x_intersect = particle_t.get_pos(0) + particle_t.get_vel(0)*t_line;
+    ThreeVec intersection(particle_t.get_pos(0) + particle_t.get_vel(0)*t_line, particle_t.get_pos(1) + particle_t.get_vel(1)*t_line, particle_t.get_pos(2) + particle_t.get_vel(2)*t_line);
     
-    double x_min_max[2];
-    min_max_x(corner1.getX(), corner2.getX(), corner3.getX(), corner4.getX(), x_min_max);
+    //check areas of 4 triangles made by conecting corners to intersect point; if area equals area of rectangle, then its bounded and intersects
+    //method from https://math.stackexchange.com/questions/190111/how-to-check-if-a-point-is-inside-a-rectangle and https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+    double area0 = screen_t.get_length()*screen_t.get_height();
+    double tmin, dist_to_intersect;
+    ThreeVec closest_point(0.0,0.0,0.0);
     
-    double check_x     = (x_intersect >= x_min_max[0]) && (x_intersect <= x_min_max[1]);
-    if(check_x)
+    tmin = -(((corner1 - intersection) * (corner2 - corner1))/abs((corner2 - corner1)*(corner2 - corner1)));
+    closest_point.setX(corner1.getX() + (corner2.getX() - corner1.getX())*tmin);
+    closest_point.setY(corner1.getY() + (corner2.getY() - corner1.getY())*tmin);
+    closest_point.setZ(corner1.getZ() + (corner2.getZ() - corner1.getZ())*tmin);
+    dist_to_intersect = sqrt(((closest_point.getX()-intersection.getX())*(closest_point.getX()-intersection.getX())) + ((closest_point.getY()-intersection.getY())*(closest_point.getY()-intersection.getY())) + ((closest_point.getZ()-intersection.getZ())*(closest_point.getZ()-intersection.getZ())));
+    double area12 = 0.5*screen_t.get_height()*dist_to_intersect;
+
+    tmin = -(((corner3 - intersection) * (corner1 - corner3))/abs((corner1 - corner3)*(corner1 - corner3)));
+    closest_point.setX(corner3.getX() + (corner1.getX() - corner3.getX())*tmin);
+    closest_point.setY(corner3.getY() + (corner1.getY() - corner3.getY())*tmin);
+    closest_point.setZ(corner3.getZ() + (corner1.getZ() - corner3.getZ())*tmin);
+    dist_to_intersect = sqrt(((closest_point.getX()-intersection.getX())*(closest_point.getX()-intersection.getX())) + ((closest_point.getY()-intersection.getY())*(closest_point.getY()-intersection.getY())) + ((closest_point.getZ()-intersection.getZ())*(closest_point.getZ()-intersection.getZ())));
+    double area13 = 0.5*screen_t.get_length()*dist_to_intersect;
+
+    tmin = -(((corner4 - intersection) * (corner2 - corner4))/abs((corner2 - corner4)*(corner2 - corner4)));
+    closest_point.setX(corner4.getX() + (corner2.getX() - corner4.getX())*tmin);
+    closest_point.setY(corner4.getY() + (corner2.getY() - corner4.getY())*tmin);
+    closest_point.setZ(corner4.getZ() + (corner2.getZ() - corner4.getZ())*tmin);
+    dist_to_intersect = sqrt(((closest_point.getX()-intersection.getX())*(closest_point.getX()-intersection.getX())) + ((closest_point.getY()-intersection.getY())*(closest_point.getY()-intersection.getY())) + ((closest_point.getZ()-intersection.getZ())*(closest_point.getZ()-intersection.getZ())));
+    double area24 = 0.5*screen_t.get_length()*dist_to_intersect;
+
+    tmin = -(((corner3 - intersection) * (corner4 - corner3))/abs((corner4 - corner3)*(corner4 - corner3)));
+    closest_point.setX(corner3.getX() + (corner4.getX() - corner3.getX())*tmin);
+    closest_point.setY(corner3.getY() + (corner4.getY() - corner3.getY())*tmin);
+    closest_point.setZ(corner3.getZ() + (corner4.getZ() - corner3.getZ())*tmin);
+    dist_to_intersect = sqrt(((closest_point.getX()-intersection.getX())*(closest_point.getX()-intersection.getX())) + ((closest_point.getY()-intersection.getY())*(closest_point.getY()-intersection.getY())) + ((closest_point.getZ()-intersection.getZ())*(closest_point.getZ()-intersection.getZ())));
+    double area34 = 0.5*screen_t.get_height()*dist_to_intersect;
+
+    if(area0 == (area12 + area13 + area24 + area34))
     {
-        double y_intersect = particle_t.get_pos(1) + particle_t.get_vel(1)*t_line;
-        double y_min_max[2];
-        min_max_x(corner1.getY(), corner2.getY(), corner3.getY(), corner4.getY(), y_min_max);
-        bool check_y       = (y_intersect >= y_min_max[0]) && (y_intersect <= y_min_max[1]);
-        if(check_y)
-        {
-            double z_intersect = particle_t.get_pos(2) + particle_t.get_vel(2)*t_line;
-            double z_min_max[2];
-            min_max_x(corner1.getZ(), corner2.getZ(), corner3.getZ(), corner4.getZ(), z_min_max);
-            bool check_z       = (z_intersect >=  z_min_max[0]) && (z_intersect <= z_min_max[1]);
-            if(check_z)
-            {
-                intersect = true;
-            }
-        }
+        intersect = true;
     }
+
     return intersect;
 }
 
