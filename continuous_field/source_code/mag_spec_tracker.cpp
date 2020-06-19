@@ -42,104 +42,77 @@ int main(int argc, char *argv[])
 	std::ofstream outfile_screens ("../data/SCREENS.csv");
     std::ofstream outfile_del_t   ("../data/DEL_T.csv");
 	std::ofstream outfile_dump;
-    //std::ifstream infile;
+    std::ifstream infile          ("../analysis/input_deck.txt");
 
 ///////////////////
+    //Read input deck values:
+    std::vector<std::string> desired_units;
+    readUnits(infile, desired_units);
+
+    int num_magnets;
+    std::vector<std::vector<std::vector<double>>> magnet_info;
+    readMagnet(infile, num_magnets, magnet_info);
+
+    int num_par = readNumOf(inputdeck);
+    std::vector<std::vector<double>> beam_info;
+    readBeam(infile, beam_info);
+
+    std::vector<std::vector<double>> beam_spread_info;
+    readSpread(infile, beam_spread_info);
+
+    int num_screens;
+    std::vector<std::vector<std::vector<double>>> screen_info;
+    readScreen(infile, number_of_screens, screen_info);
+    
+///////////////////
     //Define Particle Beam:
-    int num_par          {20};
-    double charge        {-1.0};    //hard-coded, no input from user
-    double mass          {1.0};    //hard-coded, no input from user
-    double energy0       {2000.0};   //Normalized Energy = gamma
-    double energy_spread {0.0};
+    //int num_par          {20};
+    double charge     {-1.0};    //hard-coded, no input from user
+    double mass       {1.0};    //hard-coded, no input from user
+    energy0 =         beam_info[1][0];   //Normalized Energy = gamma
+    energy_spread =   beam_spread_info[1][0];
     //double int_y = sqrt(-(1.0 - energy0*energy0)/(energy0*energy0))*energy0;
     //std::cout << std::setprecision(15);
     //del_time = 2*M_PI*energy0*100;
     //std::cout << int_y << std::endl;
-    ThreeVec initial_position(-134.819, 0.0, 0.0);
-    ThreeVec initial_position_spread(0.00586169, 0.00586169, 0.00586169);
-    ThreeVec initial_angular_direction(0.0, M_PI/2.000000, M_PI/2.000000);
-    ThreeVec initial_angular_spread(0.0, 0.1, 0.1);
+    ThreeVec initial_position(beam_info[0][0], beam_info[0][1], beam_info[0][2]);
+    ThreeVec initial_position_spread(beam_spread_info[0][0], beam_spread_info[0][1], beam_spread_info[0][2]);
+    ThreeVec initial_angular_direction(beam_info[2][0], beam_info[2][1], beam_info[2][2]);
+    ThreeVec initial_angular_spread(beam_spread_info[2][0], beam_spread_info[2][1], beam_spread_info[2][2]);
+    
     Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread);
 
 
 /////////////////////
     //Define Magnets:
-    const int num_magnets{2};
+    //const int num_magnets{2};
     Magnet magnet[num_magnets];
-        for(int ii{0}; ii<num_magnets; ii++)
-        {
-            //magnet[ii]
-            switch(ii)
-            {
-            case 0:
-                magnet[ii].set_B0(0, 0.0); magnet[ii].set_B0(1, 0.0); magnet[ii].set_B0(2, 1.0);
-                //magnet[ii].set_pos(0, -1958.0*3000.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
-                magnet[ii].set_pos(0, 0.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
-                //magnet[ii].set_length(1958.0*50000.0);
-                magnet[ii].set_length(175.851);
-                //magnet[ii].set_width(1957.95*20000.0);
-                magnet[ii].set_width(134.819);
-                magnet[ii].set_height(200.6);
-                magnet[ii].set_outfile(outfile_magnets);
-                outfile_uniform_magnet(magnet[ii], ii);
-                break;
-            
-            case 1:
-                {
-                magnet[ii].set_B0(0, 0.0); magnet[ii].set_B0(1, 0.0); magnet[ii].set_B0(2, 1.0);
-                double mag_x_pos = 17.597 + magnet[0].get_pos(0) + magnet[0].get_length();
-                magnet[ii].set_pos(0, 300); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
-                magnet[ii].set_length(175.972);
-                magnet[ii].set_width(134.819);
-                magnet[ii].set_height(200.6);
-                magnet[ii].set_outfile(outfile_magnets);
-                outfile_uniform_magnet(magnet[ii], ii);
-                break;
-                }   //<---END OF CASE 1//
-            }   //<---END OF SWITCH STATEMENT//
-        }   //<---END OF MAGNET 'FOR' LOOP//
+    for(int ii=0; ii<num_magnets; ++ii) {
+        
+        magnet[ii].set_B0(0, magnet_info[2][ii][0]);
+        magnet[ii].set_B0(1, magnet_info[2][ii][1]);
+        magnet[ii].set_B0(2, magnet_info[2][ii][2]);
+        //magnet[ii].set_pos(0, -1958.0*3000.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
+        magnet[ii].set_pos(0, magnet_info[1][ii][0]); 
+        magnet[ii].set_pos(1, magnet_info[1][ii][1]); 
+        magnet[ii].set_pos(2, magnet_info[1][ii][2]);
+        //magnet[ii].set_length(1958.0*50000.0);
+        magnet[ii].set_length(magnet_info[0][ii][1]);
+        //magnet[ii].set_width(1957.95*20000.0);
+        magnet[ii].set_width(magnet_info[0][ii][0]);
+        magnet[ii].set_height(magnet_info[0][ii][2]);
+        magnet[ii].set_outfile(outfile_magnets);
+        outfile_uniform_magnet(magnet[ii], ii);
+    }   //<---END OF MAGNET 'FOR' LOOP//
 
 
 ////////////////////
     //Define Screens:
-    const int num_screens = 1;
+    //const int num_screens = 1;
     Screen screen[num_screens];
-    for(int ii{0}; ii < num_screens; ii++)
-    {
-        switch(ii)
-        {
-            case 0:
-            {
-                double srn_x_pos = round((magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+50);
-                double srn_y_pos = -58 + magnet[num_magnets-1].get_pos(1);
-                double srn_z_pos = magnet[num_magnets-1].get_pos(2);
-                screen[ii].set_pos(0, srn_x_pos+50); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
-                screen[ii].set_length(400);
-                screen[ii].set_height(200);
-                screen[ii].set_angle_about_z(45.0, 'd');
-                screen[ii].set_angle_about_y(45.0, 'd');
-                screen[ii].set_angle_about_x(0.0, 'd');
-                screen[ii].set_outfile(outfile_screens);
-                outfile_screen_single (screen[ii], ii);
-                break;
-            }   //<---END OF CASE 0//
-            case 1:
-                double srn_x_pos = (magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+1000;
-                double srn_y_pos = -400.0;
-                double srn_z_pos = 0.0;
-                screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
-                screen[ii].set_length(500);
-                screen[ii].set_height(500);
-                screen[ii].set_angle_about_z(90.0,'d');
-                screen[ii].set_angle_about_y(0.0);
-                screen[ii].set_angle_about_x(0.0);
-                screen[ii].set_outfile(outfile_screens);
-                outfile_screen_single (screen[ii], ii);
-                break;
-        }   //<---END OF SWITCH STATEMENT//
-    }   //<---END OF SCREEN 'FOR' LOOP//
-    if(num_screens <= 0)
-    {
+    
+    if(num_screens <= 0) {
+        
         Screen null_screen;
         null_screen.set_pos(0.0, 0.0, 0.0);
         null_screen.set_length(0.0);
@@ -150,9 +123,22 @@ int main(int argc, char *argv[])
         null_screen.set_outfile(outfile_screens);
         outfile_screen_single(null_screen, 0);
     }
+    else {
+        for(int ii=0; ii<num_screens; ++ii) {
 
-
-
+            screen[ii].set_pos(0, screen_info[1][ii][0]);
+            screen[ii].set_pos(1, screen_info[1][ii][1]);
+            screen[ii].set_pos(2, screen_info[1][ii][2]);
+            screen[ii].set_length(screen_info[0][ii][0]);
+            screen[ii].set_height(screen_info[0][ii][1]);
+            screen[ii].set_angle_about_z(screen_info[2][ii][0], 'r');
+            screen[ii].set_angle_about_y(screen_info[2][ii][1], 'r');
+            screen[ii].set_angle_about_x(screen_info[2][ii][2], 'r');
+            screen[ii].set_outfile(outfile_screens);
+            outfile_screen_single (screen[ii], ii);
+        }   //<---END OF SCREEN 'FOR' LOOP//
+    }
+    
 
 
     //MAIN LOOP FOR STEPPING PARTICLES THROUGH SYSTEM:
@@ -198,7 +184,7 @@ int main(int argc, char *argv[])
     outfile_energy. close();
     //outfile_array_size. close();
     outfile_del_t.  close();
-    //infile.close();
+    infile.close();
 
     return 0;
 }

@@ -196,7 +196,7 @@ def dynamicFloatValue_Beam_Direction():
     listOfWidgets.extend([widget1, widget2, widget3])
     return listOfWidgets
 
-# Define Beam spread
+# Define Beam Spread attributes
 
 def dynamicFloatValue_Beam_Position_Spread():
     listOfWidgets = []
@@ -221,11 +221,22 @@ beam_energy_spread = widgets.BoundedFloatText(
     description='nrg spread'
 )
 
-beam_divergence_spread = widgets.BoundedFloatText(
-    value=0,
-    min=0,
-    description='div spread'
-)
+def dynamicFloatValue_Beam_Divergence_Spread():
+    listOfWidgets = []
+    widget1 = widgets.FloatText(
+        value=0,
+        description='x divergence',
+    )
+    widget2 = widgets.FloatText(
+        value=0,
+        description='y divergence',
+    )
+    widget3 = widgets.FloatText(
+        value=0,
+        description='z divergence',
+    )
+    listOfWidgets.extend([widget1, widget2, widget3])
+    return listOfWidgets
 
 # Define Screen attriutes
 
@@ -312,8 +323,9 @@ def averageB0(num_of_magnets, field_comps):
     
     return aveB_0
 
-def convertAngles(units, beam_direction, screen_angles):
+def convertAngles(units, beam_direction, divergence_spread, screen_angles):
     converted_beam_direction = []
+    converted_divergence_spread = []
     converted_screen_angles = []
 
     angle_multiplier = 1 # Radians
@@ -324,10 +336,12 @@ def convertAngles(units, beam_direction, screen_angles):
     
     for i in range(len(beam_direction)):
         converted_beam_direction.append( beam_direction[i].value * angle_multiplier )
+    for i in range(3):
+        converted_divergence_spread.append( divergence_spread[i].value * angle_multiplier )
     for i in range(len(screen_angles)):
         converted_screen_angles.append( screen_angles[i].value * angle_multiplier )
         
-    return converted_beam_direction, converted_screen_angles
+    return converted_beam_direction, converted_divergence_spread, converted_screen_angles
 
 def normalizeValues(units, num_mag, mag_dim, mag_pos, fld_comps, beam_pos, beam_energy, scrn_dim, scrn_pos):
     norm_mag_dim = []
@@ -383,9 +397,9 @@ def showDiagram(max_x, min_x, max_y, min_y, max_z, min_z, num_mag, mag_dim, mag_
                 scrn_angl):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.set_xbound(lower=min_x, upper_max_x)
-    ax.set_ybound(lower=min_y, upper_max_y)
-    ax.set_zbound(lower=min_z, upper_max_z)
+    #ax.set_xbound(lower=min_x, upper_max_x)
+    #ax.set_ybound(lower=min_y, upper_max_y)
+    #ax.set_zbound(lower=min_z, upper_max_z)
     
     # plot magnet(s)
     i = 0
@@ -438,7 +452,7 @@ def createOutput(num_mag, norm_mag_dim, norm_mag_pos, norm_fld_comps, num_partic
 
     spread_pos = createList(pos_sprd)
     spread_nrg = [f'{energy_sprd}', ' ']
-    spread_div = [f'{div_sprd}', ' ']
+    spread_div = createList(div_sprd)
     spread_info = spread_pos + spread_nrg + spread_div
 
     screen_num = [f'{num_scrn}', ' ']
@@ -450,7 +464,7 @@ def createOutput(num_mag, norm_mag_dim, norm_mag_pos, norm_fld_comps, num_partic
     return mag_info, beam_info, spread_info, screen_info
 
 def writeOutput(units, num_mag, mag_dim, mag_pos, fld_comps, num_particles, beam_pos, beam_energy, converted_beam_dir, pos_sprd,
-                energy_sprd, div_spread, num_scrn, scrn_dime, scrn_pos, converted_scrn_angl):
+                energy_sprd, converted_div_spread, num_scrn, scrn_dim, scrn_pos, converted_scrn_angl):
     
     outfile = open('input_deck.txt', 'w')
     
@@ -460,7 +474,7 @@ def writeOutput(units, num_mag, mag_dim, mag_pos, fld_comps, num_particles, beam
     
     mag_info, beam_info, spread_info, screen_info = createOutput(num_mag, norm_mag_dim, norm_mag_pos, norm_fld_comps, num_particles,
                                                                  norm_beam_pos, norm_beam_energy, converted_beam_dir, num_scrns, pos_sprd,
-                                                                 energy_sprd, div_sprd, num_scrn, norm_scrn_dim, norm_scrn_pos,
+                                                                 energy_sprd, converted_div_sprd, num_scrn, norm_scrn_dim, norm_scrn_pos,
                                                                  converted_scrn_angl)
     outfile.writelines(units)
     outfile.write('\n')
