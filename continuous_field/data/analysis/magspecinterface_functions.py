@@ -1,6 +1,5 @@
 import ipywidgets as widgets
 import math
-import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -72,6 +71,8 @@ global_min_z = widgets.FloatText(
     disabled=False
 )
 
+global_bounds = [global_max_x, global_min_x, global_max_y, global_min_y, global_max_z, global_min_z]
+
 # Define Magnet attributes
 
 number_of_magnets = widgets.BoundedIntText(
@@ -105,25 +106,32 @@ def dynamicFloatValue_Magnet_Dimensions(num_of_magnets):
         listOfWidgets.append(widget3)
     return listOfWidgets
 
-def dynamicFloatValue_Magnet_Position(num_of_magnets):
+def dynamicFloatValue_Magnet_Position(num_of_magnets, magnet_dimensions, global_bounds):
     listOfWidgets = []
+    j = 0
     for i in range(num_of_magnets):
         widget1 = widgets.BoundedFloatText(
             value=0,
-            min=0,
+            max=(global_bounds[0].value - magnet_dimensions[j+1].value),
+            min=(global_bounds[1].value ),
             description=f'x pos {i+1}',
         )
-        widget2 = widgets.FloatText(
+        widget2 = widgets.BoundedFloatText(
             value=0,
+            max=(global_bounds[2].value - 0.5*magnet_dimensions[j].value),
+            min=(global_bounds[3].value + 0.5*magnet_dimensions[j].value),
             description=f'y pos {i+1}',
         )
-        widget3 = widgets.FloatText(
+        widget3 = widgets.BoundedFloatText(
             value=0,
+            max=(global_bounds[4].value - 0.5*magnet_dimensions[j+2].value),
+            min=(global_bounds[5].value + 0.5*magnet_dimensions[j+2].value),
             description=f'z pos {i+1}',
         )
         listOfWidgets.append(widget1)
         listOfWidgets.append(widget2)
         listOfWidgets.append(widget3)
+        j += 3
     return listOfWidgets
 
 def dynamicFloatValue_Magnetic_Field_Comps(num_of_magnets):
@@ -156,18 +164,24 @@ number_of_particles = widgets.BoundedIntText(
     disabled=False
 )
 
-def dynamicFloatValue_Beam_Start_Position():
+def dynamicFloatValue_Beam_Start_Position(global_bounds):
     listOfWidgets = []
-    widget1 = widgets.FloatText(
+    widget1 = widgets.BoundedFloatText(
         value=0,
+        max=global_bounds[0].value,
+        min=global_bounds[1].value,
         description='x start pos',
     )
-    widget2 = widgets.FloatText(
+    widget2 = widgets.BoundedFloatText(
         value=0,
+        max=global_bounds[2].value,
+        min=global_bounds[3].value,
         description='y start pos',
     )
-    widget3 = widgets.FloatText(
+    widget3 = widgets.BoundedFloatText(
         value=0,
+        max=global_bounds[4].value,
+        min=global_bounds[5].value,
         description='z start pos',
     )
     listOfWidgets.extend([widget1, widget2, widget3])
@@ -242,7 +256,7 @@ def dynamicFloatValue_Beam_Divergence_Spread():
 
 number_of_screens = widgets.BoundedIntText(
     value=2,
-    min=1,
+    min=0,
     step=1,
     description='# of Screens',
     disabled=False
@@ -265,19 +279,25 @@ def dynamicFloatValue_Screen_Dimensions(num_of_screens):
         listOfWidgets.append(widget2)
     return listOfWidgets
 
-def dynamicFloatValue_Screen_Position(num_of_screens):
+def dynamicFloatValue_Screen_Position(num_of_screens, global_bounds):
     listOfWidgets = []
     for i in range(num_of_screens):
-        widget1 = widgets.FloatText(
+        widget1 = widgets.BoundedFloatText(
             value=0,
+            max=global_bounds[0].value,
+            min=global_bounds[1].value,
             description=f'x pos {i+1}',
         )
-        widget2 = widgets.FloatText(
+        widget2 = widgets.BoundedFloatText(
             value=0,
+            max=global_bounds[2].value,
+            min=global_bounds[3].value,
             description=f'y pos {i+1}',
         )
-        widget3 = widgets.FloatText(
+        widget3 = widgets.BoundedFloatText(
             value=0,
+            max=global_bounds[4].value,
+            min=global_bounds[5].value,
             description=f'z pos {i+1}',
         )
         listOfWidgets.append(widget1)
@@ -334,7 +354,7 @@ def convertAngles(units, beam_direction, divergence_spread, screen_angles):
     elif units[4] == 'Degrees':
         angle_multiplier = math.pi/180
     
-    for i in range(len(beam_direction)):
+    for i in range(3):
         converted_beam_direction.append( beam_direction[i].value * angle_multiplier )
     for i in range(3):
         converted_divergence_spread.append( divergence_spread[i].value * angle_multiplier )
@@ -393,39 +413,56 @@ def normalizeValues(units, num_mag, mag_dim, mag_pos, fld_comps, beam_pos, beam_
 
 # Functions to aid in plotting
 
-def showDiagram(max_x, min_x, max_y, min_y, max_z, min_z, num_mag, mag_dim, mag_pos, beam_pos, beam_dir, num_scrn, scrn_dim, scrn_pos,
-                scrn_angl):
+def showDiagram(num_mag, mag_dim, mag_pos, beam_pos, beam_dir, num_scrn, scrn_dim, scrn_pos, scrn_angl):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    #ax.set_xbound(lower=min_x, upper_max_x)
-    #ax.set_ybound(lower=min_y, upper_max_y)
-    #ax.set_zbound(lower=min_z, upper_max_z)
+    ax.autoscale_view()
     
     # plot magnet(s)
     i = 0
-    mx1 = [mag_pos[i].value, mag_pos[i].value + mag_dim[i+1].value]
-    mx2 = [mag_pos[i].value, mag_pos[i].value]
-    mx3 = [mag_pos[i].value + mag_dim[i+1].value, mag_pos[i].value + mag_dim[i+1].value]
-    my1 = [mag_pos[i+1].value - (0.5 * mag_dim[i].value), mag_pos[i+1].value + (0.5 * mag_dim[i].value)]
-    my2 = [mag_pos[i+1].value + (0.5 * mag_dim[i].value), mag_pos[i+1].value + (0.5 * mag_dim[i].value)]
-    my3 = [mag_pos[i+1].value - (0.5 * mag_dim[i].value), mag_pos[i+1].value - (0.5 * mag_dim[i].value)]
-    mz1 = [mag_pos[i+2].value - (0.5 * mag_dim[i+2].value), mag_pos[i+2].value + (0.5 * mag_dim[i+2].value)]
-    mz2 = [mag_pos[i+2].value + (0.5 * mag_dim[i+2].value), mag_pos[i+2].value + (0.5 * mag_dim[i+2].value)]
-    mz3 = [mag_pos[i+2].value - (0.5 * mag_dim[i+2].value), mag_pos[i+2].value - (0.5 * mag_dim[i+2].value)]
     for k in range(num_mag):
-        ax.plot(mx2, my1, mz2, c='b', alpha = 0.5)
-        ax.plot(mx2, my1, mz3, c='b', alpha = 0.5)
-        ax.plot(mx2, my2, mz1, c='b', alpha = 0.5)
-        ax.plot(mx2, my3, mz1, c='b', alpha = 0.5)
-        ax.plot(mx3, my1, mz2, c='b', alpha = 0.5)
-        ax.plot(mx3, my1, mz3, c='b', alpha = 0.5)
-        ax.plot(mx3, my2, mz1, c='b', alpha = 0.5)
-        ax.plot(mx3, my3, mz1, c='b', alpha = 0.5)
-        ax.plot(mx1, my2, mz2, c='b', alpha = 0.5)
-        ax.plot(mx1, my3, mz2, c='b', alpha = 0.5)
-        ax.plot(mx1, my2, mz3, c='b', alpha = 0.5)
-        ax.plot(mx1, my3, mz3, c='b', alpha = 0.5)
+        mx1 = [mag_pos[i].value, mag_pos[i].value + mag_dim[i+1].value]
+        mx2 = [mag_pos[i].value, mag_pos[i].value]
+        mx3 = [mag_pos[i].value + mag_dim[i+1].value, mag_pos[i].value + mag_dim[i+1].value]
+        my1 = [mag_pos[i+1].value - (0.5 * mag_dim[i].value), mag_pos[i+1].value + (0.5 * mag_dim[i].value)]
+        my2 = [mag_pos[i+1].value + (0.5 * mag_dim[i].value), mag_pos[i+1].value + (0.5 * mag_dim[i].value)]
+        my3 = [mag_pos[i+1].value - (0.5 * mag_dim[i].value), mag_pos[i+1].value - (0.5 * mag_dim[i].value)]
+        mz1 = [mag_pos[i+2].value - (0.5 * mag_dim[i+2].value), mag_pos[i+2].value + (0.5 * mag_dim[i+2].value)]
+        mz2 = [mag_pos[i+2].value + (0.5 * mag_dim[i+2].value), mag_pos[i+2].value + (0.5 * mag_dim[i+2].value)]
+        mz3 = [mag_pos[i+2].value - (0.5 * mag_dim[i+2].value), mag_pos[i+2].value - (0.5 * mag_dim[i+2].value)]
+    
+        ax.plot(mx2, my1, mz2, c='b', alpha=0.5)
+        ax.plot(mx2, my1, mz3, c='b', alpha=0.5)
+        ax.plot(mx2, my2, mz1, c='b', alpha=0.5)
+        ax.plot(mx2, my3, mz1, c='b', alpha=0.5)
+        ax.plot(mx3, my1, mz2, c='b', alpha=0.5)
+        ax.plot(mx3, my1, mz3, c='b', alpha=0.5)
+        ax.plot(mx3, my2, mz1, c='b', alpha=0.5)
+        ax.plot(mx3, my3, mz1, c='b', alpha=0.5)
+        ax.plot(mx1, my2, mz2, c='b', alpha=0.5)
+        ax.plot(mx1, my3, mz2, c='b', alpha=0.5)
+        ax.plot(mx1, my2, mz3, c='b', alpha=0.5)
+        ax.plot(mx1, my3, mz3, c='b', alpha=0.5)
         i += 3
+    
+    # plot beam
+    length = mag_pos[0].value - beam_pos[0].value
+    startx = beam_pos[0].value
+    starty = beam_pos[1].value
+    startz = beam_pos[2].value
+    endx = length * math.cos(beam_dir[0])   # using direction cosines
+    endy = length * math.cos(beam_dir[1])
+    endz = length * math.cos(beam_dir[2])
+    
+    ax.plot([startx, endx], [starty, endy], [startz, endz], c='c', alpha=0.5)
+    
+    # plot screen(s)
+    j = 0
+    for k in range(num_scrn):
+        yaw = scrn_angl[j].value
+        pitch = scrn_angl[j+1].value
+        roll = scrn_angl[j+2].value
+        
 
 # Functions to aid in output
 
