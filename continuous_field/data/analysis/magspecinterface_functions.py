@@ -193,18 +193,24 @@ beam_energy = widgets.BoundedFloatText(
     description='beam energy'
 )
 
-def dynamicFloatValue_Beam_Direction():
+def dynamicFloatValue_Beam_Direction(angle_unit):
     listOfWidgets = []
+    init_val = math.pi/2000 # mrad
+    if angle_unit == 'Radians':
+        init_val = math.pi/2
+    elif angle_unit == 'Degrees':
+        init_val = 90
+    
     widget1 = widgets.FloatText(
         value=0,
         description='x angle',
     )
     widget2 = widgets.FloatText(
-        value=0,
+        value=init_val,
         description='y angle',
     )
     widget3 = widgets.FloatText(
-        value=0,
+        value=init_val,
         description='z angle',
     )
     listOfWidgets.extend([widget1, widget2, widget3])
@@ -413,9 +419,13 @@ def normalizeValues(units, num_mag, mag_dim, mag_pos, fld_comps, beam_pos, beam_
 
 # Functions to aid in plotting
 
-def showDiagram(num_mag, mag_dim, mag_pos, beam_pos, beam_dir, num_scrn, scrn_dim, scrn_pos, scrn_angl):
+def showDiagram(distance_unit, num_mag, mag_dim, mag_pos, beam_pos, beam_dir, num_scrn, scrn_dim, scrn_pos, scrn_angl):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
+    ax.set_xlabel(f'x position ({distance_unit})')
+    ax.set_ylabel(f'y position ({distance_unit})')
+    ax.set_zlabel(f'z position ({distance_unit})')
+    ax.set_title('User Defined Magnetic Spectrometer')
     ax.autoscale_view()
     
     # plot magnet(s)
@@ -454,14 +464,14 @@ def showDiagram(num_mag, mag_dim, mag_pos, beam_pos, beam_dir, num_scrn, scrn_di
     endy = length * math.cos(beam_dir[1])
     endz = length * math.cos(beam_dir[2])
     
-    ax.plot([startx, endx], [starty, endy], [startz, endz], c='c', alpha=0.5)
+    ax.plot([startx, endx], [starty, endy], [startz, endz], c='c', alpha=1)
     
     # plot screen(s)
     j = 0
     for k in range(num_scrn):
-        yaw = scrn_angl[j].value
-        pitch = scrn_angl[j+1].value
-        roll = scrn_angl[j+2].value
+        yaw = scrn_angl[j]
+        pitch = scrn_angl[j+1]
+        roll = scrn_angl[j+2]
         
 
 # Functions to aid in output
