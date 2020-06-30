@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     std::vector<std::vector<std::vector<double>>> magnet_info;
     readMagnet(infile, num_magnets, magnet_info);
 
-    int num_par = readNumOf(inputdeck);
+    int num_par = readNumOf(infile);
     std::vector<std::vector<double>> beam_info;
     readBeam(infile, beam_info);
 
@@ -62,15 +62,15 @@ int main(int argc, char *argv[])
 
     int num_screens;
     std::vector<std::vector<std::vector<double>>> screen_info;
-    readScreen(infile, number_of_screens, screen_info);
+    readScreen(infile, num_screens, screen_info);
     
 ///////////////////
     //Define Particle Beam:
     //int num_par          {20};
     double charge     {-1.0};    //hard-coded, no input from user
     double mass       {1.0};    //hard-coded, no input from user
-    energy0 =         beam_info[1][0];   //Normalized Energy = gamma
-    energy_spread =   beam_spread_info[1][0];
+    double energy0 =         beam_info[1][0];   //Normalized Energy = gamma
+    double energy_spread =   beam_spread_info[1][0];
     //double int_y = sqrt(-(1.0 - energy0*energy0)/(energy0*energy0))*energy0;
     //std::cout << std::setprecision(15);
     //del_time = 2*M_PI*energy0*100;
