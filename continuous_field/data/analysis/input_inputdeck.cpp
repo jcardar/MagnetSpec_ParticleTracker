@@ -8,10 +8,11 @@ void readUnits(std::ifstream &input_stream, std::vector<std::string> &desired_un
     std::string length_unit;
     std::string energy_unit;
     std::string angle_unit;
+    std::string magnetic_field_unit;
 
-    input_stream >> length_unit >> energy_unit >> angle_unit;
+    input_stream >> length_unit >> energy_unit >> angle_unit >> magnetic_field_unit;
 
-    desired_units = {length_unit, energy_unit, angle_unit};
+    desired_units = {length_unit, energy_unit, angle_unit, magnetic_field_unit};
 }
 
 int readNumOf(std::ifstream &input_stream) {
@@ -26,7 +27,7 @@ void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vecto
     magNum = readNumOf(input_stream);
     std::string tempStr;
 
-    //outside index goes dimensions, position, field strength
+    //outside index goes dimensions, position, magnetic field components
     //dimensions go width, length, height
     for(int i=0; i<3; ++i) {
         std::vector<std::vector<double>> tempMagSet;

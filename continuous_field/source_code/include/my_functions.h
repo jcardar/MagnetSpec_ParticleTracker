@@ -62,4 +62,16 @@ void half_time_step(double &time_step);
 
 void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t);
 
+void readUnits(std::ifstream &input_stream, std::vector<std::string> &desired_units);
+
+int readNumOf(std::ifstream &input_stream);
+
+void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vector<std::vector<double>>> &magInfo);
+
+void readBeam(std::ifstream &input_stream, std::vector<std::vector<double>> &beamInfo);
+
+void readSpread(std::ifstream &input_stream, std::vector<std::vector<double>> &spreadInfo);
+
+void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::vector<std::vector<double>>> &screenInfo);
+
 #endif
