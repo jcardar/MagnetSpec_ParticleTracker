@@ -46,25 +46,26 @@ int main(int argc, char *argv[])
 
 ///////////////////
     //Define Particle Beam:
-    int num_par          {20};
+    int num_par          {300};
     double charge        {-1.0};    //hard-coded, no input from user
     double mass          {1.0};    //hard-coded, no input from user
-    double energy0       {2000.0};   //Normalized Energy = gamma
-    double energy_spread {0.0};
+    double energy0       {9785.74};   //Normalized Energy = gamma
+    //double energy_spread {489.287};
+    double energy_spread {9500.0};
     //double int_y = sqrt(-(1.0 - energy0*energy0)/(energy0*energy0))*energy0;
     //std::cout << std::setprecision(15);
     //del_time = 2*M_PI*energy0*100;
     //std::cout << int_y << std::endl;
-    ThreeVec initial_position(-134.819, 0.0, 0.0);
-    ThreeVec initial_position_spread(0.00586169, 0.00586169, 0.00586169);
+    ThreeVec initial_position(-58.6169, 5.86169*2.0, 0.0);
+    ThreeVec initial_position_spread(0.0, 0.0, 0.0);
     ThreeVec initial_angular_direction(0.0, M_PI/2.000000, M_PI/2.000000);
-    ThreeVec initial_angular_spread(0.0, 0.1, 0.1);
-    Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread);
+    ThreeVec initial_angular_spread(0.0, 0.01, 0.0);
+    Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread, Beam::PositionInitializationTypes::INITIALIZE_GAUSSIAN_POS, Beam::EnergyInitializationTypes::INITIALIZE_UNIFORM_EN, Beam::DivergenceInitializationTypes::INITIALIZE_SCAN_DIV);
 
 
 /////////////////////
     //Define Magnets:
-    const int num_magnets{2};
+    const int num_magnets{3};
     Magnet magnet[num_magnets];
         for(int ii{0}; ii<num_magnets; ii++)
         {
@@ -76,10 +77,11 @@ int main(int argc, char *argv[])
                 //magnet[ii].set_pos(0, -1958.0*3000.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
                 magnet[ii].set_pos(0, 0.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
                 //magnet[ii].set_length(1958.0*50000.0);
-                magnet[ii].set_length(175.851);
+                //magnet[ii].set_length(175.851);134.819
+                magnet[ii].set_length(175.972); //20 cm
                 //magnet[ii].set_width(1957.95*20000.0);
-                magnet[ii].set_width(134.819);
-                magnet[ii].set_height(200.6);
+                magnet[ii].set_width(58.6169);
+                magnet[ii].set_height(17.5851);
                 magnet[ii].set_outfile(outfile_magnets);
                 outfile_uniform_magnet(magnet[ii], ii);
                 break;
@@ -87,11 +89,24 @@ int main(int argc, char *argv[])
             case 1:
                 {
                 magnet[ii].set_B0(0, 0.0); magnet[ii].set_B0(1, 0.0); magnet[ii].set_B0(2, 1.0);
-                double mag_x_pos = 17.597 + magnet[0].get_pos(0) + magnet[0].get_length();
-                magnet[ii].set_pos(0, 300); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
+                double mag_x_pos = 29.30845 + magnet[0].get_pos(0) + magnet[0].get_length();
+                magnet[ii].set_pos(0, mag_x_pos); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
                 magnet[ii].set_length(175.972);
-                magnet[ii].set_width(134.819);
-                magnet[ii].set_height(200.6);
+                magnet[ii].set_width(58.6169);
+                magnet[ii].set_height(17.5851);
+                magnet[ii].set_outfile(outfile_magnets);
+                outfile_uniform_magnet(magnet[ii], ii);
+                break;
+                }   //<---END OF CASE 1//
+
+            case 2:
+                {
+                magnet[ii].set_B0(0, 0.0); magnet[ii].set_B0(1, 0.0); magnet[ii].set_B0(2, 0.8);
+                double mag_x_pos = 29.30845 + magnet[1].get_pos(0) + magnet[1].get_length();
+                magnet[ii].set_pos(0, mag_x_pos); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
+                magnet[ii].set_length(134.819);
+                magnet[ii].set_width(58.6169);
+                magnet[ii].set_height(17.5851);
                 magnet[ii].set_outfile(outfile_magnets);
                 outfile_uniform_magnet(magnet[ii], ii);
                 break;
@@ -102,40 +117,92 @@ int main(int argc, char *argv[])
 
 ////////////////////
     //Define Screens:
-    const int num_screens = 1;
+    //read screen info into vector object
+    const int num_screens = 3;
     Screen screen[num_screens];
     for(int ii{0}; ii < num_screens; ii++)
     {
+        //
         switch(ii)
         {
             case 0:
             {
-                double srn_x_pos = round((magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+50);
-                double srn_y_pos = -58 + magnet[num_magnets-1].get_pos(1);
+                double srn_x_pos = (magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+0.00586169;
+                double srn_y_pos = magnet[num_magnets-1].get_pos(1) - (magnet[num_magnets-1].get_width()/2.0)-0.00586169;
                 double srn_z_pos = magnet[num_magnets-1].get_pos(2);
-                screen[ii].set_pos(0, srn_x_pos+50); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
-                screen[ii].set_length(400);
-                screen[ii].set_height(200);
-                screen[ii].set_angle_about_z(45.0, 'd');
-                screen[ii].set_angle_about_y(45.0, 'd');
+                screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
+                screen[ii].set_length(magnet[num_magnets-1].get_width());
+                screen[ii].set_height(magnet[num_magnets-1].get_height());
+                screen[ii].set_angle_about_z(90.0, 'd');
+                screen[ii].set_angle_about_y(0.0, 'd');
                 screen[ii].set_angle_about_x(0.0, 'd');
                 screen[ii].set_outfile(outfile_screens);
                 outfile_screen_single (screen[ii], ii);
                 break;
             }   //<---END OF CASE 0//
+
+            // case 0:
+            // {
+            //     double srn_x_pos = magnet[num_magnets-1].get_pos(0);
+            //     double srn_y_pos = magnet[num_magnets-1].get_pos(1) - (magnet[num_magnets-1].get_width()/2.0)-50;
+            //     double srn_z_pos = 0.0;
+            //     screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
+            //     screen[ii].set_length(magnet[num_magnets-1].get_length()*5.0);
+            //     screen[ii].set_height(magnet[num_magnets-1].get_height());
+            //     screen[ii].set_angle_about_z(10.0,'d');
+            //     screen[ii].set_angle_about_y(0.0);
+            //     screen[ii].set_angle_about_x(0.0);
+            //     screen[ii].set_outfile(outfile_screens);
+            //     outfile_screen_single (screen[ii], ii);
+            //     break;
+            // }   //<---END OF CASE 0//
             case 1:
-                double srn_x_pos = (magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+1000;
-                double srn_y_pos = -400.0;
+            {
+                double srn_x_pos = magnet[num_magnets-1].get_pos(0);
+                double srn_y_pos = magnet[num_magnets-1].get_pos(1) - (magnet[num_magnets-1].get_width()/2.0)-0.00586169;
                 double srn_z_pos = 0.0;
                 screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
-                screen[ii].set_length(500);
-                screen[ii].set_height(500);
-                screen[ii].set_angle_about_z(90.0,'d');
+                screen[ii].set_length(magnet[num_magnets-1].get_length());
+                screen[ii].set_height(magnet[num_magnets-1].get_height());
+                screen[ii].set_angle_about_z(0.0,'d');
                 screen[ii].set_angle_about_y(0.0);
                 screen[ii].set_angle_about_x(0.0);
                 screen[ii].set_outfile(outfile_screens);
                 outfile_screen_single (screen[ii], ii);
                 break;
+            }
+
+            case 2:
+            {
+                double srn_x_pos = (magnet[num_magnets-1].get_pos(0)+magnet[num_magnets-1].get_length())+ (58.6169*sin(45*M_PI/180.0));
+                double srn_y_pos = magnet[num_magnets-1].get_pos(1) - (magnet[num_magnets-1].get_width()/2.0) - (58.6169*sin(45*M_PI/180.0))/10.0;
+                double srn_z_pos = magnet[num_magnets-1].get_pos(2);
+                screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
+                screen[ii].set_length((magnet[num_magnets-1].get_width() + (58.6169*sin(45*M_PI/180.0)))*2.0);
+                screen[ii].set_height(magnet[num_magnets-1].get_height()+ (58.6169*sin(45*M_PI/180.0)));
+                screen[ii].set_angle_about_z(10.0, 'd');
+                screen[ii].set_angle_about_y(0.0, 'd');
+                screen[ii].set_angle_about_x(0.0, 'd');
+                screen[ii].set_outfile(outfile_screens);
+                outfile_screen_single (screen[ii], ii);
+                break;
+            }   //<---END OF CASE 0//
+
+            case 3:
+            {
+                double srn_x_pos = magnet[num_magnets-1].get_pos(0) + magnet[num_magnets-1].get_length();
+                double srn_y_pos = magnet[num_magnets-1].get_pos(1) - (magnet[num_magnets-1].get_width()/2.0) - (58.6169*sin(45*M_PI/180.0));
+                double srn_z_pos = 0.0;
+                screen[ii].set_pos(0, srn_x_pos); screen[ii].set_pos(1, srn_y_pos); screen[ii].set_pos(2, srn_z_pos);
+                screen[ii].set_length(magnet[num_magnets-1].get_length()+(58.6169*sin(45*M_PI/180.0)));
+                screen[ii].set_height(magnet[num_magnets-1].get_height()+(58.6169*sin(45*M_PI/180.0)));
+                screen[ii].set_angle_about_z(45.0,'d');
+                screen[ii].set_angle_about_y(0.0);
+                screen[ii].set_angle_about_x(0.0);
+                screen[ii].set_outfile(outfile_screens);
+                outfile_screen_single (screen[ii], ii);
+                break;
+            }
         }   //<---END OF SWITCH STATEMENT//
     }   //<---END OF SCREEN 'FOR' LOOP//
     if(num_screens <= 0)
@@ -164,7 +231,9 @@ int main(int argc, char *argv[])
         std::cout << "particle number " << (ii+1) << '\n';
 
         if(ii>0)
-            {electron_beam.next_particle(electron_beam.m_particle_counter);}
+            {
+                electron_beam.next_particle();
+            }
         
         Particle electron = electron_beam.get_particle();
         electron.set_outfiles(outfile_time, outfile_xpos, outfile_ypos, outfile_zpos, outfile_px, outfile_py, outfile_pz, outfile_energy);

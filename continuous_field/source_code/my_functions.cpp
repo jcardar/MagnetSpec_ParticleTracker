@@ -847,7 +847,8 @@ bool check_if_intersect_screen(Screen screen_t, Particle particle_t)
     dist_to_intersect = sqrt(((closest_point.getX()-intersection.getX())*(closest_point.getX()-intersection.getX())) + ((closest_point.getY()-intersection.getY())*(closest_point.getY()-intersection.getY())) + ((closest_point.getZ()-intersection.getZ())*(closest_point.getZ()-intersection.getZ())));
     double area34 = 0.5*screen_t.get_height()*dist_to_intersect;
 
-    if(area0 == (area12 + area13 + area24 + area34))
+    //std::cout << "area 0 = " << area0 << " and areas combined are " << (area12 + area13 + area24 + area34) << std::endl;
+    if((area0 + area0*0.01) >= (area12 + area13 + area24 + area34))
     {
         intersect = true;
     }
@@ -923,7 +924,7 @@ void readUnits(std::ifstream &input_stream, std::vector<std::string> &desired_un
     std::string length_unit;
     std::string energy_unit;
     std::string angle_unit;
-    std::string magnetic_field_unit
+    std::string magnetic_field_unit;
 
     input_stream >> length_unit >> energy_unit >> angle_unit >> magnetic_field_unit;
 

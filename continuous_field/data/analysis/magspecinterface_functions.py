@@ -383,9 +383,9 @@ def showDiagram(max_x, min_x, max_y, min_y, max_z, min_z, num_mag, mag_dim, mag_
                 scrn_angl):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.set_xbound(lower=min_x, upper_max_x)
-    ax.set_ybound(lower=min_y, upper_max_y)
-    ax.set_zbound(lower=min_z, upper_max_z)
+    ax.set_xbound(lower=min_x, upper=upper_max_x)
+    ax.set_ybound(lower=min_y, upper=upper_max_y)
+    ax.set_zbound(lower=min_z, upper=upper_max_z)
     
     # plot magnet(s)
     i = 0
