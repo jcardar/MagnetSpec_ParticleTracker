@@ -72,20 +72,21 @@ void readBeam(std::ifstream &input_stream, std::vector<std::vector<double>> &bea
 void readSpread(std::ifstream &input_stream, std::vector<std::vector<double>> &spreadInfo) {
     std::string tempStr;
 
+    //outside index goes position, energy, divergence
     for(int i=0; i<3; ++i) {
         std::vector<double> tempInfoBits;
 
-        if(i==0) {
+        if(i==1) {
+            input_stream >> tempStr;
+            double tempDbl = std::stod(tempStr);
+            tempInfoBits.push_back(tempDbl);
+        }
+        else {
             for(int k=0; k<3; ++k) {
                 input_stream >> tempStr;
                 double tempDbl = std::stod(tempStr);
                 tempInfoBits.push_back(tempDbl);
             }
-        }
-        else {
-            input_stream >> tempStr;
-            double tempDbl = std::stod(tempStr);
-            tempInfoBits.push_back(tempDbl);
         }
         spreadInfo.push_back(tempInfoBits);
     }
