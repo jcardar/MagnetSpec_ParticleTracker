@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
 
 ///////////////////
     //Read input deck values:
+    //object numbers are defined here
     std::vector<std::string> desired_units;
     readUnits(infile, desired_units);
 
@@ -66,7 +67,6 @@ int main(int argc, char *argv[])
     
 ///////////////////
     //Define Particle Beam:
-    //int num_par          {20};
     double charge     {-1.0};    //hard-coded, no input from user
     double mass       {1.0};    //hard-coded, no input from user
     double energy0 =         beam_info[1][0];   //Normalized Energy = gamma
@@ -85,7 +85,6 @@ int main(int argc, char *argv[])
 
 /////////////////////
     //Define Magnets:
-    //const int num_magnets{2};
     Magnet magnet[num_magnets];
     for(int ii=0; ii<num_magnets; ++ii) {
         
@@ -108,7 +107,6 @@ int main(int argc, char *argv[])
 
 ////////////////////
     //Define Screens:
-    //const int num_screens = 1;
     Screen screen[num_screens];
     
     if(num_screens <= 0) {
