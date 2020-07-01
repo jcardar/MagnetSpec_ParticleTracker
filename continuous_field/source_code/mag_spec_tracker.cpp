@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	std::ofstream outfile_screens ("../data/SCREENS.csv");
     std::ofstream outfile_del_t   ("../data/DEL_T.csv");
 	std::ofstream outfile_dump;
-    std::ifstream infile          ("../analysis/input_deck.txt");
+    std::ifstream infile          ("../data/analysis/input_deck.txt");
 
 ///////////////////
     //Read input deck values:
