@@ -1014,7 +1014,7 @@ void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::ve
 
     //outside index goes dimensions, position, angles
     //dimensions go length, height
-    //angles go z-axis, x-axis
+    //angles go z-axis, y-axis, x-axis
     for(int i=0; i<3; ++i) {
         std::vector<std::vector<double>> tempScreenSet;
 
@@ -1022,14 +1022,14 @@ void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::ve
             std::vector<double> tempInfoBits;
 
             if(i==0) {
-                for(int k=0; k<3; ++k) {
+                for(int k=0; k<2; ++k) {
                     input_stream >> tempStr;
                     double tempDbl = std::stod(tempStr);
                     tempInfoBits.push_back(tempDbl);
                 }
             }
             else {
-                for(int k=0; k<2; ++k) {
+                for(int k=0; k<3; ++k) {
                     input_stream >> tempStr;
                     double tempDbl = std::stod(tempStr);
                     tempInfoBits.push_back(tempDbl);
