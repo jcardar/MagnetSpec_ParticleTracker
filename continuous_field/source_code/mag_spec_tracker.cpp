@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     ThreeVec initial_angular_direction(beam_info[2][0], beam_info[2][1], beam_info[2][2]);
     ThreeVec initial_angular_spread(beam_spread_info[2][0], beam_spread_info[2][1], beam_spread_info[2][2]);
     
-    Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread);
+    Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread, static_cast<Beam::PositionInitializationTypes>(0), static_cast<Beam::EnergyInitializationTypes>(0), static_cast<Beam::DivergenceInitializationTypes>(0));
 
 
 /////////////////////
