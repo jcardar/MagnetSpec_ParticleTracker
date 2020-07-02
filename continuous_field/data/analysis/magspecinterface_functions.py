@@ -28,8 +28,8 @@ units_angles = widgets.Dropdown(
 )
 
 units_magnetic_field = widgets.Dropdown(
-    options=['T', 'Gauss'],
-    value='T',
+    options=['Tesla', 'Gauss'],
+    value='Tesla',
     description='Field Unit',
     disabled=False,
 )
@@ -37,22 +37,22 @@ units_magnetic_field = widgets.Dropdown(
 # Define initialization types
 
 init_position = widgets.Dropdown(
-    options=['Gaussian', 'Uniform'],
-    value='Gaussian',
+    options=[('Gaussian',0) , ('Uniform',1) , ('Scan',2)],
+    value=2,
     description='Position',
     disabled=False,
 )
 
 init_energy = widgets.Dropdown(
-    options=['Gaussian', 'Uniform', 'Log'],
-    value='Gaussian',
+    options=[('Gaussian',0) , ('Uniform',1) , ('Log',2)],
+    value=1,
     description='Energy',
     disabled=False,
 )
 
 init_divergence = widgets.Dropdown(
-    options=['Gaussian', 'Uniform', 'Scan'],
-    value='Gaussian',
+    options=[('Gaussian',0) , ('Uniform',1) , ('Scan',2)],
+    value=2,
     description='Divergence',
     disabled=False,
 )
@@ -66,7 +66,7 @@ global_max_x = widgets.FloatText(
 )
 
 global_min_x = widgets.FloatText(
-    value=0,
+    value=-100,
     description='global x min',
     disabled=False
 )
@@ -78,7 +78,7 @@ global_max_y = widgets.FloatText(
 )
 
 global_min_y = widgets.FloatText(
-    value=0,
+    value=-100,
     description='global y min',
     disabled=False
 )
@@ -90,7 +90,7 @@ global_max_z = widgets.FloatText(
 )
 
 global_min_z = widgets.FloatText(
-    value=0,
+    value=-100,
     description='global z min',
     disabled=False
 )
