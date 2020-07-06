@@ -208,6 +208,7 @@ def dynamicFloatValue_Beam_Start_Position(global_bounds):
 beam_energy = widgets.BoundedFloatText(
     value=1,
     min=0,
+    max=9999999,
     description='beam energy'
 )
 
@@ -256,6 +257,7 @@ def dynamicFloatValue_Beam_Position_Spread():
 beam_energy_spread = widgets.BoundedFloatText(
     value=0,
     min=0,
+    max=9999999,
     description='nrg spread'
 )
 

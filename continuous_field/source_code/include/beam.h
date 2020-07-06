@@ -75,6 +75,8 @@ public:
         return m_particle;
     }
 
+    int get_num_particles()
+    { return m_num_particles; }
 };
 
 
