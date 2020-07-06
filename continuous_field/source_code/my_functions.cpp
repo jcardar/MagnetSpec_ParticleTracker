@@ -1041,13 +1041,13 @@ void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::ve
     }
 }
 
-void ReadInitTypes(std::ifstream &input_stream, std::vector<std::string>> &init_types) {
+void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types) {
     std::string pos_type_str;
     std::string energy_type_str;
     std::string div_type_str;
 
     input_stream >> pos_type_str >> energy_type_str >> div_type_str;
-    
+    int pos_type, energy_type, div_type;
     pos_type = std::stoi(pos_type_str);
     energy_type = std::stoi(energy_type_str);
     div_type = std::stoi(div_type_str);

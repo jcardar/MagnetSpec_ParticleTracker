@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     std::vector<std::vector<std::vector<double>>> screen_info;
     readScreen(infile, num_screens, screen_info);
     
-    std::vector<std::string>> init_types;
+    std::vector<int> init_types;
     ReadInitTypes(infile, init_types);
     
 ///////////////////

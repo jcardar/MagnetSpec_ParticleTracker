@@ -74,6 +74,6 @@ void readSpread(std::ifstream &input_stream, std::vector<std::vector<double>> &s
 
 void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::vector<std::vector<double>>> &screenInfo);
 
-void ReadInitTypes(std::ifstream &input_stream, std::vector<std::string>> &init_types);
+void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types);
 
 #endif
