@@ -92,6 +92,7 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
 
             case DivergenceInitializationTypes::INITIALIZE_SCAN_DIV:
             {
+                m_num_particles = m_num_particles*3.0;
                 double angle_x = m_angle_central.getX();
                 double angle_y = m_angle_central.getY();
                 double angle_z = m_angle_central.getZ();
@@ -166,7 +167,7 @@ void Beam::next_particle(int& particle_counter,
                 else if(diverge_init == DivergenceInitializationTypes::INITIALIZE_SCAN_DIV)
                     {
                         if((particle_counter) % 3 == 0)
-                        {m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/3)*2*m_energy_spread/(m_num_particles/3));}
+                        {m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/3)*2*m_energy_spread/((m_num_particles-3)/3));}
                     }
                 break;
             }

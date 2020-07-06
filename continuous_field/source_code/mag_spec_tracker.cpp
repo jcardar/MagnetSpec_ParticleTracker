@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     ThreeVec initial_angular_spread(beam_spread_info[2][0], beam_spread_info[2][1], beam_spread_info[2][2]);
     
     Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread, static_cast<Beam::PositionInitializationTypes>(init_types[0]), static_cast<Beam::EnergyInitializationTypes>(init_types[1]), static_cast<Beam::DivergenceInitializationTypes>(init_types[2]));
-
+    num_par = electron_beam.get_num_particles();
 
 /////////////////////
     //Define Magnets:
