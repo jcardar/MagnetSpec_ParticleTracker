@@ -12,14 +12,15 @@ class Particle
     ThreeVec m_p;                  //in p/mc
     ThreeVec m_vel;
     double m_energy;
-    int m_charge;
+    double m_charge;
+    double m_rest_mass;
     double *m_time;
     const double m_rest_en = 1;     //E0/E0
 
 public:
     Particle() {};
 
-    Particle(ThreeVec pos, ThreeVec momentum, int charge, double& time, std::ofstream& out_time, 
+    Particle(ThreeVec pos, ThreeVec momentum, int charge, double mass, double& time, std::ofstream& out_time, 
             std::ofstream& out_posx, std::ofstream& out_posy, std::ofstream& out_posz,
             std::ofstream& out_velx, std::ofstream& out_vely, std::ofstream& out_velz, std::ofstream& out_energy);
 
@@ -30,6 +31,16 @@ public:
     ThreeVec get_pos()
     {
         return m_pos;
+    }
+
+    double get_charge()
+    {
+        return m_charge;
+    }
+
+    double get_mass()
+    {
+        return m_rest_mass;
     }
 
     double get_pos(int i)
@@ -50,11 +61,6 @@ public:
     double get_energy()
     {
         return m_energy;
-    }
-
-    int get_charge()
-    {
-        return m_charge;
     }
 
     double get_time()
@@ -85,6 +91,11 @@ public:
     void set_vel(ThreeVec vel);
     void set_vel(int index, double value);
 
+    void set_charge(double charge = -1.0);
+    void set_mass(double mass = 1.0);
+
+    
+
     std::ofstream *m_out_time;
     std::ofstream *m_out_posx;
     std::ofstream *m_out_posy;
@@ -94,14 +105,19 @@ public:
     std::ofstream *m_out_pz; 
     std::ofstream *m_out_energy;
 
-    enum InitializationTypes
-    {
-        INITIALIZE_GAUSSIAN,
-        INITIALIZE_UNIFORM_POS_DIST,
-        INITIALIZE_UNIFORM_EN_DIST,
-        INITIALIZE_POINT_SOURCE_GAUS,
-        INITIALIZE_POINT_SOURCE_UNI,
-    };
+    void set_outfiles( std::ofstream& out_time, 
+            std::ofstream& out_posx, std::ofstream& out_posy, std::ofstream& out_posz,
+            std::ofstream& out_velx, std::ofstream& out_vely, std::ofstream& out_velz, std::ofstream& out_energy)
+        {
+            m_out_time   = &out_time;
+            m_out_posx   = &out_posx;
+            m_out_posy   = &out_posy;
+            m_out_posz   = &out_posz;
+            m_out_px     = &out_velx;
+            m_out_py     = &out_vely;
+            m_out_pz     = &out_velz;
+            m_out_energy = &out_energy;
+        }
 
 };
 

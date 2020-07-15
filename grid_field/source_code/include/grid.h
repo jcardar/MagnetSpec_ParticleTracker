@@ -4,8 +4,16 @@
 #include "threematrix.h"
 #include "threevector.h"
 #include <fstream>
-#include "particle.h"
+#include "magnet.h"
 
+class Grid
+{
+private:
+
+
+public:
+
+};
 
 
 

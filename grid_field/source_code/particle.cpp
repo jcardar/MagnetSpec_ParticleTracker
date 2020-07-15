@@ -7,7 +7,7 @@
 #include <iostream>
 
 
-Particle::Particle(ThreeVec pos, ThreeVec momentum, int charge, double& time, std::ofstream& OUT_time, 
+Particle::Particle(ThreeVec pos, ThreeVec momentum, int charge, double mass, double& time, std::ofstream& OUT_time, 
             std::ofstream& OUT_posx, std::ofstream& OUT_posy, std::ofstream& OUT_posz,
             std::ofstream& OUT_velx, std::ofstream& OUT_vely, std::ofstream& OUT_velz, std::ofstream& OUT_energy)
                 : m_time(&time), m_out_time(&OUT_time), m_out_posx(&OUT_posx), m_out_posy(&OUT_posy), m_out_posz(&OUT_posz),
@@ -15,7 +15,8 @@ Particle::Particle(ThreeVec pos, ThreeVec momentum, int charge, double& time, st
     {
         set_pos(pos);
         set_p(momentum);
-        m_charge = charge;
+        m_charge    = charge;
+        m_rest_mass = mass; 
         m_vel.setX(momentum.getX()/m_energy);
         m_vel.setY(momentum.getY()/m_energy);
         m_vel.setZ(momentum.getZ()/m_energy);
@@ -41,14 +42,14 @@ void Particle::set_pos(double x, double y, double z)
 void Particle::set_p(ThreeVec momentum)
 {
     m_p = momentum;
-    set_energy(sqrt(momentum.mag()*momentum.mag() + 1));
+    //set_energy(sqrt(momentum.mag()*momentum.mag() + 1));
     m_vel = momentum/m_energy;
 } 
 
 void Particle::set_p(int index, double value)
 {
     m_p.set(index, value);
-    set_energy(sqrt(m_p.mag()*m_p.mag() + 1));
+    //set_energy(sqrt(m_p.mag()*m_p.mag() + 1));
     m_vel.set(index, value/m_energy);
 }
 
@@ -80,6 +81,16 @@ void Particle::set_vel(int index, double value)
 {
     m_vel.set(index, value);
 }
+
+
+void Particle::set_charge(double charge)
+{
+    m_charge = charge;
+}
+void Particle::set_mass(double mass)
+{
+    m_rest_mass = mass;
+};
 
 
 

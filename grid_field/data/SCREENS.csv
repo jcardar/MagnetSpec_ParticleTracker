@@ -1,2 +1,2 @@
-Num ,screen_low_energy_edgex ,screen_low_energy_edgey ,screen_low_energy_edgez ,angle ,length ,height ,
-1,2210.45,-17.597,0,90,55,17.597
+Num,screen_low_energy_edgex,screen_low_energy_edgey,screen_low_energy_edgez,degrees about x-axis,degrees about y-axis,degrees about z-axis,length,height
+1,1408.03,-29.334,0,0,0,-135,234.672,586.679
