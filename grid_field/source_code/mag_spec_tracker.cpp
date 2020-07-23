@@ -53,6 +53,12 @@ int main(int argc, char *argv[])
     int num_magnets;
     std::vector<std::vector<std::vector<double>>> magnet_info;
     readMagnet(infile, num_magnets, magnet_info);
+    
+    std::vector<double> PmagDim;
+    readPermanentMagDim(infile, num_magnets, PmagDim);
+    
+    std::vector<std::string> magnet_axes_info;
+    readMagAxes(infile, num_magnets, magnet_axes_info);
 
     int num_par = readNumOf(infile);
     std::vector<std::vector<double>> beam_info;
@@ -94,13 +100,10 @@ int main(int argc, char *argv[])
         magnet[ii].set_B0(0, magnet_info[2][ii][0]);
         magnet[ii].set_B0(1, magnet_info[2][ii][1]);
         magnet[ii].set_B0(2, magnet_info[2][ii][2]);
-        //magnet[ii].set_pos(0, -1958.0*3000.0); magnet[ii].set_pos(1, 0.0); magnet[ii].set_pos(2, 0.0);
         magnet[ii].set_pos(0, magnet_info[1][ii][0]); 
         magnet[ii].set_pos(1, magnet_info[1][ii][1]); 
         magnet[ii].set_pos(2, magnet_info[1][ii][2]);
-        //magnet[ii].set_length(1958.0*50000.0);
         magnet[ii].set_length(magnet_info[0][ii][1]);
-        //magnet[ii].set_width(1957.95*20000.0);
         magnet[ii].set_width(magnet_info[0][ii][0]);
         magnet[ii].set_height(magnet_info[0][ii][2]);
         magnet[ii].set_outfile(outfile_magnets);

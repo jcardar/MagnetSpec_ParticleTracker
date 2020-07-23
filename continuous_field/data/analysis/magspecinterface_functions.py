@@ -128,6 +128,16 @@ def dynamicFloatValue_Magnet_Dimensions(num_of_magnets):
         listOfWidgets.extend([widget1, widget2, widget3])
     return listOfWidgets
 
+def dynamicFloatValue_Permanent_Magnet_Dimension(num_of_magnets):
+    listOfWidgets = []
+    for i in range(num_of_magnets):
+        widget = widgets.FloatText(
+            value=1,
+            description=f'dim normal to gap {i+1}',
+        )
+        listOfWidgets.append(widget)
+    return listOfWidgets
+
 def dynamicFloatValue_Magnet_Position(num_of_magnets, magnet_dimensions, global_bounds):
     listOfWidgets = []
     j = 0
@@ -154,22 +164,25 @@ def dynamicFloatValue_Magnet_Position(num_of_magnets, magnet_dimensions, global_
         j += 3
     return listOfWidgets
 
-def dynamicFloatValue_Magnetic_Field_Comps(num_of_magnets):
+def dynamicFloatValue_Magnetic_Field_Value(num_of_magnets):
     listOfWidgets = []
     for i in range(num_of_magnets):
-        widget1 = widgets.FloatText(
+        widget = widgets.FloatText(
             value=1,
-            description=f'x comp {i+1}',
+            description=f'B field {i+1}',
         )
-        widget2 = widgets.FloatText(
-            value=1,
-            description=f'y comp {i+1}',
+        listOfWidgets.append(widget)
+    return listOfWidgets
+
+def dynamicFloatValue_Magnetic_Field_Axis(num_of_magnets):
+    listOfWidgets = []
+    for i in range(num_of_magnets):
+        widget = widgets.Dropdown(
+            options=[('x-axis','x') , ('y-axis','y') , ('z-axis','z')],
+            value='z',
+            description='along the',
         )
-        widget3 = widgets.FloatText(
-            value=1,
-            description=f'z comp {i+1}',
-        )
-        listOfWidgets.extend([widget1, widget2, widget3])
+        listOfWidgets.append(widget)
     return listOfWidgets
 
 # Define Beam attributes
@@ -382,18 +395,10 @@ np.cos(alpha)*np.sin(gamma))
 
 # Functions to aid in standardizing values
 
-def averageB0(num_of_magnets, field_comps):
-    all_fields_total = 0
-    i = 0
-    for j in range(num_of_magnets):
-        one_field_total = 0
-        
-        for k in range(3):
-            one_field_total += math.pow(field_comps[i].value,2)
-            i += 1
-        
-        all_fields_total += math.sqrt(one_field_total)
-    
+def averageB0(num_of_magnets, field_values):
+    all_fields_total = 0.0
+    for i in range(num_of_magnets):
+        all_fields_total += field_values[i].value
     aveB_0 = all_fields_total / num_of_magnets
     
     return aveB_0
@@ -418,16 +423,17 @@ def convertAngles(units, beam_direction, divergence_spread, screen_angles):
         
     return converted_beam_direction, converted_divergence_spread, converted_screen_angles
 
-def normalizeValues(units, num_mag, mag_dim, mag_pos, fld_comps, beam_pos, beam_energy, pos_sprd, energy_sprd, scrn_dim, scrn_pos):
+def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_pos, beam_energy, pos_sprd, energy_sprd, scrn_dim, 
+                    scrn_pos):
     n_mag_dim = []
     n_mag_pos = []
-    n_fld_comps = []
+    n_fld_vals = []
     n_beam_pos = []
     n_pos_sprd = []
     n_scrn_dim = []
     n_scrn_pos = []
     
-    aveB_0 = averageB0(num_mag, fld_comps)
+    aveB_0 = averageB0(num_mag, fld_vals)
     omega_div_c = (1.602177 * math.pow(10,-19) * aveB_0) / (9.109384 * math.pow(10,-31) * 2.997925 * math.pow(10,8))
     
     # distances
@@ -439,6 +445,7 @@ def normalizeValues(units, num_mag, mag_dim, mag_pos, fld_comps, beam_pos, beam_
         
     for i in range(len(mag_dim)):
         n_mag_dim.append( mag_dim[i].value * distance_multiplier * omega_div_c )
+    n_Pmag_dim = Pmag_dim * distance_multiplier * omega_div_c
     for i in range(len(mag_pos)):
         n_mag_pos.append( mag_pos[i].value * distance_multiplier * omega_div_c )
     for i in range(3):
@@ -455,8 +462,8 @@ def normalizeValues(units, num_mag, mag_dim, mag_pos, fld_comps, beam_pos, beam_
     if units[6] == 'Gauss':
         magnetic_multiplier = math.pow(10,-4)
     
-    for i in range(len(fld_comps)):
-        n_fld_comps.append( (fld_comps[i].value * magnetic_multiplier) / aveB_0 )
+    for i in range(len(fld_vals)):
+        n_fld_vals.append( (fld_vals[i].value * magnetic_multiplier) / aveB_0 )
     
     # energy
     rest_energy = 0.511 # MeV
@@ -468,7 +475,7 @@ def normalizeValues(units, num_mag, mag_dim, mag_pos, fld_comps, beam_pos, beam_
     n_beam_energy = (rest_energy + beam_energy.value)/rest_energy
     n_energy_sprd = (rest_energy + energy_sprd.value)/rest_energy
     
-    return n_mag_dim, n_mag_pos, n_fld_comps, n_beam_pos, n_beam_energy, n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos
+    return n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, n_beam_pos, n_beam_energy, n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos
 
 # Functions to aid in plotting
 
@@ -496,19 +503,28 @@ def createList(values_list):
         newlist.append(' ')
     return newlist
 
-def createOutput(num_mag, mag_dim, mag_pos, fld_comps, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, energy_sprd, div_sprd, 
-                 num_scrn, scrn_dim, scrn_pos, scrn_angl):
+def createAxesList(axes_list):
+    newlist = []
+    for i in range(len(axes_list)):
+        newlist.append(axes_list[i].value)
+        newlist.append(' ')
+    return newlist
+
+def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, 
+                 energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl):
     mag_num = [f'{num_mag}', ' ']
-    mag_dim = createList(mag_dim)
-    mag_pos = createList(mag_pos)
-    mag_field = createList(fld_comps)
-    mag_info = mag_num + mag_dim + mag_pos + mag_field
+    dim_mag = createList(mag_dim)
+    pos_mag = createList(mag_pos)
+    mag_field = createList(fld_vals)
+    pMag_dim = [f'{Pmag_dim}', ' ']
+    field_axes = createAxesList(fld_axs)
+    mag_info = mag_num + dim_mag + pos_mag + mag_field + pMag_dim + field_axes
 
     particle_num = [f'{num_particles}', ' ']
-    beam_pos = createList(beam_pos)
+    pos_beam = createList(beam_pos)
     beam_nrg = [f'{beam_energy}', ' ']
-    beam_dir = createList(beam_dir)
-    beam_info = particle_num + beam_pos + beam_nrg + beam_dir
+    dir_beam = createList(beam_dir)
+    beam_info = particle_num + pos_beam + beam_nrg + dir_beam
 
     spread_pos = createList(pos_sprd)
     spread_nrg = [f'{energy_sprd}', ' ']
@@ -523,18 +539,18 @@ def createOutput(num_mag, mag_dim, mag_pos, fld_comps, num_particles, beam_pos, 
     
     return mag_info, beam_info, spread_info, screen_info
 
-def writeOutput(units, num_mag, mag_dim, mag_pos, fld_comps, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, energy_sprd, 
-                div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types):
+def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, 
+                energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types):
     
     outfile = open('input_deck.txt', 'w')
     
-    n_mag_dim, n_mag_pos, n_fld_comps, n_beam_pos, n_beam_energy, \
-    n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos = normalizeValues(units, num_mag, mag_dim, mag_pos, fld_comps, beam_pos, beam_energy,
-                                                                        pos_sprd, energy_sprd, scrn_dim, scrn_pos)
+    n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, n_beam_pos, n_beam_energy, \
+    n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos = normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_pos,
+                                                                        beam_energy, pos_sprd, energy_sprd, scrn_dim, scrn_pos)
     
-    mag_info, beam_info, spread_info, screen_info = createOutput(num_mag, n_mag_dim, n_mag_pos, n_fld_comps, num_particles, n_beam_pos, 
-                                                                 n_beam_energy, beam_dir, n_pos_sprd, n_energy_sprd, div_sprd, num_scrn, 
-                                                                 n_scrn_dim, n_scrn_pos, scrn_angl)
+    mag_info, beam_info, spread_info, screen_info = createOutput(num_mag, n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, fld_axs, 
+                                                                 num_particles, n_beam_pos, n_beam_energy, beam_dir, n_pos_sprd, 
+                                                                 n_energy_sprd, div_sprd, num_scrn, n_scrn_dim, n_scrn_pos, scrn_angl)
     outfile.writelines(units)
     outfile.write('\n')
     outfile.writelines(mag_info)
@@ -551,8 +567,8 @@ def writeOutput(units, num_mag, mag_dim, mag_pos, fld_comps, num_particles, beam
 
 # Plots and outputs
 
-def DisplayAndOutput(global_bounds, units, num_mag, mag_dim, mag_pos, fld_comps, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd,
-                     energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types):
+def DisplayAndOutput(global_bounds, units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy,
+                     beam_dir, pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel(f'x position ({units[0]})')
@@ -751,7 +767,7 @@ abs(np.array(corner4 - corner3)@np.array(corner4 - corner3)))) for jj in range(l
     display(button)
     
     def on_button_clicked(b):
-        writeOutput(units, num_mag, mag_dim, mag_pos, fld_comps, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, energy_sprd, 
-                    div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types)
+        writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, 
+                    pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types)
         print('Inputs saved and exported!')
     button.on_click(on_button_clicked)

@@ -68,6 +68,10 @@ int readNumOf(std::ifstream &input_stream);
 
 void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vector<std::vector<double>>> &magInfo);
 
+void readPermanentMagDim(std::ifstream &input_stream, int magNum, std::vector<double> &PmagDim);
+
+void readMagAxes(std::ifstream &input_stream, int magNum, std::vector<std::string> &axesInfo);
+
 void readBeam(std::ifstream &input_stream, std::vector<std::vector<double>> &beamInfo);
 
 void readSpread(std::ifstream &input_stream, std::vector<std::vector<double>> &spreadInfo);

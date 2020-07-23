@@ -943,22 +943,54 @@ void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vecto
     magNum = readNumOf(input_stream);
     std::string tempStr;
 
-    //outside index goes dimensions, position, magnetic field components
+    //outside index goes dimensions, position, magnetic field value
     //dimensions go width, length, height
     for(int i=0; i<3; ++i) {
         std::vector<std::vector<double>> tempMagSet;
+        
+        if(i!=2) {
+            for(int j=0; j<magNum; ++j) {
+                std::vector<double> tempInfoBits;
 
-        for(int j=0; j<magNum; ++j) {
-            std::vector<double> tempInfoBits;
-
-            for(int k=0; k<3; ++k) {
+                for(int k=0; k<3; ++k) {
+                    input_stream >> tempStr;
+                    double tempDbl = std::stod(tempStr);
+                    tempInfoBits.push_back(tempDbl);
+                }
+                tempMagSet.push_back(tempInfoBits);
+            }
+            magInfo.push_back(tempMagSet);
+        }
+        else {
+            for(int j=0; j<magNum; ++j) {
+                std::vector<double> tempInfoBits;
+                
                 input_stream >> tempStr;
                 double tempDbl = std::stod(tempStr);
                 tempInfoBits.push_back(tempDbl);
+                tempMagSet.push_back(tempInfoBits);
             }
-            tempMagSet.push_back(tempInfoBits);
+            magInfo.push_back(tempMagSet);
         }
-        magInfo.push_back(tempMagSet);
+    }
+}
+
+void readPermanentMagDim(std::ifstream &input_stream, int magNum, std::vector<double> &PmagDim) {
+    std::string tempStr;
+    
+    for(int i=0; i<magNum; ++i) {
+        input_stream >> tempStr;
+        double tempDbl = std::stod(tempStr);
+        PmagDim.push_back(tempDbl);
+    }
+}
+
+void readMagAxes(std::ifstream &input_stream, int magNum, std::vector<std::string> &axesInfo) {
+    std::string tempStr;
+    
+    for(int i=0; i<magNum; ++i) {
+        input_stream >> tempStr;
+        axesInfo.push_back(tempStr);
     }
 }
 
@@ -1052,5 +1084,5 @@ void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types) {
     energy_type = std::stoi(energy_type_str);
     div_type = std::stoi(div_type_str);
 
-    init_types = {pos_type, energy_type, div_type};
+    init_types{ pos_type, energy_type, div_type };
 }

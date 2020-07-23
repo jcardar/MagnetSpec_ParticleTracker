@@ -943,22 +943,54 @@ void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vecto
     magNum = readNumOf(input_stream);
     std::string tempStr;
 
-    //outside index goes dimensions, position, magnetic field components
+    //outside index goes dimensions, position, magnetic field value
     //dimensions go width, length, height
     for(int i=0; i<3; ++i) {
         std::vector<std::vector<double>> tempMagSet;
+        
+        if(i!=2) {
+            for(int j=0; j<magNum; ++j) {
+                std::vector<double> tempInfoBits;
 
-        for(int j=0; j<magNum; ++j) {
-            std::vector<double> tempInfoBits;
-
-            for(int k=0; k<3; ++k) {
+                for(int k=0; k<3; ++k) {
+                    input_stream >> tempStr;
+                    double tempDbl = std::stod(tempStr);
+                    tempInfoBits.push_back(tempDbl);
+                }
+                tempMagSet.push_back(tempInfoBits);
+            }
+            magInfo.push_back(tempMagSet);
+        }
+        else {
+            for(int j=0; j<magNum; ++j) {
+                std::vector<double> tempInfoBits;
+                
                 input_stream >> tempStr;
                 double tempDbl = std::stod(tempStr);
                 tempInfoBits.push_back(tempDbl);
+                tempMagSet.push_back(tempInfoBits);
             }
-            tempMagSet.push_back(tempInfoBits);
+            magInfo.push_back(tempMagSet);
         }
-        magInfo.push_back(tempMagSet);
+    }
+}
+
+void readPermanentMagDim(std::ifstream &input_stream, int magNum, std::vector<double> &PmagDim) {
+    std::string tempStr;
+    
+    for(int i=0; i<magNum; ++i) {
+        input_stream >> tempStr;
+        double tempDbl = std::stod(tempStr);
+        PmagDim.push_back(tempDbl);
+    }
+}
+
+void readMagAxes(std::ifstream &input_stream, int magNum, std::vector<std::string> &axesInfo) {
+    std::string tempStr;
+    
+    for(int i=0; i<magNum; ++i) {
+        input_stream >> tempStr;
+        axesInfo.push_back(tempStr);
     }
 }
 
@@ -1053,4 +1085,48 @@ void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types) {
     div_type = std::stoi(div_type_str);
 
     init_types = {pos_type, energy_type, div_type};
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+double find_magnetization(const Magnet &magnet, double mag_height) {
+    // dimensions of permanent magnet
+    double b = 0.5*magnet.get_width();   // half width
+    double a = 0.5*magnet.get_length();  // half length
+    double c = 0.5*mag_height;           // half height
+    
+    double z = 0.5*magnet.get_height() + c;  // distance from magnet center to center between magnets
+    double Bz = magnet.get_B0(2);
+    
+    double magnetization = (Bz*4*pow(10.,7)/(2*(atan((a*b)/((z-c)*sqrt(pow(half_w,2)+pow(half_l,2)+pow(z-c,2))-
+                                                            atan((a*b)/((z+c)*sqrt(pow(a,2)+pow(b,2)+pow(z+c,2))));
+    // divided by 2 because of the contributions of both magnets
+    
+    return magnetization;
+}
+
+ThreeVec calc_grid_point_B(const ThreeVec &grid_point, const Magnet &magnet, double mag_height, double magnetization) {
+    // dimensions of permanent magnet
+    double b = 0.5*magnet.get_width();   // half width
+    double a = 0.5*magnet.get_length();  // half length
+    double c = 0.5*mag_height;           // half height
+    
+    double mag_center_x = magnet.get_pos(0) + a;
+    double mag_center_y = magnet.get_pos(1);
+    double mag_center_z = magnet.get_pos(2) - 0.5*magnet.get_height - c;
+
+    double x = grid_point.getX() - mag_center_x;
+    double y = grid_point.getY() - mag_center_y;
+    double z = grid_point.getZ() - mag_center_z;  // distance from magnet to grid point
+    
+    double factor = magnetization * pow(10.,-7);
+    grid_Bx = factor*log();
+    grid_By = factor*log();
+    grid_Bz = -factor*;
+    
+    ThreeVec grid_point_B;
+    grid_point_B.setX(grid_Bx);
+    grid_point_B.setY(grid_By);
+    grid_point_B.setZ(grid_Bz);
+    
+    return grid_point_B;
 }

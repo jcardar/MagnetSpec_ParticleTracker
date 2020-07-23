@@ -53,6 +53,12 @@ int main(int argc, char *argv[])
     int num_magnets;
     std::vector<std::vector<std::vector<double>>> magnet_info;
     readMagnet(infile, num_magnets, magnet_info);
+    
+    std::vector<double> PmagDim;
+    readPermanentMagDim(infile, num_magnets, PmagDim);
+    
+    std::vector<std::string> magnet_axes_info;
+    readMagAxes(infile, num_magnets, magnet_axes_info);
 
     int num_par = readNumOf(infile);
     std::vector<std::vector<double>> beam_info;
