@@ -57,8 +57,8 @@ int main(int argc, char *argv[])
     std::vector<double> PmagDim;
     readPermanentMagDim(infile, num_magnets, PmagDim);
     
-    std::vector<std::string> magnet_axes_info;
-    readMagAxes(infile, num_magnets, magnet_axes_info);
+    std::vector<char> magnet_axis_info;
+    readMagAxis(infile, num_magnets, magnet_axis_info);
 
     int num_par = readNumOf(infile);
     std::vector<std::vector<double>> beam_info;
@@ -97,9 +97,20 @@ int main(int argc, char *argv[])
     Magnet magnet[num_magnets];
     for(int ii=0; ii<num_magnets; ++ii) {
         
-        magnet[ii].set_B0(0, magnet_info[2][ii][0]);
-        magnet[ii].set_B0(1, magnet_info[2][ii][1]);
-        magnet[ii].set_B0(2, magnet_info[2][ii][2]);
+        magnet[ii].set_B0(0, 0.0);
+        magnet[ii].set_B0(1, 0.0);
+        magnet[ii].set_B0(2, 0.0);
+        
+        if(magnet_axis_info[ii] == 'z') {
+            magnet[ii].set_B0(2, magnet_info[2][ii][0]);
+        }
+        else if(magnet_axis_info[ii] == 'y') {
+            magnet[ii].set_B0(1, magnet_info[2][ii][0]);
+        }
+        else {
+            magnet[ii].set_B0(0, magnet_info[2][ii][0]);  // magnet_axis_info == 'x'
+        }
+        
         magnet[ii].set_pos(0, magnet_info[1][ii][0]); 
         magnet[ii].set_pos(1, magnet_info[1][ii][1]); 
         magnet[ii].set_pos(2, magnet_info[1][ii][2]);
@@ -146,7 +157,7 @@ int main(int argc, char *argv[])
 
 
     //MAIN LOOP FOR STEPPING PARTICLES THROUGH SYSTEM:
-    for(int ii{0}; ii < num_par; ii++)
+    for(int ii{0}; ii < num_par; ++ii)
     {
         int magnet_counter = 0;
         int screen_counter = 0;

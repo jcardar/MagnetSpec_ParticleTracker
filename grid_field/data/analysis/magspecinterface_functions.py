@@ -178,7 +178,7 @@ def dynamicFloatValue_Magnetic_Field_Axis(num_of_magnets):
     listOfWidgets = []
     for i in range(num_of_magnets):
         widget = widgets.Dropdown(
-            options=[('x-axis','x') , ('y-axis','y') , ('z-axis','z')],
+            options=[('x-axis','x') ,('y-axis','y') , ('z-axis','z')],
             value='z',
             description='along the',
         )
@@ -426,6 +426,7 @@ def convertAngles(units, beam_direction, divergence_spread, screen_angles):
 def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_pos, beam_energy, pos_sprd, energy_sprd, scrn_dim, 
                     scrn_pos):
     n_mag_dim = []
+    n_Pmag_dim = []
     n_mag_pos = []
     n_fld_vals = []
     n_beam_pos = []
@@ -445,7 +446,8 @@ def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_p
         
     for i in range(len(mag_dim)):
         n_mag_dim.append( mag_dim[i].value * distance_multiplier * omega_div_c )
-    n_Pmag_dim = Pmag_dim * distance_multiplier * omega_div_c
+    for i in range(len(Pmag_dim)):
+        n_Pmag_dim.append( Pmag_dim[i].value * distance_multiplier * omega_div_c )
     for i in range(len(mag_pos)):
         n_mag_pos.append( mag_pos[i].value * distance_multiplier * omega_div_c )
     for i in range(3):
@@ -516,7 +518,7 @@ def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_par
     dim_mag = createList(mag_dim)
     pos_mag = createList(mag_pos)
     mag_field = createList(fld_vals)
-    pMag_dim = [f'{Pmag_dim}', ' ']
+    pMag_dim = createList(Pmag_dim)
     field_axes = createAxesList(fld_axs)
     mag_info = mag_num + dim_mag + pos_mag + mag_field + pMag_dim + field_axes
 

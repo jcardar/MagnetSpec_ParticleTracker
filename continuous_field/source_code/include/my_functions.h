@@ -70,7 +70,7 @@ void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vecto
 
 void readPermanentMagDim(std::ifstream &input_stream, int magNum, std::vector<double> &PmagDim);
 
-void readMagAxes(std::ifstream &input_stream, int magNum, std::vector<std::string> &axesInfo);
+void readMagAxis(std::ifstream &input_stream, int magNum, std::vector<char> &axisInfo);
 
 void readBeam(std::ifstream &input_stream, std::vector<std::vector<double>> &beamInfo);
 
@@ -79,5 +79,13 @@ void readSpread(std::ifstream &input_stream, std::vector<std::vector<double>> &s
 void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::vector<std::vector<double>>> &screenInfo);
 
 void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types);
+
+double find_magnetization(Magnet &magnet, double mag_height);
+
+void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z);
+
+bool B_within_margin(double magnetization, double B1, double B2, double B3);
+
+ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double magnetization, char axis);
 
 #endif

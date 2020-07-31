@@ -178,7 +178,7 @@ def dynamicFloatValue_Magnetic_Field_Axis(num_of_magnets):
     listOfWidgets = []
     for i in range(num_of_magnets):
         widget = widgets.Dropdown(
-            options=[('x-axis','x') , ('y-axis','y') , ('z-axis','z')],
+            options=[('x-axis','x') ,('y-axis','y') , ('z-axis','z')],
             value='z',
             description='along the',
         )

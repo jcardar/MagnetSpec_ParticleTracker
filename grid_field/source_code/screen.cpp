@@ -2,6 +2,9 @@
 #include "screen.h"
 #include "threevector.h"
 #include <cmath>
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 Screen::Screen(ThreeVec position, double angle_rad_about_x, double angle_rad_about_y, double angle_rad_about_z, double length, double height)
         : m_position(position), m_angle_about_x(angle_rad_about_x), m_angle_about_y(angle_rad_about_y), m_angle_about_z(angle_rad_about_z), m_length(length), m_height(height)
