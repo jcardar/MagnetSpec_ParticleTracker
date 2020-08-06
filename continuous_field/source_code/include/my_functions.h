@@ -2,11 +2,16 @@
 #define MY_FUNCTIONS_H
 
 #include <fstream>
+#include <vector>
 #include "threevector.h"
 #include "threematrix.h"
 #include "particle.h"
 #include "magnet.h"
 #include "screen.h"
+#include "math.h"
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
 void outfile_tab(double& time, std::ofstream& out_time, ThreeVec pos, std::ofstream& out_xpos, std::ofstream& out_ypos, std::ofstream& out_zpos, ThreeVec vel, std::ofstream& out_vx, std::ofstream& out_vy, std::ofstream& out_vz);
 
@@ -80,12 +85,12 @@ void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::ve
 
 void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types);
 
-double find_magnetization(Magnet &magnet, double mag_height);
+double find_magnetization(Magnet &magnet, double mag_dim, char axis);
 
-void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z);
+void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3);
 
-bool B_within_margin(double magnetization, double B1, double B2, double B3);
+bool B_within_margin(double B_center_val, double B1, double B2, double B3);
 
-ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double magnetization, char axis);
+ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, char axis, double magnetization);
 
 #endif

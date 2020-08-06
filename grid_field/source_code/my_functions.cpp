@@ -1092,39 +1092,61 @@ void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-double find_magnetization(Magnet &magnet, double mag_height) {
-    // dimensions of permanent magnet
-    double b = 0.5*magnet.get_width();   // half width
-    double a = 0.5*magnet.get_length();  // half length
-    double c = 0.5*mag_height;           // half height
+double find_magnetization(Magnet &magnet, double mag_dim, char axis) {
+    double B_center, a, b, c, d;
+    if(axis=='z') {
+        B_center = magnet.get_B0(2);
+
+        // dimensions of permanent magnet
+        a = 0.5*magnet.get_length();  // half length for permanent magnet
+        b = 0.5*magnet.get_width();   // half width for permanent magnet
+        c = 0.5*mag_dim;           // half height for permanent magnet
+        
+        d = 0.5*magnet.get_height() + c;  // distance from mag center to center between mags along the axis of magnetization
+    }
+    else if(axis=='y') {
+        B_center = magnet.get_B0(1);
+
+        a = 0.5*magnet.get_length();
+        b = 0.5*magnet.get_height();
+        c = 0.5*mag_dim;
+
+        d = 0.5*magnet.get_width() + c;
+    }
+    else {
+        // axis = x
+        B_center = magnet.get_B0(0);
+
+        a = 0.5*magnet.get_height();
+        b = 0.5*magnet.get_width();
+        c = 0.5*mag_dim;
+
+        d = 0.5*magnet.get_length() + c;
+    }
     
-    double z = 0.5*magnet.get_height() + c;  // distance from magnet center to center between magnets
-    double Bz = magnet.get_B0(2);
-    
-    double magnetization = (Bz*4*pow(10.,7))/(2*(atan((a*b)/((z-c)*sqrt(pow(b,2)+pow(a,2)+pow(z-c,2))))-
-                                                            atan((a*b)/((z+c)*sqrt(pow(a,2)+pow(b,2)+pow(z+c,2))))));
+    double magnetization = (B_center*4*pow(10.,7))/(2*(atan((a*b)/((d-c)*sqrt(pow(b,2)+pow(a,2)+pow(d-c,2))))-atan((a*b)/((d+c)*sqrt(pow(a,2)+pow(b,2)+pow(d+c,2))))));
     // divided by 2 because of the contributions of both magnets
     
     return magnetization;
 }
 
-void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z) {
+void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3) {
     
-   double temp_B1 = factor*log( (( (sqrt(pow(-x+a,2)+pow(y-b,2)+pow(-z+c,2))+b-y)/(sqrt(pow(-x+a,2)+pow(y+b,2)+pow(-z+c,2))-b-y) )*( (sqrt(pow(x+a,2)+pow(y-b,2)+pow(z+c,2))+b-y)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2))-b-y) ))/(( (sqrt(pow(x+a,2)+pow(y-b,2)+pow(-z+c,2))+b-y)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2))-b-y) )*( (sqrt(pow(-x+a,2)+pow(y-b,2)+pow(z+c,2))+b-y)/(sqrt(pow(-x+a,2)+pow(y+b,2)+pow(z+c,2))-b-y) )) );
+    temp_B1 = factor*log( (( (sqrt(pow(-x+a,2)+pow(y-b,2)+pow(-z+c,2))+b-y)/(sqrt(pow(-x+a,2)+pow(y+b,2)+pow(-z+c,2))-b-y) )*( (sqrt(pow(x+a,2)+pow(y-b,2)+pow(z+c,2))+b-y)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2))-b-y) ))/(( (sqrt(pow(x+a,2)+pow(y-b,2)+pow(-z+c,2))+b-y)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2))-b-y) )*( (sqrt(pow(-x+a,2)+pow(y-b,2)+pow(z+c,2))+b-y)/(sqrt(pow(-x+a,2)+pow(y+b,2)+pow(z+c,2))-b-y) )) );
     
-   double temp_B2 = factor*log( (( (sqrt(pow(x-a,2)+pow(-y+b,2)+pow(-z+c,2))+a-x)/(sqrt(pow(x+a,2)+pow(-y+b,2)+pow(-z+c,2))-a-x) )*( (sqrt(pow(x-a,2)+pow(y+b,2)+pow(z+c,2))+a-x)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2))-a-x) ))/(( (sqrt(pow(x-a,2)+pow(y+b,2)+pow(-z+c,2))+a-x)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2))-a-x) )*( (sqrt(pow(x-a,2)+pow(-y+b,2)+pow(z+c,2))+a-x)/(sqrt(pow(x+a,2)+pow(-y+b,2)+pow(z+c,2))-a-x) )) );
+    temp_B2 = factor*log( (( (sqrt(pow(x-a,2)+pow(-y+b,2)+pow(-z+c,2))+b+y)/(sqrt(pow(x+a,2)+pow(-y+b,2)+pow(-z+c,2))-b+y) )*( (sqrt(pow(x-a,2)+pow(y+b,2)+pow(z+c,2))+b-y)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2))-b-y) ))/(( (sqrt(pow(x-a,2)+pow(y+b,2)+pow(-z+c,2))+b-y)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2))-b-y) )*( (sqrt(pow(x-a,2)+pow(-y+b,2)+pow(z+c,2))+b+y)/(sqrt(pow(x+a,2)+pow(-y+b,2)+pow(z+c,2))-b+y) )) );
     
-   double temp_B3 = -factor*( atan(((-x+a)*(y+b))/((z+c)*sqrt(pow(-x+a,2)+pow(y+b,2)+pow(z+c,2)))) + atan(((-x+a)*(y+b))/((-z+c)*sqrt(pow(-x+a,2)+pow(y+b,2)+pow(-z+c,2)))) + atan(((-x+a)*(-y+b))/((z+c)*sqrt(pow(-x+a,2)+pow(-y+b,2)+pow(z+c,2)))) + atan(((-x+a)*(-y+b))/((-z+c)*sqrt(pow(-x+a,2)+pow(-y+b,2)+pow(-z+c,2)))) + atan(((x+a)*(y+b))/((z+c)*sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2)))) + atan(((x+a)*(y+b))/((-z+c)*sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2)))) + atan(((x+a)*(-y+b))/((z+c)*sqrt(pow(x+a,2)+pow(-y+b,2)+pow(z+c,2)))) + atan(((x+a)*(-y+b))/((-z+c)*sqrt(pow(x+a,2)+pow(-y+b,2)+pow(-z+c,2)))) );
+    temp_B3 = -factor*( atan(((-x+a)*(y+b))/((z+c)*sqrt(pow(-x+a,2)+pow(y+b,2)+pow(z+c,2)))) + atan(((-x+a)*(y+b))/((-z+c)*sqrt(pow(-x+a,2)+pow(y+b,2)+pow(-z+c,2)))) + atan(((-x+a)*(-y+b))/((z+c)*sqrt(pow(-x+a,2)+pow(-y+b,2)+pow(z+c,2)))) + atan(((-x+a)*(-y+b))/((-z+c)*sqrt(pow(-x+a,2)+pow(-y+b,2)+pow(-z+c,2)))) + atan(((x+a)*(y+b))/((z+c)*sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2)))) + atan(((x+a)*(y+b))/((-z+c)*sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2)))) + atan(((x+a)*(-y+b))/((z+c)*sqrt(pow(x+a,2)+pow(-y+b,2)+pow(z+c,2)))) + atan(((x+a)*(-y+b))/((-z+c)*sqrt(pow(x+a,2)+pow(-y+b,2)+pow(-z+c,2)))) );
 }
 
-bool B_within_margin(double magnetization, double B1, double B2, double B3) {
+bool B_within_margin(double B_center_val, double B1, double B2, double B3) {
     bool in_margin = true;
     
     // magnitude of B field from 1 magnet
     double magnitude = sqrt( pow(B1,2) + pow(B2,2) + pow(B3,2) );
     double percent = 0.01;
-    double cutoff_value = fabs(percent * magnetization);
-    
+    double cutoff_value = fabs(percent * B_center_val);
+
     if(magnitude < cutoff_value) {
         in_margin = false;
     }
@@ -1132,23 +1154,26 @@ bool B_within_margin(double magnetization, double B1, double B2, double B3) {
     return in_margin;
 }
 
-ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double magnetization, char axis) {
+ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, char axis, double magnetization) {
     ThreeVec grid_point_B;
 
     if(axis=='z') {
+
         // dimensions of permanent magnet
-        double b = 0.5*magnet.get_width();   // half width for permanent magnet
         double a = 0.5*magnet.get_length();  // half length for permanent magnet
+        double b = 0.5*magnet.get_width();   // half width for permanent magnet
         double c = 0.5*mag_dim;           // half height for permanent magnet
         
         double offset = 0.5*magnet.get_height() + c;  // moves user defined point for magnet space to the magnet center
+        
+        double B_center_val = magnet.get_B0(2);
         
         double grid_B1 = 0.0;  //B1 and B2 are components perpendicular to magnetization axis
         double grid_B2 = 0.0;  // for z-axis, B1 = x comp and B2 = y comp
         double grid_B3 = 0.0;  // B3 is along axis
         
         int i = 1;
-        while (i > -2) {
+        while(i > -2) {
             double mag_center_x = magnet.get_pos(0) + a;
             double mag_center_y = magnet.get_pos(1);
             double mag_center_z = magnet.get_pos(2) - (i*offset);
@@ -1157,13 +1182,13 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;  // distance from magnet to grid point
             
-            double factor = magnetization * pow(10.,-7) * i;
+            double factor = magnetization * pow(10.,-7);
             double temp_B1;
             double temp_B2;
             double temp_B3;
-            calc_grid_B_comps(factor, a, b, c, x, y, z);
+            calc_grid_B_comps(factor, a, b, c, x, y, z, temp_B1, temp_B2, temp_B3);
             
-            bool in_margin = B_within_margin(magnetization, temp_B1, temp_B2, temp_B3);
+            bool in_margin = B_within_margin(B_center_val, temp_B1, temp_B2, temp_B3);
             if(in_margin) {
                 grid_B1 += temp_B1;
                 grid_B2 += temp_B2;
@@ -1176,11 +1201,14 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
         grid_point_B.setZ(grid_B3);
     }
     else if(axis=='y') {
-        double b = 0.5*magnet.get_height();
+
         double a = 0.5*magnet.get_length();
+        double b = 0.5*magnet.get_height();
         double c = 0.5*mag_dim;
         
         double offset = 0.5*magnet.get_width() + c;
+        
+        double B_center_val = magnet.get_B0(1);
         
         double grid_B1 = 0.0;
         double grid_B2 = 0.0;
@@ -1196,13 +1224,13 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;
             
-            double factor = magnetization * pow(10.,-7) * i;
+            double factor = magnetization * pow(10.,-7);
             double temp_B1;
             double temp_B2;
             double temp_B3;
-            calc_grid_B_comps(factor, a, b, c, x, y, z);
+            calc_grid_B_comps(factor, a, b, c, x, y, z, temp_B1, temp_B2, temp_B3);
             
-            bool in_margin = B_within_margin(magnetization, temp_B1, temp_B2, temp_B3);
+            bool in_margin = B_within_margin(B_center_val, temp_B1, temp_B2, temp_B3);
             if(in_margin) {
                 grid_B1 += temp_B1;
                 grid_B2 += temp_B2;
@@ -1216,9 +1244,12 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
     }
     else {
         // axis = x
-        double b = 0.5*magnet.get_width();
+
         double a = 0.5*magnet.get_height();
+        double b = 0.5*magnet.get_width();
         double c = 0.5*mag_dim;
+        
+        double B_center_val = magnet.get_B0(0);
         
         double grid_B1 = 0.0;
         double grid_B2 = 0.0;
@@ -1227,11 +1258,12 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
         int i = 1;
         while (i > -2) {
             // user defined point is not at halfway of the magnet space length
+            double offset;
             if(i > 0) {
-                double offset = -1*c;
+                offset = -1*c;
             }
             else {
-                double offset = magnet.get_length() + c;
+                offset = magnet.get_length() + c;
             }
             
             double mag_center_x = magnet.get_pos(0) + offset;
@@ -1242,13 +1274,13 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;
             
-            double factor = magnetization * pow(10.,-7) * i;
+            double factor = magnetization * pow(10.,-7);
             double temp_B1;
             double temp_B2;
             double temp_B3;
-            calc_grid_B_comps(factor, a, b, c, x, y, z);
+            calc_grid_B_comps(factor, a, b, c, x, y, z, temp_B1, temp_B2, temp_B3);
             
-            bool in_margin = B_within_margin(magnetization, temp_B1, temp_B2, temp_B3);
+            bool in_margin = B_within_margin(B_center_val, temp_B1, temp_B2, temp_B3);
             if(in_margin) {
                 grid_B1 += temp_B1;
                 grid_B2 += temp_B2;

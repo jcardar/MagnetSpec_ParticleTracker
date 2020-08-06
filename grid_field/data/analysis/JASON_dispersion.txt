@@ -1,0 +1,5 @@
+###For an energy first is central divergence then transverse divergence trajectories (10 mrad)
+###Position on Screen [m], electron energy [MeV]
+1.43383e-18, 1.00000e+00
+1.43383e-18, 1.00000e+00
+1.43383e-18, 1.00000e+00

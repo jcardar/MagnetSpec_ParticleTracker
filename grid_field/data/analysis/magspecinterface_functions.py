@@ -107,21 +107,24 @@ number_of_magnets = widgets.BoundedIntText(
     disabled=False
 )
 
-def dynamicFloatValue_Magnet_Dimensions(num_of_magnets):
+def dynamicFloatValue_Magnet_Dimensions(num_of_magnets, global_bounds):
     listOfWidgets = []
     for i in range(num_of_magnets):
         widget1 = widgets.BoundedFloatText(
             value=0,
+            max=global_bounds[2].value,
             min=0,
             description=f'width {i+1}',
         )
         widget2 = widgets.BoundedFloatText(
             value=0,
+            max=global_bounds[0].value,
             min=0,
             description=f'length {i+1}',
         )
         widget3 = widgets.BoundedFloatText(
             value=0,
+            max=global_bounds[4].value,
             min=0,
             description=f'height {i+1}',
         )
@@ -131,8 +134,10 @@ def dynamicFloatValue_Magnet_Dimensions(num_of_magnets):
 def dynamicFloatValue_Permanent_Magnet_Dimension(num_of_magnets):
     listOfWidgets = []
     for i in range(num_of_magnets):
-        widget = widgets.FloatText(
-            value=1,
+        widget = widgets.BoundedFloatText(
+            value=0,
+            max=999999,
+            min=0,
             description=f'dim normal to gap {i+1}',
         )
         listOfWidgets.append(widget)
@@ -189,6 +194,7 @@ def dynamicFloatValue_Magnetic_Field_Axis(num_of_magnets):
 
 number_of_particles = widgets.BoundedIntText(
     value=1,
+    max=999999,
     min=1,
     step=1,
     description='# of Particles',
@@ -301,16 +307,18 @@ number_of_screens = widgets.BoundedIntText(
     disabled=False
 )
 
-def dynamicFloatValue_Screen_Dimensions(num_of_screens):
+def dynamicFloatValue_Screen_Dimensions(num_of_screens, global_bounds):
     listOfWidgets = []
     for i in range(num_of_screens):
         widget1 = widgets.BoundedFloatText(
             value=0,
+            max=global_bounds[0].value,
             min=0,
             description=f'length {i+1}',
         )
         widget2 = widgets.BoundedFloatText(
             value=0,
+            max=global_bounds[4].value,
             min=0,
             description=f'height {i+1}',
         )
