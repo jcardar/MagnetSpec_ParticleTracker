@@ -442,7 +442,10 @@ def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_p
     n_scrn_pos = []
     
     aveB_0 = averageB0(num_mag, fld_vals)
-    omega_div_c = (1.602177 * math.pow(10,-19) * aveB_0) / (9.109384 * math.pow(10,-31) * 2.997925 * math.pow(10,8))
+    q_e = 1.602177 * math.pow(10,-19)
+    m_e = 9.109384 * math.pow(10,-31)
+    c = 2.997925 * math.pow(10,8)
+    omega_div_c = (q_e * aveB_0) / (m_e * c)
     
     # distances
     distance_multiplier = 1 # m
@@ -484,6 +487,17 @@ def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_p
     n_energy_sprd = (rest_energy + energy_sprd.value)/rest_energy
     
     return n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, n_beam_pos, n_beam_energy, n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos
+
+def normalizeMu0(num_mag, fld_vals):
+    aveB_0 = averageB0(num_mag, fld_vals)
+    q_e = 1.602177 * math.pow(10,-19)
+    m_e = 9.109384 * math.pow(10,-31)
+    c = 2.997925 * math.pow(10,8)
+    omega_div_c = (q_e * aveB_0) / (m_e * c)
+    
+    mu_0 = 4 * math.pi * math.pow(10,-7) * ((omega_div_c * q_e * q_e) / m_e)
+    
+    return mu_0
 
 # Functions to aid in plotting
 
@@ -555,6 +569,7 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
     n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, n_beam_pos, n_beam_energy, \
     n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos = normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_pos,
                                                                         beam_energy, pos_sprd, energy_sprd, scrn_dim, scrn_pos)
+    mu_0 = normalizeMu0(num_mag, fld_vals)
     
     mag_info, beam_info, spread_info, screen_info = createOutput(num_mag, n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, fld_axs, 
                                                                  num_particles, n_beam_pos, n_beam_energy, beam_dir, n_pos_sprd, 
@@ -570,6 +585,8 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
     outfile.writelines(screen_info)
     outfile.write('\n')
     outfile.writelines(init_types)
+    outfile.write('\n')
+    outfile.write(f'{mu_0}')
     
     outfile.close()
 

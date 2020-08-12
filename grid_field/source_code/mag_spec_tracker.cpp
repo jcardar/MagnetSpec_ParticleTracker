@@ -73,6 +73,8 @@ int main(int argc, char *argv[])
     
     std::vector<int> init_types;
     ReadInitTypes(infile, init_types);
+
+    double mu_0 = ReadMu0(infile);
     
 ///////////////////
     //Define Particle Beam:

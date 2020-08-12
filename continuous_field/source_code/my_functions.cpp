@@ -1088,8 +1088,16 @@ void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types) {
     init_types = { pos_type, energy_type, div_type };
 }
 
+double ReadMu0(std::ifstream &input_stream) {
+    std::string tempStr;
+    input_stream >> tempStr;
+    double mu_0 = std::stod(tempStr);
+
+    return mu_0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-double find_magnetization(Magnet &magnet, double mag_dim, char axis) {
+double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis) {
     double B_center, a, b, c, d;
     if(axis=='z') {
         B_center = magnet.get_B0(2);
@@ -1121,7 +1129,7 @@ double find_magnetization(Magnet &magnet, double mag_dim, char axis) {
         d = 0.5*magnet.get_length() + c;
     }
     
-    double magnetization = (B_center*4*pow(10.,7))/(2*(atan((a*b)/((d-c)*sqrt(pow(b,2)+pow(a,2)+pow(d-c,2))))-atan((a*b)/((d+c)*sqrt(pow(a,2)+pow(b,2)+pow(d+c,2))))));
+    double magnetization = B_center/((mu_0/M_PI)*(atan((a*b)/((d-c)*sqrt(pow(b,2)+pow(a,2)+pow(d-c,2))))-atan((a*b)/((d+c)*sqrt(pow(a,2)+pow(b,2)+pow(d+c,2)))))*2);
     // divided by 2 because of the contributions of both magnets
     
     return magnetization;
@@ -1150,8 +1158,9 @@ bool B_within_margin(double B_center_val, double B1, double B2, double B3) {
     return in_margin;
 }
 
-ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, char axis, double magnetization) {
+ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization) {
     ThreeVec grid_point_B;
+    double factor = (mu_0 * magnetization)/(4 * M_PI);
 
     if(axis=='z') {
 
@@ -1178,7 +1187,6 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;  // distance from magnet to grid point
             
-            double factor = magnetization * pow(10.,-7);
             double temp_B1;
             double temp_B2;
             double temp_B3;
@@ -1220,7 +1228,6 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;
             
-            double factor = magnetization * pow(10.,-7);
             double temp_B1;
             double temp_B2;
             double temp_B3;
@@ -1270,7 +1277,6 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;
             
-            double factor = magnetization * pow(10.,-7);
             double temp_B1;
             double temp_B2;
             double temp_B3;
