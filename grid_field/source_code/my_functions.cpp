@@ -1137,20 +1137,32 @@ double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis
     return magnetization;
 }
 
+double F2(double a, double b, double c, double x, double y, double z)
+{
+    double numerator = sqrt( ((x+a)*(x+a)) + ((y-b)*(y-b)) + ((z+c)*(z+c)) ) + b - y;
+    double denomenator = (sqrt( ((x+a)*(x+a)) + ((y+b)*(y+b)) + ((z+c)*(z+c)) ) - b - y);
+    return numerator/denomenator;
+}
+
+double F1(double a, double b, double c, double x, double y, double z)
+{
+    return atan( ( (x+a)*(y+b) )/( (z+c)*sqrt( ((x+a)*(x+a)) + ((y+b)*(y+b)) + ((z+c)*(z+c)) ) ) );
+}
+
 void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3) {
     
-    temp_B1 = factor*log( (( (sqrt(pow(-x+a,2)+pow(y-b,2)+pow(-z+c,2))+b-y)/(sqrt(pow(-x+a,2)+pow(y+b,2)+pow(-z+c,2))-b-y) )*( (sqrt(pow(x+a,2)+pow(y-b,2)+pow(z+c,2))+b-y)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2))-b-y) ))/(( (sqrt(pow(x+a,2)+pow(y-b,2)+pow(-z+c,2))+b-y)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2))-b-y) )*( (sqrt(pow(-x+a,2)+pow(y-b,2)+pow(z+c,2))+b-y)/(sqrt(pow(-x+a,2)+pow(y+b,2)+pow(z+c,2))-b-y) )) );
+    temp_B1 = factor*log( ( F2(a,b,c,-x,y,-z)*F2(a,b,c,x,y,z) )/( F2(a,b,c,x,y,-z)*F2(a,b,c,-x,y,z) )  );
 
-    temp_B2 = factor*log( (( (sqrt(pow(x-a,2)+pow(-y+b,2)+pow(-z+c,2))+a-x)/(sqrt(pow(x+a,2)+pow(-y+b,2)+pow(-z+c,2))-a-x) )*( (sqrt(pow(x-a,2)+pow(y+b,2)+pow(z+c,2))+a-x)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2))-a-x) ))/(( (sqrt(pow(x-a,2)+pow(y+b,2)+pow(-z+c,2))+a-x)/(sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2))-a-x) )*( (sqrt(pow(x-a,2)+pow(-y+b,2)+pow(z+c,2))+a-x)/(sqrt(pow(x+a,2)+pow(-y+b,2)+pow(z+c,2))-a-x) )) );
-    
-    temp_B3 = -factor*( atan(((-x+a)*(y+b))/((z+c)*sqrt(pow(-x+a,2)+pow(y+b,2)+pow(z+c,2)))) + atan(((-x+a)*(y+b))/((-z+c)*sqrt(pow(-x+a,2)+pow(y+b,2)+pow(-z+c,2)))) + atan(((-x+a)*(-y+b))/((z+c)*sqrt(pow(-x+a,2)+pow(-y+b,2)+pow(z+c,2)))) + atan(((-x+a)*(-y+b))/((-z+c)*sqrt(pow(-x+a,2)+pow(-y+b,2)+pow(-z+c,2)))) + atan(((x+a)*(y+b))/((z+c)*sqrt(pow(x+a,2)+pow(y+b,2)+pow(z+c,2)))) + atan(((x+a)*(y+b))/((-z+c)*sqrt(pow(x+a,2)+pow(y+b,2)+pow(-z+c,2)))) + atan(((x+a)*(-y+b))/((z+c)*sqrt(pow(x+a,2)+pow(-y+b,2)+pow(z+c,2)))) + atan(((x+a)*(-y+b))/((-z+c)*sqrt(pow(x+a,2)+pow(-y+b,2)+pow(-z+c,2)))) );
+    temp_B2 = factor*log( ( F2(b,a,c,-y,x,-z)*F2(b,a,c,y,x,z) )/( F2(b,a,c,y,x,-z)*F2(b,a,c,-y,x,z) )  );
+
+    temp_B3 = -factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
 }
 
 bool B_within_margin(double B_center_val, double B1, double B2, double B3) {
     bool in_margin = true;
     
     // magnitude of B field from 1 magnet
-    double magnitude = sqrt( pow(B1,2) + pow(B2,2) + pow(B3,2) );
+    double magnitude = sqrt( (B1*B1) + (B2*B2) + (B3*B3) );
     double percent = 0.01;
     double cutoff_value = fabs(percent * B_center_val);
 
