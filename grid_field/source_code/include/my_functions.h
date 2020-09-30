@@ -45,9 +45,9 @@ void step_through_magnet_mag_leap(Particle &electron, Magnet &magnet, ThreeVec v
 
 void step_through_magnet_mag_leap(Particle *electron, Magnet &magnet, double& time, const double& del_time);
 
-void boris(Particle &electron_t, Magnet &magnet_t, const double del_t);
+void boris(Particle &electron_t, Magnet &magnet_t, const double del_t, double mu_0);
 
-void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double time_out = (2*M_PI*1000));
+void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out = (2*M_PI*1000));
 
 void first_half_position_step(Particle &electron_t, const double del_t);
 
@@ -61,7 +61,7 @@ double dist_to_mag(Magnet magnet_t, Particle particle_t);
 
 void move_particle_to_magnet(Magnet magnet_t, Particle &particle_t);
 
-void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double time_limit);
+void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit);
 
 void half_time_step(double &time_step);
 

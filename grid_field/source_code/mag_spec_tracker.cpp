@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     double time     {0.0};                            //Define a variable time in which will be stepped over
-    double del_time {0.05};                              //Define a time step
+    double del_time {0.03};                              //Define a time step
     //Hard-coded:
     bool time_step_test = false;
 
@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
     //std::cout << std::setprecision(15);
     //del_time = 2*M_PI*energy0*100;
     //std::cout << int_y << std::endl;
+    //std::cerr << beam_info[0][0] << std::endl;
     ThreeVec initial_position(beam_info[0][0], beam_info[0][1], beam_info[0][2]);
     ThreeVec initial_position_spread(beam_spread_info[0][0], beam_spread_info[0][1], beam_spread_info[0][2]);
     ThreeVec initial_angular_direction(beam_info[2][0], beam_info[2][1], beam_info[2][2]);
@@ -102,15 +103,17 @@ int main(int argc, char *argv[])
         magnet[ii].set_B0(0, 0.0);
         magnet[ii].set_B0(1, 0.0);
         magnet[ii].set_B0(2, 0.0);
+        magnet[ii].set_axis_of_magnetization( magnet_axis_info[ii] );
+        magnet[ii].set_height_of_dipole_block( PmagDim[ii] );
         
-        if(magnet_axis_info[ii] == 'z') {
-            magnet[ii].set_B0(2, magnet_info[2][ii][0]);
+        if(magnet_axis_info[ii] == 'x') {
+            magnet[ii].set_B0(0, magnet_info[2][ii][0]);
         }
         else if(magnet_axis_info[ii] == 'y') {
             magnet[ii].set_B0(1, magnet_info[2][ii][0]);
         }
         else {
-            magnet[ii].set_B0(0, magnet_info[2][ii][0]);  // magnet_axis_info == 'x'
+            magnet[ii].set_B0(2, magnet_info[2][ii][0]);  // magnet_axis_info == 'z'
         }
         
         magnet[ii].set_pos(0, magnet_info[1][ii][0]); 
@@ -172,6 +175,7 @@ int main(int argc, char *argv[])
             }
         
         Particle electron = electron_beam.get_particle();
+        std::cerr << electron.get_pos(0) << std::endl;
         electron.set_outfiles(outfile_time, outfile_xpos, outfile_ypos, outfile_zpos, outfile_px, outfile_py, outfile_pz, outfile_energy);
 
         electron.set_time(time);
@@ -182,7 +186,7 @@ int main(int argc, char *argv[])
 
         double particle_time_limit = (2*M_PI*energy0)*10.0;
 
-        move_through_magnets(magnet, num_magnets, electron, time, del_time, particle_time_limit);
+        move_through_magnets(magnet, num_magnets, electron, time, del_time, mu_0, particle_time_limit);
         move_to_screens(screen, num_screens, electron);
 
         outfile_part_newline(electron);

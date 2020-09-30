@@ -4,14 +4,14 @@
 
 
 
-Magnet::Magnet(ThreeVec pos, double length, double width, double height, ThreeVec B0, std::ofstream& out_magnet)
-        : m_position(pos), m_length(length), m_width(width), m_height(height), m_Bfield(B0), m_out_magnet(&out_magnet)
+Magnet::Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, ThreeVec B0, std::ofstream& out_magnet)
+        : m_position(pos), m_length(length), m_width(width), m_height(height), m_height_of_dipole_block(height_of_dipole_block), m_Bfield(B0), m_out_magnet(&out_magnet)
 {
 
 }
 
-Magnet::Magnet(ThreeVec pos, double length, double width, double height, double* Bmap, std::ofstream& out_magnet)
-    : m_position(pos), m_length(length), m_width(width), m_height(height), m_Bfield_grid(Bmap), m_out_magnet(&out_magnet)
+Magnet::Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, double* Bmap, std::ofstream& out_magnet)
+    : m_position(pos), m_length(length), m_width(width), m_height(height), m_height_of_dipole_block(height_of_dipole_block), m_Bfield_grid(Bmap), m_out_magnet(&out_magnet)
 {
 
 }
@@ -39,6 +39,16 @@ void Magnet::set_width(double width)
 void Magnet::set_height(double height)
 {
     m_height = height;
+}
+
+void Magnet::set_height_of_dipole_block(double height_of_block)
+{
+    m_height_of_dipole_block = height_of_block;
+}
+
+void Magnet::set_axis_of_magnetization(char axis_of_magnetization)
+{
+    m_axis_of_magnetization = axis_of_magnetization;
 }
 
 void Magnet::set_B0(ThreeVec B0)
@@ -84,4 +94,14 @@ double Magnet::get_width()
 double Magnet::get_height()
 {
     return m_height;
+}
+
+double Magnet::get_height_of_dipole_block()
+{
+    return m_height_of_dipole_block;
+}
+
+char Magnet::get_axis_of_magnetization()
+{
+    return m_axis_of_magnetization;
 }

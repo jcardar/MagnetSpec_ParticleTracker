@@ -41,9 +41,21 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
             }
             case PositionInitializationTypes::INITIALIZE_UNIFORM_POS:
             {
+                double x_init = position_initial.getX()-position_spread.getX();
+                double y_init = position_initial.getY()-position_spread.getY();
+                double z_init = position_initial.getZ()-position_spread.getZ();
+                m_particle.set_pos(x_init, y_init, z_init);
                 break;
             }
-
+            case PositionInitializationTypes::INITIALIZE_SCAN_POS:
+            {
+                //central, left, right (Y), bottom, top (Z), back, front (X)
+                double x_init = position_initial.getX();
+                double y_init = position_initial.getY();
+                double z_init = position_initial.getZ();
+                m_particle.set_pos(x_init, y_init, z_init);
+                break;
+            }
         }
 
         switch(energy_init)
@@ -75,6 +87,10 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
             }
         }
 
+        if(pos_init == PositionInitializationTypes::INITIALIZE_SCAN_POS)
+        {
+            diverge_init = DivergenceInitializationTypes::INITIALIZE_SCAN_DIV;
+        }
         switch(diverge_init)
         {
             case DivergenceInitializationTypes::INITIALIZE_GAUSSIAN_DIV:
@@ -109,7 +125,7 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
 
             case DivergenceInitializationTypes::INITIALIZE_SCAN_DIV:
             {
-                m_num_particles = m_num_particles*3.0;
+                m_num_particles = m_num_particles*7.0;
                 double angle_x = m_angle_central.getX();
                 double angle_y = m_angle_central.getY();
                 double angle_z = m_angle_central.getZ();
@@ -166,7 +182,42 @@ void Beam::next_particle(int& particle_counter,
             }
 
             case PositionInitializationTypes::INITIALIZE_UNIFORM_POS:
-                {break;}
+            {
+                break;
+            }
+
+            case PositionInitializationTypes::INITIALIZE_SCAN_POS:
+            {
+                if(particle_counter%7 == 0)
+                {
+                    m_particle.set_pos(m_position_central.getX(), m_position_central.getY(), m_position_central.getZ());
+                }
+                else if(particle_counter%7 == 1)
+                {
+                    m_particle.set_pos(m_position_central.getX(), m_position_central.getY()-m_position_spread.getY(), m_position_central.getZ());
+                }
+                else if(particle_counter%7 == 2)
+                {
+                    m_particle.set_pos(m_position_central.getX(), m_position_central.getY()+m_position_spread.getY(), m_position_central.getZ());
+                }
+                else if(particle_counter%7 == 3)
+                {
+                    m_particle.set_pos(m_position_central.getX(), m_position_central.getY(), m_position_central.getZ()-m_position_spread.getZ());
+                }
+                else if(particle_counter%7 == 4)
+                {
+                    m_particle.set_pos(m_position_central.getX(), m_position_central.getY(), m_position_central.getZ()+m_position_spread.getZ());
+                }
+                else if(particle_counter%7 == 5)
+                {
+                    m_particle.set_pos(m_position_central.getX()-m_position_spread.getX(), m_position_central.getY(), m_position_central.getZ());
+                }
+                else if(particle_counter%7 == 6)
+                {
+                    m_particle.set_pos(m_position_central.getX()+m_position_spread.getX(), m_position_central.getY(), m_position_central.getZ());
+                }
+                break;
+            }
         }
 
         switch(energy_init)
@@ -179,23 +230,32 @@ void Beam::next_particle(int& particle_counter,
 
             case EnergyInitializationTypes::INITIALIZE_UNIFORM_EN:
             {
-                if(diverge_init != DivergenceInitializationTypes::INITIALIZE_SCAN_DIV)
-                    {m_particle.set_energy(m_energy_central - m_energy_spread + particle_counter+m_energy_spread/m_num_particles);}
+                if(pos_init != PositionInitializationTypes::INITIALIZE_SCAN_POS && diverge_init != DivergenceInitializationTypes::INITIALIZE_SCAN_DIV)
+                    {
+                        m_particle.set_energy(m_energy_central - m_energy_spread + particle_counter+m_energy_spread/m_num_particles);
+                    }
                 else if(diverge_init == DivergenceInitializationTypes::INITIALIZE_SCAN_DIV)
                     {
-                        if((particle_counter) % 3 == 0)
-                        {m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/3)*2*m_energy_spread/((m_num_particles-3)/3));}
+                        if((particle_counter) % 7 == 0)
+                        {
+                            m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/7)*2*m_energy_spread/((m_num_particles-7)/7));
+                        }
                     }
                 break;
             }
+
             case EnergyInitializationTypes::INITIALIZE_LOG_EN:
             {
                 if(diverge_init != DivergenceInitializationTypes::INITIALIZE_SCAN_DIV)
-                    {m_particle.set_energy(m_energy_central - m_energy_spread + particle_counter+m_energy_spread/m_num_particles);}
+                    {
+                        m_particle.set_energy(m_energy_central - m_energy_spread + particle_counter+m_energy_spread/m_num_particles);
+                    }
                 else if(diverge_init == DivergenceInitializationTypes::INITIALIZE_SCAN_DIV)
                     {
-                        if((particle_counter) % 3 == 0)
-                        {m_particle.set_energy((m_energy_central - m_energy_spread)*(particle_counter/3));}
+                        if((particle_counter) % 7 == 0)
+                        {
+                            m_particle.set_energy((m_energy_central - m_energy_spread)*(particle_counter/3));
+                        }
                     }
                 break;
             }
@@ -224,7 +284,7 @@ void Beam::next_particle(int& particle_counter,
             case DivergenceInitializationTypes::INITIALIZE_SCAN_DIV:
             {
                 //scans central, left, right, top, bottom of divergence extremes
-                if((particle_counter)%3 == 0)
+                if((particle_counter)%7 == 0)
                 {
                         double angle_x = m_angle_central.getX();
                         double angle_y = m_angle_central.getY();
@@ -234,9 +294,21 @@ void Beam::next_particle(int& particle_counter,
                         double py      = p_mag*cos(angle_y);
                         double pz      = p_mag*cos(angle_z);
                         double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        if(angle_x < 0)
+                        {
+                            px = -px;
+                        }
+                        if(angle_y < 0)
+                        {
+                            py = -py;
+                        }
+                        if(angle_z < 0)
+                        {
+                            pz = -pz;
+                        }
                         m_particle.set_p(px, py, pz);
                 }
-                else if((particle_counter) % 3 == 1)// && particle_counter+1 % 4 != 0)
+                else if((particle_counter) % 7 == 1)// && particle_counter+1 % 4 != 0)
                     {
                         double angle_x = m_angle_central.getX();
                         double angle_y = m_angle_central.getY() - m_angle_spread.getY();
@@ -246,9 +318,21 @@ void Beam::next_particle(int& particle_counter,
                         double py      = p_mag*cos(angle_y);
                         double pz      = p_mag*cos(angle_z);
                         double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        if(angle_x < 0)
+                        {
+                            px = -px;
+                        }
+                        if(angle_y < 0)
+                        {
+                            py = -py;
+                        }
+                        if(angle_z < 0)
+                        {
+                            pz = -pz;
+                        }
                         m_particle.set_p(px, py, pz);
                     }
-                else if(particle_counter % 3 == 2)// && particle_counter+1 % 6 != 0)
+                else if(particle_counter % 7 == 2)// && particle_counter+1 % 6 != 0)
                     {
                         double angle_x = m_angle_central.getX();
                         double angle_y = m_angle_central.getY() + m_angle_spread.getY();
@@ -258,34 +342,120 @@ void Beam::next_particle(int& particle_counter,
                         double py      = p_mag*cos(angle_y);
                         double pz      = p_mag*cos(angle_z);
                         double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        if(angle_x < 0)
+                        {
+                            px = -px;
+                        }
+                        if(angle_y < 0)
+                        {
+                            py = -py;
+                        }
+                        if(angle_z < 0)
+                        {
+                            pz = -pz;
+                        }
                         m_particle.set_p(px, py, pz);
                     }
-                // else if((particle_counter+1) % 4 == 0)
-                //     {
-                //         double angle_x = m_angle_central.getX();
-                //         double angle_y = m_angle_central.getY();
-                //         double angle_z = m_angle_central.getZ() - m_angle_spread.getZ();
-                        
-                //         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                //         //double px      = p_mag*cos(angle_x);
-                //         double py      = p_mag*cos(angle_y);
-                //         double pz      = p_mag*cos(angle_z);
-                //         double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
-                //         m_particle.set_p(px, py, pz);
-                //     }
-                // else if((particle_counter+1) % 5 == 0)
-                //     {
-                //         double angle_x = m_angle_central.getX();
-                //         double angle_y = m_angle_central.getY();
-                //         double angle_z = m_angle_central.getZ() - m_angle_spread.getZ();
-                        
-                //         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                //         //double px      = p_mag*cos(angle_x);
-                //         double py      = p_mag*cos(angle_y);
-                //         double pz      = p_mag*cos(angle_z);
-                //         double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
-                //         m_particle.set_p(px, py, pz);
-                //     }
+                else if((particle_counter) % 7 == 3)
+                    {
+                        double angle_x = m_angle_central.getX();
+                        double angle_y = m_angle_central.getY();
+                        double angle_z = m_angle_central.getZ() - m_angle_spread.getZ();
+                     
+                        double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
+                        //double px      = p_mag*cos(angle_x);
+                        double py      = p_mag*cos(angle_y);
+                        double pz      = p_mag*cos(angle_z);
+                        double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        if(angle_x < 0)
+                        {
+                            px = -px;
+                        }
+                        if(angle_y < 0)
+                        {
+                            py = -py;
+                        }
+                        if(angle_z < 0)
+                        {
+                            pz = -pz;
+                        }
+                        m_particle.set_p(px, py, pz);
+                    }
+                else if((particle_counter) % 7 == 4)
+                    {
+                        double angle_x = m_angle_central.getX();
+                        double angle_y = m_angle_central.getY();
+                        double angle_z = m_angle_central.getZ() + m_angle_spread.getZ();
+                     
+                        double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
+                        //double px      = p_mag*cos(angle_x);
+                        double py      = p_mag*cos(angle_y);
+                        double pz      = p_mag*cos(angle_z);
+                        double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        if(angle_x < 0)
+                        {
+                            px = -px;
+                        }
+                        if(angle_y < 0)
+                        {
+                            py = -py;
+                        }
+                        if(angle_z < 0)
+                        {
+                            pz = -pz;
+                        }
+                        m_particle.set_p(px, py, pz);
+                    }
+                else if((particle_counter) % 7 == 5)
+                    {
+                        double angle_x = m_angle_central.getX() - m_angle_spread.getX();
+                        double angle_y = m_angle_central.getY();
+                        double angle_z = m_angle_central.getZ();
+                     
+                        double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
+                        double px      = p_mag*cos(angle_x);
+                        double py      = p_mag*cos(angle_y);
+                        //double pz      = p_mag*cos(angle_z);
+                        double pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
+                        if(angle_x < 0)
+                        {
+                            px = -px;
+                        }
+                        if(angle_y < 0)
+                        {
+                            py = -py;
+                        }
+                        if(angle_z < 0)
+                        {
+                            pz = -pz;
+                        }
+                        m_particle.set_p(px, py, pz);
+                    }
+                else if((particle_counter) % 7 == 6)
+                    {
+                        double angle_x = m_angle_central.getX() + m_angle_spread.getX();
+                        double angle_y = m_angle_central.getY();
+                        double angle_z = m_angle_central.getZ();
+                     
+                        double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
+                        double px      = p_mag*cos(angle_x);
+                        double py      = p_mag*cos(angle_y);
+                        //double pz      = p_mag*cos(angle_z);
+                        double pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
+                        if(angle_x < 0)
+                        {
+                            px = -px;
+                        }
+                        if(angle_y < 0)
+                        {
+                            py = -py;
+                        }
+                        if(angle_z < 0)
+                        {
+                            pz = -pz;
+                        }
+                        m_particle.set_p(px, py, pz);
+                    }
             }
                 
         }

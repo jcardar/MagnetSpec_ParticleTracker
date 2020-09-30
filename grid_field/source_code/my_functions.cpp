@@ -359,9 +359,12 @@ void stepThroughMagnet_Leap(Particle *electron, Magnet &magnet, double& time, co
         //std::cerr << electron->get_pos() << '\n' << '~' << '\n';
 }
 
+double ReadMu0(std::ifstream &input_stream);
+double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis);
+void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter)
+void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter, double mu_0)
 {
     //Rotation of momentum vector in uniform field
     // p+ = p- + (p- + (p- x t)) x s
@@ -384,21 +387,28 @@ void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter)
                 + (electron_t.get_p(2) * electron_t.get_p(2)));
     igamma    = 1.0/(sqrt(1.0+psquared)); 
 
-        electron_t.set_pos( 0, electron_t.get_pos(0) + (electron_t.get_p(0) * del_t * igamma * 0.5) );
-        electron_t.set_pos( 1, electron_t.get_pos(1) + (electron_t.get_p(1) * del_t * igamma * 0.5) );
-        electron_t.set_pos( 2, electron_t.get_pos(2) + (electron_t.get_p(2) * del_t * igamma * 0.5) ); 
+    electron_t.set_pos( 0, electron_t.get_pos(0) + (electron_t.get_p(0) * del_t * igamma * 0.5) );
+    electron_t.set_pos( 1, electron_t.get_pos(1) + (electron_t.get_p(1) * del_t * igamma * 0.5) );
+    electron_t.set_pos( 2, electron_t.get_pos(2) + (electron_t.get_p(2) * del_t * igamma * 0.5) ); 
 
-    Bsquared  = ( ( (magnet_t.get_B0(0))*(magnet_t.get_B0(0)) ) + ( (magnet_t.get_B0(1))*(magnet_t.get_B0(1)) )
-                + ( (magnet_t.get_B0(2))*(magnet_t.get_B0(2)) ) );
+    //Bsquared  = ( ( (magnet_t.get_B0(0))*(magnet_t.get_B0(0)) ) + ( (magnet_t.get_B0(1))*(magnet_t.get_B0(1)) )
+    //           + ( (magnet_t.get_B0(2))*(magnet_t.get_B0(2)) ) );
     
+    double B1_atPosition, B2_atPosition, B3_atPosition;
+    double magnetization = find_magnetization(magnet_t, magnet_t.get_height_of_dipole_block(), mu_0, magnet_t.get_axis_of_magnetization());
+    double factor = (mu_0 * magnetization)/(4 * M_PI);
+    calc_grid_B_comps(factor, 0.5*magnet_t.get_length(), 0.5*magnet_t.get_width(), 0.5*magnet_t.get_height(), electron_t.get_pos(0), electron_t.get_pos(1), electron_t.get_pos(2), B1_atPosition, B2_atPosition, B3_atPosition);
+
+    Bsquared = ( B1_atPosition*B1_atPosition ) + (B2_atPosition * B2_atPosition) + (B3_atPosition * B3_atPosition);
     double old_px, old_py, old_pz;
+    ThreeVec B_at_position(B1_atPosition, B2_atPosition, B3_atPosition);
 
         ttsquared = 0.0;
     //if(counter!=0)
     //{
         for (x1=0; x1<3; ++x1)
             {
-            tt[x1]     = (magnet_t.get_B0(x1) )*del_t*0.5*igamma;
+            tt[x1]     = (B_at_position.get(x1) )*del_t*0.5*igamma;
             ttsquared += (tt[x1]*tt[x1]);
             }
         
@@ -427,7 +437,7 @@ void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter)
 
     //Do average velocity to update position
 
-    ThreeVec average_vel((old_px+electron_t.get_p(0))*igamma*0.5, (old_py+electron_t.get_p(1))*igamma*0.5, (old_pz+electron_t.get_p(2))*igamma*0.5);
+    //ThreeVec average_vel((old_px+electron_t.get_p(0))*igamma*0.5, (old_py+electron_t.get_p(1))*igamma*0.5, (old_pz+electron_t.get_p(2))*igamma*0.5);
     
     //ThreeVec half_pos((electron_t.get_pos(0) + (old_px*igamma*del_t*0.5)),(electron_t.get_pos(1) + (old_py*igamma*del_t*0.5)),(electron_t.get_pos(2) + (old_pz*igamma*del_t*0.5)));
 
@@ -447,7 +457,7 @@ void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double time_out)
+void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out)
 {
     //TESTING CHANING TIME STEP:
     //const double del_time = del_time_1 * 0.5;
@@ -457,7 +467,7 @@ void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& t
     int counter = 0;
     do
         {
-            boris(electron, magnet, del_time, counter); //updates particle velocity & position in magnetic field 
+            boris(electron, magnet, del_time, counter, mu_0); //updates particle velocity & position in magnetic field 
             counter++;
 
             time += del_time;
@@ -466,9 +476,13 @@ void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& t
             electron.set_time(time);
 
             
-            check_x = (electron.get_pos(0) >= (magnet.get_pos(0))) && (electron.get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0))));
+            //check_x = (electron.get_pos(0) >= (magnet.get_pos(0))) && (electron.get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0))));
+            //check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0));
+            //check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
+            check_x = (electron.get_pos(0) >= (magnet.get_pos(0)-magnet.get_length())) && (electron.get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0))));
             check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0));
             check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
+
 
             if((check_x && check_y && check_z) && !(time>=time_out))
                 { outfile_part_commaAndWrite(electron); }
@@ -677,7 +691,7 @@ void move_particle_to_magnet(Magnet magnet_t, Particle &particle_t)
 
 
 
-void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double time_limit)
+void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time,double mu_0, double time_limit)
 {
     bool check_inside_magnet = false;
     bool check_intersect_magnet = false;
@@ -1101,6 +1115,7 @@ double ReadMu0(std::ifstream &input_stream) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis) {
+    //mag_dim is the 'height' of the dipole's magnetic blocks
     double B_center, a, b, c, d;
     if(axis=='z') {
         B_center = magnet.get_B0(2);
@@ -1158,7 +1173,8 @@ void calc_grid_B_comps(double factor, double a, double b, double c, double x, do
     temp_B3 = -factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
 }
 
-bool B_within_margin(double B_center_val, double B1, double B2, double B3) {
+bool B_within_margin(double B_center_val, double B1, double B2, double B3) 
+{
     bool in_margin = true;
     
     // magnitude of B field from 1 magnet
