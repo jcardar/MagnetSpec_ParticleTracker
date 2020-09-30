@@ -138,7 +138,7 @@ def dynamicFloatValue_Permanent_Magnet_Dimension(num_of_magnets):
             value=0,
             max=999999,
             min=0,
-            description=f'dim normal to gap {i+1}',
+            description=f'dimension {i+1}',
         )
         listOfWidgets.append(widget)
     return listOfWidgets
