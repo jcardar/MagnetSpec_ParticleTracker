@@ -486,7 +486,7 @@ def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_p
         rest_energy = 0.511 * math.pow(10,-3)
     
     n_beam_energy = (rest_energy + beam_energy.value)/rest_energy
-    n_energy_sprd = (rest_energy + energy_sprd.value)/rest_energy
+    n_energy_sprd = (energy_sprd.value)/rest_energy
     
     return n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, n_beam_pos, n_beam_energy, n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos
 
