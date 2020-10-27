@@ -9,7 +9,7 @@ import numpy
 import matplotlib.pyplot as plt
 import copy
 import math
-from phaseCal_agrt import *
+#from phaseCal_agrt import *
 
 #Recommended to use differential driver: changes mutation size to correspond to how close it is to optimized value
 
@@ -27,7 +27,7 @@ starting_point = [0.5, 1.5e-6]
 #Mutation size only two parameters - first changes first starting point, second changes second starting point
 mutation_size = (0.01, 0.05e-6)
 
-iter_num = 40
+iter_num = 100
 
 
 def main():
@@ -60,8 +60,8 @@ def main():
 
         fom, I = synthetic_diagnostic(params)
 
-        print('Iter No.: %d, Child: %d, Fom: %.1f, Genes: %.3f, %.2f'%
-                (ga.generation_number, population_id, fom, params[0], params[1]*1e6))
+        print('Iter No.: %d, Child: %d, Fom: %.1f'%
+                (ga.generation_number, population_id, fom))
 
         if save_raw_option.lower() == 'y':
             pass
@@ -160,8 +160,8 @@ def main():
     ax2.set_ylabel('Zeff')
     ax3.set_ylabel('Sigma (1e-6)')
 
-    ax2.axhline(z0, ls = '--', color = 'gray', lw = 2)
-    ax3.axhline(s0*1e6, ls = '--', color = 'gray', lw = 2)
+    #ax2.axhline(z0, ls = '--', color = 'gray', lw = 2)
+    #ax3.axhline(s0*1e6, ls = '--', color = 'gray', lw = 2)
 
     ax4.set_title('Goal')
     ax5.set_title('Current best')
@@ -190,10 +190,10 @@ def main():
         ax3.plot([ga.generation_number] * ga['population'], 1e6*gene_all.reshape((ga['population'], len(lbound)))[:,1], '+', color = 'gray')
         ax3.plot([ga.generation_number] * ga['selection'],  1e6*gene.reshape(    (ga['selection'],len(lbound))  )[:,1], 'r*')
         
-        _, _, _, I_best = shadowgraphy(zeff = gene[0], sigma = gene[1], Lx = 10*13e-6, EkeV = [5], Nx =  2048, Ny = 512)
+        #####_, _, _, I_best = shadowgraphy(zeff = gene[0], sigma = gene[1], Lx = 10*13e-6, EkeV = [5], Nx =  2048, Ny = 512)
 
-        p4 = ax4.pcolormesh(x*1e6, y*1e6, I0, vmin = 0, vmax = 0.5, rasterized = True)
-        p5 = ax5.pcolormesh(x*1e6, y*1e6, I_best, vmin = 0, vmax = 0.5, rasterized = True)
+        #####p4 = ax4.pcolormesh(x*1e6, y*1e6, I0, vmin = 0, vmax = 0.5, rasterized = True)
+        #####p5 = ax5.pcolormesh(x*1e6, y*1e6, I_best, vmin = 0, vmax = 0.5, rasterized = True)
         # plt.colorbar(p4, ax = ax4)
         # plt.colorbar(p5, ax = ax5)
 

@@ -15,6 +15,7 @@ private:
     double m_angle_about_z;     //radians about z-axis
     double m_length;
     double m_height;
+    int m_index;
 public:
 
     Screen(ThreeVec position, double angle_rad_around_x, double angle_rad_around_y, double angle_rad_around_z, double length, double height);
@@ -38,6 +39,8 @@ public:
 
     void set_height(double height);
 
+    void set_index(int index);
+
     ThreeVec get_pos();
 
     double get_pos(int index);
@@ -52,9 +55,15 @@ public:
 
     double get_height();
 
+    int get_index();
+
     void set_outfile(std::ofstream& out_screen);
 
+    void set_outfile_particle_on_screen(std::ofstream& out_particle_on_screen);
+
     std::ofstream *m_out_screen;
+
+    std::ofstream *m_out_particle_on_screen;
 };
 
 

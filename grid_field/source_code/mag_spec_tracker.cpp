@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     double time     {0.0};                            //Define a variable time in which will be stepped over
-    double del_time {0.03};                              //Define a time step
+    double del_time {0.2};                           //Define a time step
     //Hard-coded:
     bool time_step_test = false;
 
@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
     std::ofstream outfile_energy  ("../data/ENERGY.csv");
     std::ofstream outfile_magnets ("../data/MAGNETS.csv");
 	std::ofstream outfile_screens ("../data/SCREENS.csv");
+    std::ofstream outfile_particle_on_screen ("../data/PARTICLE_ON_SCREENS.csv");
     std::ofstream outfile_del_t   ("../data/DEL_T.csv");
 	std::ofstream outfile_dump;
     std::ifstream infile          ("../data/analysis/input_deck.txt");
@@ -145,7 +146,7 @@ int main(int argc, char *argv[])
     }
     else {
         for(int ii=0; ii<num_screens; ++ii) {
-
+            screen[ii].set_index(ii);
             screen[ii].set_pos(0, screen_info[1][ii][0]);
             screen[ii].set_pos(1, screen_info[1][ii][1]);
             screen[ii].set_pos(2, screen_info[1][ii][2]);
@@ -155,10 +156,11 @@ int main(int argc, char *argv[])
             screen[ii].set_angle_about_y(screen_info[2][ii][1], 'r');
             screen[ii].set_angle_about_x(screen_info[2][ii][2], 'r');
             screen[ii].set_outfile(outfile_screens);
+            screen[ii].set_outfile_particle_on_screen(outfile_particle_on_screen);
             outfile_screen_single (screen[ii], ii);
         }   //<---END OF SCREEN 'FOR' LOOP//
     }
-    
+    outfile_part_on_screen_first_line(screen[0]);
 
 
     //MAIN LOOP FOR STEPPING PARTICLES THROUGH SYSTEM:
@@ -167,7 +169,7 @@ int main(int argc, char *argv[])
         int magnet_counter = 0;
         int screen_counter = 0;
         time               = 0.0;
-        std::cout << "particle number " << (ii+1) << '\n';
+        //std::cout << "particle number " << (ii+1) << std::endl;
 
         if(ii>0)
             {
@@ -175,7 +177,7 @@ int main(int argc, char *argv[])
             }
         
         Particle electron = electron_beam.get_particle();
-        std::cerr << electron.get_pos(0) << std::endl;
+        //std::cerr << electron.get_pos(0) << std::endl;
         electron.set_outfiles(outfile_time, outfile_xpos, outfile_ypos, outfile_zpos, outfile_px, outfile_py, outfile_pz, outfile_energy);
 
         electron.set_time(time);
@@ -187,26 +189,27 @@ int main(int argc, char *argv[])
         double particle_time_limit = (2*M_PI*energy0)*10.0;
 
         move_through_magnets(magnet, num_magnets, electron, time, del_time, mu_0, particle_time_limit);
-        move_to_screens(screen, num_screens, electron);
+        move_to_screens(screen, num_screens, electron, ii);
 
         outfile_part_newline(electron);
         if(time_step_test)
             {half_time_step(del_time);}
     }   //<-END OF PARTICLE STEPPING 'FOR' LOOP
 
-    outfile_readme. close();
+    outfile_readme.            close();
     //outfile_grid. close();
-    outfile_time.   close();
-    outfile_xpos.   close();
-    outfile_ypos.   close();
-    outfile_zpos.   close();
-    outfile_px.     close();
-    outfile_py.     close();
-    outfile_pz.     close();
-    outfile_magnets.close();
-    outfile_energy. close();
+    outfile_time.              close();
+    outfile_xpos.              close();
+    outfile_ypos.              close();
+    outfile_zpos.              close();
+    outfile_px.                close();
+    outfile_py.                close();
+    outfile_pz.                close();
+    outfile_magnets.           close();
+    outfile_energy.            close();
+    outfile_particle_on_screen.close();
     //outfile_array_size. close();
-    outfile_del_t.  close();
+    outfile_del_t.             close();
     infile.close();
 
     return 0;

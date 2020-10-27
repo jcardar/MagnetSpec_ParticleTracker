@@ -31,6 +31,10 @@ void outfile_uniform_magnet(Magnet& magnet, int counter);
 
 void outfile_screen_single(Screen& screen, int counter);
 
+void outfile_part_on_screen_first_line(Screen& screen_t);
+
+void outfile_part_on_screen(Screen& screen_t, int particle_number_t);
+
 void uniform_en_dist(double& initial_x, double& initial_y, double& initial_z, double& initial_enx, double& initial_eny, double& initial_enz, double length_before, int* posy_counter, int* posz_counter, ThreeVec r0, ThreeVec radius_r0, ThreeVec energy0, int num_par);
 
 void uniform_pos_dist(double& initial_x, double& initial_y, double& initial_z, double& initial_enx, double& initial_eny, double& initial_enz, double length_before, int* posx_counter, int* posy_counter, int* posz_counter, ThreeVec p0, ThreeVec radius_p0, ThreeVec r0, int num_par, bool pointSource, bool dist_x, bool dist_y, bool dist_z);
@@ -47,7 +51,7 @@ void step_through_magnet_mag_leap(Particle *electron, Magnet &magnet, double& ti
 
 void boris(Particle &electron_t, Magnet &magnet_t, const double del_t, double mu_0);
 
-void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out = (2*M_PI*1000));
+void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out = (2*M_PI*1000), bool supress_output=true);
 
 void first_half_position_step(Particle &electron_t, const double del_t);
 
@@ -65,7 +69,7 @@ void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
 
 void half_time_step(double &time_step);
 
-void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t);
+void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t, int particle_counter_t);
 
 void readUnits(std::ifstream &input_stream, std::vector<std::string> &desired_units);
 

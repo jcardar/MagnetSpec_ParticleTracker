@@ -75,6 +75,9 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
                  * First particle will have central - FWHM energy
                  */
                 m_particle.set_energy(abs(m_energy_central - m_energy_spread));
+                //std::cerr << abs(m_energy_central) << "\n";
+                //std::cerr << abs(m_energy_spread) << "\n";
+                //std::cerr << abs(m_energy_central - m_energy_spread) << "\n";
                 break;
             }
             case EnergyInitializationTypes::INITIALIZE_LOG_EN:

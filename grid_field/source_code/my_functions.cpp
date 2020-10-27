@@ -165,6 +165,22 @@ void outfile_screen_single(Screen& screen, int counter)
 } 
 
 
+
+void outfile_part_on_screen_first_line(Screen& screen_t)
+{
+    *(screen_t.m_out_particle_on_screen) << "screen_number," << "particle_number," << "(part_x-screen_x)," << "(part_y-screen_y)," << "(part_z-screen_z)" << "\n";
+}
+
+void outfile_part_on_screen(Screen& screen_t, int particle_number_t, Particle& particle_t)
+{
+    *(screen_t.m_out_particle_on_screen) << screen_t.get_index() << ","
+                                        << particle_number_t << ","
+                                        << (particle_t.get_pos(0) - screen_t.get_pos(0)) << ","
+                                        << (particle_t.get_pos(1) - screen_t.get_pos(1)) << ","
+                                        << (particle_t.get_pos(2) - screen_t.get_pos(2)) << "\n";
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Gaussian random distribution function
 double gaussian()
@@ -366,6 +382,7 @@ void calc_grid_B_comps(double factor, double a, double b, double c, double x, do
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter, double mu_0)
 {
+    //std::cerr << "Magnet x-Position " << magnet_t.get_pos(0) << '\n';
     //Rotation of momentum vector in uniform field
     // p+ = p- + (p- + (p- x t)) x s
     // t = B q del_t / (2 m gamma)
@@ -396,10 +413,18 @@ void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter, do
     
     double B1_atPosition, B2_atPosition, B3_atPosition;
     double magnetization = find_magnetization(magnet_t, magnet_t.get_height_of_dipole_block(), mu_0, magnet_t.get_axis_of_magnetization());
+    //std::cerr << "Magnitization is " << magnetization << '\n';
     double factor = (mu_0 * magnetization)/(4 * M_PI);
-    calc_grid_B_comps(factor, 0.5*magnet_t.get_length(), 0.5*magnet_t.get_width(), 0.5*magnet_t.get_height(), electron_t.get_pos(0), electron_t.get_pos(1), electron_t.get_pos(2), B1_atPosition, B2_atPosition, B3_atPosition);
+    //std::cerr << "factor is " << factor << '\n';
+    //Magnitization and factor are staying the same across magnets: they're not the problem
+    double x_pos = electron_t.get_pos(0) - (magnet_t.get_pos(0)+0.5*magnet_t.get_length());
+    double y_pos = electron_t.get_pos(1) - magnet_t.get_pos(1);
+    double z_pos = electron_t.get_pos(2) - magnet_t.get_pos(2);
+    calc_grid_B_comps(factor, 0.5*magnet_t.get_length(), 0.5*magnet_t.get_width(), 0.5*magnet_t.get_height(), x_pos, y_pos, z_pos, B1_atPosition, B2_atPosition, B3_atPosition);
 
     Bsquared = ( B1_atPosition*B1_atPosition ) + (B2_atPosition * B2_atPosition) + (B3_atPosition * B3_atPosition);
+    //std::cerr << "B-squared is "<< Bsquared << '\n';
+    //Bsquared is constantly decreasing!!!
     double old_px, old_py, old_pz;
     ThreeVec B_at_position(B1_atPosition, B2_atPosition, B3_atPosition);
 
@@ -457,7 +482,7 @@ void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter, do
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out)
+void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out, bool supress_output)
 {
     //TESTING CHANING TIME STEP:
     //const double del_time = del_time_1 * 0.5;
@@ -482,26 +507,33 @@ void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& t
             check_x = (electron.get_pos(0) >= (magnet.get_pos(0)-magnet.get_length())) && (electron.get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0))));
             check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0));
             check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
-
-
+            //if(counter%10==0)
+            //    {std::cerr << counter << '\n'; std::cerr << electron.get_p(0) << '\n';}
             if((check_x && check_y && check_z) && !(time>=time_out))
                 { outfile_part_commaAndWrite(electron); }
             else if( (!( check_x && check_y && check_z )) || (time >= time_out) )
                 {
                     outfile_part_commaAndWrite(electron); 
                 }
-            if(time >= time_out)
-                { std::cout << "Particle Timed-Out.\n"; }
-            if( (check_x && check_y && check_z) == false )
-                {
-                    std::cout << "Particle Out of Magnet.\n";
-                    if(check_x == false)
-                        { std::cout << "Out of bounds in x.\n"; } 
-                    if(check_y == false)
-                        { std::cout << "Out of bounds in y.\n"; } 
-                    if(check_z == false)
-                        { std::cout << "Out of bounds in z.\n"; } 
-                }
+            if(supress_output)
+            {
+                supress_output = true;
+            }
+            else
+            {
+                if(time >= time_out)
+                    { std::cout << "Particle Timed-Out.\n"; }
+                if( (check_x && check_y && check_z) == false )
+                    {
+                        std::cout << "Particle Out of Magnet.\n";
+                        if(check_x == false)
+                            { std::cout << "Out of bounds in x.\n"; } 
+                        if(check_y == false)
+                            { std::cout << "Out of bounds in y.\n"; } 
+                        if(check_z == false)
+                            { std::cout << "Out of bounds in z.\n"; } 
+                    }
+            }
             
         } while((check_x && check_y && check_z) && (time < time_out));
 }
@@ -662,6 +694,7 @@ double dist_to_mag(Magnet magnet_t, Particle particle_t)
     pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_mag * particle_t.get_vel(2)));
 
     dist_to_mag = sqrt((pos_at_shortest_time.getX() - particle_t.get_pos(0))*(pos_at_shortest_time.getX() - particle_t.get_pos(0)) + (pos_at_shortest_time.getY() - particle_t.get_pos(1))*(pos_at_shortest_time.getY() - particle_t.get_pos(1)) + (pos_at_shortest_time.getZ() - particle_t.get_pos(2))*(pos_at_shortest_time.getZ() - particle_t.get_pos(2)));
+    //std::cerr<< dist_to_mag << '\n';
     return dist_to_mag;
 }
 
@@ -702,7 +735,8 @@ void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
         check_inside_magnet = inside_of_mag(magnet_t[ii], particle_t);
         if(check_inside_magnet==true)
         {
-           //outfile_part_comma(particle_t);
+            //std::cerr << "Inside of magnet " << ii+1 << '\n';
+            //outfile_part_comma(particle_t);
             step_through_magnet_mag_boris(particle_t, magnet_t[ii], time, del_time, time_limit);
             boris_counter++;
             ii = -1; //restart loop (which will iterate ii by 1, to zero)
@@ -735,8 +769,12 @@ void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
 
             if(index_of_shortest != -1)
             {                
+                //std::cerr << "current particle X-location is " << particle_t.get_pos(0) << std::endl;
+                //std::cerr << "distance to next magnet is " << shortest_distance << std::endl;
                 move_particle_to_magnet(magnet_t[index_of_shortest], particle_t);
+                //std::cerr << "Sending to magnet " << index_of_shortest+1 << std::endl;
                 //std::cerr << "Sending to next magnet" << std::endl;
+                //std::cerr << "New particle X-location is " << particle_t.get_pos(0) << std::endl;
                 outfile_part_commaAndWrite(particle_t);
 
                 double particle_time = particle_t.get_time();
@@ -875,7 +913,7 @@ bool check_if_intersect_screen(Screen screen_t, Particle particle_t)
 }
 
 
-void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t)
+void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t, int particle_counter_t)
 {
     double dist_to_screen_ii[num_screen];
     int jj = -1;
@@ -931,6 +969,7 @@ void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t)
                 particle_time += t_line;
                 particle_t.set_time(particle_time);
                 outfile_part_commaAndWrite(particle_t);
+                outfile_part_on_screen(screen_t[index_of_shortest], particle_counter_t, particle_t);
                 continue;
             }
         }

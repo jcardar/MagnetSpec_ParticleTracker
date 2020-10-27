@@ -145,6 +145,11 @@ void Screen::set_height(double height)
         m_height = height;
     }
 
+void Screen::set_index(int index)
+    {
+        m_index = index;
+    }
+
 ThreeVec Screen::get_pos()
     {
         return m_position;
@@ -219,7 +224,17 @@ double Screen::get_height()
         return m_height;
     }
 
+int Screen::get_index()
+{
+    return m_index;
+}
+
 void Screen::set_outfile(std::ofstream& out_screen)
     {
         m_out_screen = &out_screen;
+    }
+
+void Screen::set_outfile_particle_on_screen(std::ofstream& out_particle_on_screen)
+    {
+        m_out_particle_on_screen = &out_particle_on_screen;
     }
