@@ -134,7 +134,7 @@ def dynamicFloatValue_Magnet_Dimensions(num_of_magnets, global_bounds):
 def dynamicFloatValue_Permanent_Magnet_Dimension(num_of_magnets):
     listOfWidgets = []
     for i in range(num_of_magnets):
-        widget = widgets.BoundedFloatText(
+        widget = widgets.FloatText(
             value=0,
             max=999999,
             min=0,
@@ -434,7 +434,6 @@ def convertAngles(units, beam_direction, divergence_spread, screen_angles):
 def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_pos, beam_energy, pos_sprd, energy_sprd, scrn_dim, 
                     scrn_pos):
     n_mag_dim = []
-    n_Pmag_dim = []
     n_mag_pos = []
     n_fld_vals = []
     n_beam_pos = []
@@ -457,8 +456,7 @@ def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_p
         
     for i in range(len(mag_dim)):
         n_mag_dim.append( mag_dim[i].value * distance_multiplier * omega_div_c )
-    for i in range(len(Pmag_dim)):
-        n_Pmag_dim.append( Pmag_dim[i].value * distance_multiplier * omega_div_c )
+    n_Pmag_dim = Pmag_dim * distance_multiplier * omega_div_c
     for i in range(len(mag_pos)):
         n_mag_pos.append( mag_pos[i].value * distance_multiplier * omega_div_c )
     for i in range(3):
@@ -486,7 +484,7 @@ def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_p
         rest_energy = 0.511 * math.pow(10,-3)
     
     n_beam_energy = (rest_energy + beam_energy.value)/rest_energy
-    n_energy_sprd = (energy_sprd.value)/rest_energy
+    n_energy_sprd = (rest_energy + energy_sprd.value)/rest_energy
     
     return n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, n_beam_pos, n_beam_energy, n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos
 
@@ -540,7 +538,7 @@ def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_par
     dim_mag = createList(mag_dim)
     pos_mag = createList(mag_pos)
     mag_field = createList(fld_vals)
-    pMag_dim = createList(Pmag_dim)
+    pMag_dim = [f'{Pmag_dim}', ' ']
     field_axes = createAxesList(fld_axs)
     mag_info = mag_num + dim_mag + pos_mag + mag_field + pMag_dim + field_axes
 
@@ -594,7 +592,7 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
 
 # Plots and outputs
 
-def DisplayAndOutput(global_bounds, units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, 
+def DisplayAndOutput(global_bounds, units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy,
                      beam_dir, pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -798,3 +796,134 @@ abs(np.array(corner4 - corner3)@np.array(corner4 - corner3)))) for jj in range(l
                     pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types)
         print('Inputs saved and exported!')
     button.on_click(on_button_clicked)
+
+# Genetic algorithm
+
+def createBoundsList(bounds_list):
+    newlist = []
+    for i in range(len(bounds_list)):
+        newlist.append(f'{bounds_list[i].value}')
+        newlist.append(' ')
+    return newlist
+
+def bool_output(check_bool):
+    bool_num = 0
+    if check_bool:
+        bool_num = -1
+    return bool_num
+
+def genetic_algorithm_setup(global_bounds, num_mag, num_screen):
+    button_label = widgets.Label(value='Do you want to use the genetic algorithm? ')
+    button = widgets.Button(description='Yes', icon='check', disabled=False)
+    display(button_label, button)
+    
+    check_label = widgets.Label(value='The genetic algorithm has access to mutate:')
+    mag_pos_label = widgets.Label(value='Magnet position')
+    screen_pos_label = widgets.Label(value='Screen position')
+    screen_angles_label = widgets.Label(value='Screen angles')
+    
+    mag_pos_checks = []
+    mag_pos_steps = []
+    
+    for i in range(num_mag):
+        check1 = widgets.Checkbox(value=False, description=f'x pos {i+1}')
+        check2 = widgets.Checkbox(value=False, description=f'y pos {i+1}')
+        check3 = widgets.Checkbox(value=False, description=f'z pos {i+1}')
+        mag_pos_checks.extend([check1, check2, check3])
+        
+        step1 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        step2 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        step3 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        mag_pos_steps.extend([step1, step2, step3])
+    
+    mag_pos_left_box = widgets.VBox(mag_pos_checks)
+    mag_pos_right_box = widgets.VBox(mag_pos_steps)
+    mag_pos_box = widgets.HBox([mag_pos_left_box, mag_pos_right_box])
+    
+    screen_pos_checks = []
+    screen_pos_steps = []
+    
+    for i in range(num_screen):
+        check1 = widgets.Checkbox(value=False, description=f'x pos {i+1}')
+        check2 = widgets.Checkbox(value=False, description=f'y pos {i+1}')
+        check3 = widgets.Checkbox(value=False, description=f'z pos {i+1}')
+        screen_pos_checks.extend([check1, check2, check3])
+        
+        step1 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        step2 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        step3 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        screen_pos_steps.extend([step1, step2, step3])
+    
+    screen_pos_left_box = widgets.VBox(screen_pos_checks)
+    screen_pos_right_box = widgets.VBox(screen_pos_steps)
+    screen_pos_box = widgets.HBox([screen_pos_left_box, screen_pos_right_box])
+    
+    screen_angles_checks = []
+    screen_angles_steps = []
+    
+    for i in range(num_screen):
+        check1 = widgets.Checkbox(value=False, description=f'yaw {i+1}')
+        check2 = widgets.Checkbox(value=False, description=f'pitch {i+1}')
+        check3 = widgets.Checkbox(value=False, description=f'roll {i+1}')
+        screen_angles_checks.extend([check1, check2, check3])
+        
+        step1 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        step2 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        step3 = widgets.BoundedFloatText(value=0.0, min=0.0, max=100.0, description='step size')
+        screen_angles_steps.extend([step1, step2, step3])
+    
+    screen_angles_left_box = widgets.VBox(screen_angles_checks)
+    screen_angles_right_box = widgets.VBox(screen_angles_steps)
+    screen_angles_box = widgets.HBox([screen_angles_left_box, screen_angles_right_box])
+    
+    save_label = widgets.Label(value='Click below to save and output selection')
+    save_button = widgets.Button(description='Save Checked Boxes', icon='check', disabled=False, layout=widgets.Layout(width='50%', 
+                                                                                                                       height='80px'))
+    
+    def on_button_clicked(b):
+        display(check_label, mag_pos_label, mag_pos_box, screen_pos_label, screen_pos_box, screen_angles_label, screen_angles_box, 
+                save_label, save_button)
+        button.disabled = True
+    button.on_click(on_button_clicked)
+    
+    def on_save_button_clicked(b):
+        outfile = open('algorithm_access.txt', 'w')
+        
+        bounds_info = createBoundsList(global_bounds)
+        outfile.writelines(bounds_info)
+        outfile.write('\n')
+        
+        mag_pos_index = 0
+        for i in range(num_mag):
+            for j in range(3):
+                bool_num = bool_output(mag_pos_checks[mag_pos_index+j].value)
+                outfile.write(f'{bool_num} ')
+                if bool_num == -1:
+                    outfile.write(f'{mag_pos_steps[mag_pos_index+j].value} ')
+            mag_pos_index += 3
+        outfile.write('\n')
+        
+        screen_pos_index = 0
+        for i in range(num_screen):
+            for j in range(3):
+                bool_num = bool_output(screen_pos_checks[screen_pos_index+j].value)
+                outfile.write(f'{bool_num} ')
+                if bool_num == -1:
+                    outfile.write(f'{screen_pos_steps[screen_pos_index+j].value} ')
+            screen_pos_index += 3
+        outfile.write('\n')
+        
+        screen_angles_index = 0
+        for i in range(num_screen):
+            for j in range(3):
+                bool_num = bool_output(screen_angles_checks[screen_angles_index+j].value)
+                outfile.write(f'{bool_num} ')
+                if bool_num == -1:
+                    outfile.write(f'{screen_angles_steps[screen_angles_index+j].value} ')
+            screen_angles_index += 3
+        
+        outfile.close
+        
+        print('Choices saved and exported!')
+    save_button.on_click(on_save_button_clicked)
+
