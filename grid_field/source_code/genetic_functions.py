@@ -55,8 +55,8 @@ def read_access_and_mutation_sizes(access_infile):
     return mutation_sizes, mag_access, screen_access
 
 def read_starting_points(mag_access, screen_access):
-    infile = open('../data/analysis/input_deck.txt', 'r')
-    outfile = open('../data/analysis/original_input_deck.txt', 'w')
+    infile = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','input_deck.txt'), 'r')
+    outfile = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','original_input_deck.txt'), 'w')
     starting_points = []
 
     first_line = infile.readline()
@@ -107,8 +107,8 @@ def read_starting_points(mag_access, screen_access):
     return starting_points
 
 def edit_input_deck(mutated_values, mag_access, screen_access):
-    infile = open('../data/analysis/input_deck.txt', 'r')
-    outfile = open('../data/analysis/temp_input_deck.txt', 'w')
+    infile = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','input_deck.txt'), 'r')
+    outfile = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','temp_input_deck.txt'), 'w')
 
     mutate_value_count = 0
 
@@ -159,3 +159,5 @@ def edit_input_deck(mutated_values, mag_access, screen_access):
 
     infile.close()
     outfile.close()
+
+    os.replace(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','temp_input_deck.txt'),os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','input_deck.txt'))
