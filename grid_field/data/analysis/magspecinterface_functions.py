@@ -801,23 +801,25 @@ abs(np.array(corner4 - corner3)@np.array(corner4 - corner3)))) for jj in range(l
 
 # Genetic algorithm
 
-def createBoundsList(bounds_list):
+def createBoundsList(bounds_list, length_unit, num_mag, field_values):
     newlist = []
-    aveB_0 = 1.0
+    
+    aveB_0 = averageB0(num_mag, field_values)
     q_e = 1.602177 * math.pow(10,-19)
     m_e = 9.109384 * math.pow(10,-31)
     c = 2.997925 * math.pow(10,8)
+    omega_div_c = (q_e * aveB_0) / (m_e * c)
+    
     distance_multiplier = 1 # m
-    units = ['cm']
     if units[0] == 'mm':
         distance_multiplier = math.pow(10,-3)
     elif units[0] == 'cm':
         distance_multiplier = math.pow(10,-2)
-    omega_div_c = (q_e * aveB_0) / (m_e * c)
     
     for i in range(len(bounds_list)):
         newlist.append(f'{(bounds_list[i].value)* distance_multiplier * omega_div_c }')
         newlist.append(' ')
+        
     return newlist
 
 def bool_output(check_bool):
@@ -826,7 +828,7 @@ def bool_output(check_bool):
         bool_num = -1
     return bool_num
 
-def genetic_algorithm_setup(global_bounds, num_mag, num_screen):
+def genetic_algorithm_setup(global_bounds, num_mag, num_screen, length_unit, field_values):
     button_label = widgets.Label(value='Do you want to use the genetic algorithm? ')
     button = widgets.Button(description='Yes', icon='check', disabled=False)
     display(button_label, button)
@@ -903,7 +905,7 @@ def genetic_algorithm_setup(global_bounds, num_mag, num_screen):
     def on_save_button_clicked(b):
         outfile = open('algorithm_access.txt', 'w')
         
-        bounds_info = createBoundsList(global_bounds)
+        bounds_info = createBoundsList(global_bounds, length_unit, num_mag, field_values)
         outfile.writelines(bounds_info)
         outfile.write('\n')
         
@@ -940,4 +942,3 @@ def genetic_algorithm_setup(global_bounds, num_mag, num_screen):
         
         print('Choices saved and exported!')
     save_button.on_click(on_save_button_clicked)
-
