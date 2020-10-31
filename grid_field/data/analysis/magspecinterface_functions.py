@@ -803,8 +803,20 @@ abs(np.array(corner4 - corner3)@np.array(corner4 - corner3)))) for jj in range(l
 
 def createBoundsList(bounds_list):
     newlist = []
+    aveB_0 = 1.0
+    q_e = 1.602177 * math.pow(10,-19)
+    m_e = 9.109384 * math.pow(10,-31)
+    c = 2.997925 * math.pow(10,8)
+    distance_multiplier = 1 # m
+    units = ['cm']
+    if units[0] == 'mm':
+        distance_multiplier = math.pow(10,-3)
+    elif units[0] == 'cm':
+        distance_multiplier = math.pow(10,-2)
+    omega_div_c = (q_e * aveB_0) / (m_e * c)
+    
     for i in range(len(bounds_list)):
-        newlist.append(f'{bounds_list[i].value}')
+        newlist.append(f'{(bounds_list[i].value)* distance_multiplier * omega_div_c }')
         newlist.append(' ')
     return newlist
 

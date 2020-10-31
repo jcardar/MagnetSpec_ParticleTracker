@@ -1012,6 +1012,7 @@ void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vecto
                 for(int k=0; k<3; ++k) {
                     input_stream >> tempStr;
                     double tempDbl = std::stod(tempStr);
+                    //std::cerr << "Magnet partially read\n";
                     tempInfoBits.push_back(tempDbl);
                 }
                 tempMagSet.push_back(tempInfoBits);
@@ -1024,6 +1025,7 @@ void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vecto
                 
                 input_stream >> tempStr;
                 double tempDbl = std::stod(tempStr);
+                //std::cerr << "Magnet partially read\n";
                 tempInfoBits.push_back(tempDbl);
                 tempMagSet.push_back(tempInfoBits);
             }
@@ -1038,6 +1040,7 @@ void readPermanentMagDim(std::ifstream &input_stream, int magNum, std::vector<do
     for(int i=0; i<magNum; ++i) {
         input_stream >> tempStr;
         double tempDbl = std::stod(tempStr);
+        //std::cerr << "Magnet dim read\n";
         PmagDim.push_back(tempDbl);
     }
 }
@@ -1061,12 +1064,14 @@ void readBeam(std::ifstream &input_stream, std::vector<std::vector<double>> &bea
         if(i==1) {
             input_stream >> tempStr;
             double tempDbl = std::stod(tempStr);
+            //std::cerr << "Beam partially read\n";
             tempInfoBits.push_back(tempDbl);
         }
         else {
             for(int j=0; j<3; ++j) {
                 input_stream >> tempStr;
                 double tempDbl = std::stod(tempStr);
+                //std::cerr << "Beam partially read\n";
                 tempInfoBits.push_back(tempDbl);
             }
         }
@@ -1084,12 +1089,15 @@ void readSpread(std::ifstream &input_stream, std::vector<std::vector<double>> &s
         if(i==1) {
             input_stream >> tempStr;
             double tempDbl = std::stod(tempStr);
+            //std::cerr << "beam spread partially read\n";
             tempInfoBits.push_back(tempDbl);
         }
         else {
             for(int k=0; k<3; ++k) {
                 input_stream >> tempStr;
                 double tempDbl = std::stod(tempStr);
+                //std::cerr << "beam spread partially read\n";
+
                 tempInfoBits.push_back(tempDbl);
             }
         }
@@ -1114,6 +1122,8 @@ void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::ve
                 for(int k=0; k<2; ++k) {
                     input_stream >> tempStr;
                     double tempDbl = std::stod(tempStr);
+                    //std::cerr << "screen partially read\n";
+
                     tempInfoBits.push_back(tempDbl);
                 }
             }
@@ -1121,6 +1131,7 @@ void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::ve
                 for(int k=0; k<3; ++k) {
                     input_stream >> tempStr;
                     double tempDbl = std::stod(tempStr);
+                    //std::cerr << "screen partially read\n";
                     tempInfoBits.push_back(tempDbl);
                 }
             }
@@ -1148,6 +1159,7 @@ double ReadMu0(std::ifstream &input_stream) {
     std::string tempStr;
     input_stream >> tempStr;
     double mu_0 = std::stod(tempStr);
+    //std::cerr << "mu0 read\n";
 
     return mu_0;
 }
