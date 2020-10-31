@@ -9,6 +9,9 @@ import numpy
 import matplotlib.pyplot as plt
 import copy
 import math
+from spectrometer_energy_resolution import *
+from genetic_functions import *
+from python_run_cpp_code_mac import *
 #from phaseCal_agrt import *
 
 #Recommended to use differential driver: changes mutation size to correspond to how close it is to optimized value
@@ -17,15 +20,29 @@ import math
 ####s0 = 3.5e-6
 ####x, y, phi0, I0 = shadowgraphy(zeff = z0, sigma = s0, Lx = 10*13e-6, EkeV = [5], Nx = 2048, Ny = 512)
 
-
+access_file = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','algorithm_access.txt'), 'r')
+global_bounds = read_global_bounds(access_file)
+mutation_size, mag_access, screen_access = read_access_and_mutation_sizes(access_file)
+starting_point = read_starting_points(mag_access, screen_access)
+#print(starting_point)
+#print(len(starting_point))
+#print(mutation_size)
+#print(len(mutation_size))
 num_parent   = 20
 num_children = 5
 num_elitism  = 5
+isfirst = True
+run_spectrometer_code()
+#import_relevant_data()
+normalizing_fom = 0
+energy_range = np.array([392.38, 3914.89])
+normalizing_fom = energy_resolution(energy_range, normalizing_fom, isfirst)
+isfirst = False
 
 #Change these:
-starting_point = [0.5, 1.5e-6]
+#starting_point = [0.5, 1.5e-6]
 #Mutation size only two parameters - first changes first starting point, second changes second starting point
-mutation_size = (0.01, 0.05e-6)
+#mutation_size = (0.01, 0.05e-6)
 
 iter_num = 100
 
@@ -33,8 +50,10 @@ iter_num = 100
 def main():
     
     # bound limit, zeff [0.05, 7], sigma [1e-6, 5e-6]
-    lbound = (0.05, 1e-6) 
-    ubound = (1.0 , 7e-6)
+    lbound, ubound = read_bounds(mag_access, screen_access, global_bounds)
+    print(len(lbound))
+    #lbound = (0.05, 1e-6) 
+    #ubound = (1.0 , 7e-6)
 
     population_id = 0
 
@@ -43,11 +62,14 @@ def main():
     
     # Fom
     def synthetic_diagnostic(params):
-
+        #energy_resolution(part_on_screen_part_index = params[0], energy = params[1], energy_range = params[2], posx = params[3], normalizing_fom = params[4], isfirst = isfirst)
+        fom = energy_resolution(energy_range, normalizing_fom, isfirst)
+        edit_input_deck(params, mag_access, screen_access)
+        run_spectrometer_code()
+        
+        return fom
         ##x, y, phi, I = shadowgraphy(zeff = params[0], sigma = params[1], Lx = 10*13e-6, EkeV = [5], Nx = 2048, Ny = 512)
         ##fom = np.sum(abs(I - I0)**0.5) #/ np.sum(abs(I0)**0.5)
-
-        return fom, I
     
     def evaluate(params):
         #FOM here, synthetic diagnostic
@@ -58,7 +80,7 @@ def main():
         if population_id % num_parent == 1:
             population_id = 1
 
-        fom, I = synthetic_diagnostic(params)
+        fom = synthetic_diagnostic(params)
 
         print('Iter No.: %d, Child: %d, Fom: %.1f'%
                 (ga.generation_number, population_id, fom))
@@ -114,6 +136,7 @@ def main():
 #CORE OF THE CODE:
     problem = OptimizationProblem((len(lbound),), evaluate, goal,
                    lbound=lbound, ubound=ubound, validator=validate)
+    #print(problem)
                 
     
 
@@ -121,7 +144,7 @@ def main():
 
     if diffdriver.lower() == 'n':
         
-        ga = BasicGaDriver(problem , mutation_size )
+        ga = BasicGaDriver(problem , mutation_size)
         ga['population'] = num_parent
         ga['selection']  = num_children
         ga['elitism']    = num_elitism
@@ -174,6 +197,8 @@ def main():
 
     i = 0
     while i <= iter_num:
+        #if i == 1:
+        #    isfirst = False
     # while True:
 
         ga.generate()
@@ -250,7 +275,7 @@ def main():
                 print('Path exists! Try again!')
                 continue
         else:
-            print("I don't understand your command, sir, try again? ")
+            print("I don't understand your command, try again? ")
 
 if __name__ == '__main__':
     main()
