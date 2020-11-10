@@ -38,7 +38,7 @@ run_spectrometer_code()
 #import_relevant_data()
 normalizing_fom = 0
 energy_range = np.array([392.38, 3914.89])
-normalizing_fom = energy_resolution(energy_range, normalizing_fom, isfirst)
+normalizing_fom = energy_weighted_resolution(energy_range, normalizing_fom, isfirst)
 print(f"Normalizing fom is {normalizing_fom}")
 isfirst = False
 best_fom = 1.0
@@ -69,8 +69,8 @@ def main():
         #energy_resolution(part_on_screen_part_index = params[0], energy = params[1], energy_range = params[2], posx = params[3], normalizing_fom = params[4], isfirst = isfirst)
         edit_input_deck(params, mag_access, screen_access)
         run_spectrometer_code()
-        #fom = energy_weighted_resolution(energy_range, normalizing_fom, isfirst)
-        fom = energy_and_divergence_resolution(energy_range, normalizing_fom, isfirst)
+        fom = energy_weighted_resolution(energy_range, normalizing_fom, isfirst)
+        #fom = energy_and_divergence_resolution(energy_range, normalizing_fom, isfirst)
         
         return fom
         ##x, y, phi, I = shadowgraphy(zeff = params[0], sigma = params[1], Lx = 10*13e-6, EkeV = [5], Nx = 2048, Ny = 512)
