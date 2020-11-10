@@ -49,7 +49,7 @@ class BasicGaDriver:
         self.params = {
                 'population': 10,
                 'selection': 3,
-                'elitism': 0,
+                'elitism': 5,
                 'mutation_size': 1.0,
                 'mutation_count': 0,
                 'mutation_probability': 1.0,

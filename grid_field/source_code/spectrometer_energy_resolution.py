@@ -104,12 +104,15 @@ def check_energy_range_captured(part_on_screen_part_index, energy, energy_range,
     Subgroups meant to ensure no holes in energy at desired ranges.
     """
     if energy_range.shape == (2,):
-        if (min([energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]))>=energy_range[0] and (max([energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]))<=energy_range[1]:
-            captured = True
+        if len([energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]) !=0:
+            if (min([energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]))>=energy_range[0] and (max([energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]))<=energy_range[1]:
+                captured = True
+            else:
+                captured = False
+                return captured
         else:
-            captured = False
-            return captured
-        if len(part_on_screen_part_index) <= (0.90*len(posx)):
+            return False
+        if len(part_on_screen_part_index) >= (0.90*len(posx)):
             captured = True
         else:
             captured = False
@@ -129,15 +132,23 @@ def check_energy_range_captured(part_on_screen_part_index, energy, energy_range,
 
 
 
-def energy_resolution(energy_range,normalizing_fom, isfirst):
+def energy_weighted_resolution(energy_range,normalizing_fom, isfirst):
     energy, part_on_screen_screen_index, part_on_screen_part_index, part_on_screen_pos_x, part_on_screen_pos_y, part_on_screen_pos_z, posx = import_relevant_data()
     energy_range_captured = check_energy_range_captured(part_on_screen_part_index, energy, energy_range, posx)
-    number_of_screens = int(max(part_on_screen_screen_index)+1)
+    if len(part_on_screen_part_index) == 0:
+        number_of_screens = 0
+        #return sys.float_info.max
+        return 3.14159
+    else:
+        number_of_screens = int(max(part_on_screen_screen_index)+1)
     if energy_range_captured == False and isfirst == False:
-        energy_resolution = sys.float_info.max
+        print("Energy range wasn't caputred.")
+        #energy_resolution = sys.float_info.max
+        energy_resolution = 3.14159
         return energy_resolution
     elif isfirst == True:
-        energy_resolution_sum = np.array([])
+        print("Is first run")
+        energy_resolution_sum = np.array([0.0])
         for jj in range(number_of_screens):
             long_cord = [np.sqrt(part_on_screen_pos_x[ii]**2 + part_on_screen_pos_y[ii]**2) for ii in range(len(part_on_screen_pos_x)) if part_on_screen_screen_index[ii] == jj];
             indicies_kept = [ii for ii in range(len(part_on_screen_pos_x)) if part_on_screen_screen_index[ii] == jj]
@@ -147,10 +158,18 @@ def energy_resolution(energy_range,normalizing_fom, isfirst):
             energies = [energy[int(part_on_screen_part_index[int(indicies_kept[ii])])][0] for ii in range(len(long_cord))]
             dE_dx    = [abs(energies[indicies_of_div_7_0[ii+1]]-energies[indicies_of_div_7_0[ii-1]])/abs(long_cord[indicies_of_div_7_0[ii+1]]-long_cord[indicies_of_div_7_0[ii-1]]) for ii in (range(1, int(len(indicies_of_div_7_0))-1, 1))]
             dE_dx_times_E = np.array(dE_dx)*np.array([energies[indicies_of_div_7_0[ii]] for ii in range(1, len(indicies_of_div_7_0)-1, 1)])
-            np.append(energy_resolution_sum, dE_dx_times_E)
-        energy_res_fom = np.sum(energy_resolution_sum)
+            #print(dE_dx_times_E)
+            energy_resolution_sum = np.append(arr = energy_resolution_sum, values=np.array(dE_dx_times_E))
+            #print(energy_resolution_sum)
+        #print(dE_dx_times_E)
+        #print(energy_resolution_sum)
+        energy_res_fom = np.sum(energy_resolution_sum)/len(energy_resolution_sum)
+        if energy_res_fom == np.inf or energy_res_fom == 0:
+            import sys
+            sys.exit("Initial condition does not capture sufficient particles to continue. Exiting.")
         return energy_res_fom
     elif energy_range_captured == True and isfirst == False:
+        print("Energy range was caputred.")
         energy_resolution_sum = np.array([])
         for jj in range(number_of_screens):
             long_cord = [np.sqrt(part_on_screen_pos_x[ii]**2 + part_on_screen_pos_y[ii]**2) for ii in range(len(part_on_screen_pos_x)) if part_on_screen_screen_index[ii] == jj];
@@ -161,9 +180,71 @@ def energy_resolution(energy_range,normalizing_fom, isfirst):
             energies = [energy[int(part_on_screen_part_index[int(indicies_kept[ii])])][0] for ii in range(len(long_cord))]
             dE_dx    = [abs(energies[indicies_of_div_7_0[ii+1]]-energies[indicies_of_div_7_0[ii-1]])/abs(long_cord[indicies_of_div_7_0[ii+1]]-long_cord[indicies_of_div_7_0[ii-1]]) for ii in (range(1, int(len(indicies_of_div_7_0))-1, 1))]
             dE_dx_times_E = np.array(dE_dx)*np.array([energies[indicies_of_div_7_0[ii]] for ii in range(1, len(indicies_of_div_7_0)-1, 1)])
-            np.append(energy_resolution_sum, dE_dx_times_E)
-        energy_res_fom = np.sum(energy_resolution_sum)
+            energy_resolution_sum = np.append(energy_resolution_sum, dE_dx_times_E)
+        #print(f"Energy res array is {energy_resolution_sum}")
+        energy_res_fom = np.sum(energy_resolution_sum)/len(energy_resolution_sum)
+        #print(f"average energy res is {energy_res_fom}")
         energy_res_fom = energy_res_fom/normalizing_fom
+        #print(f"Normalized energy res is {energy_res_fom}")
+        return energy_res_fom
+    else:
+        print("Something went wrong calculating energy resolution fom!")
+
+
+def energy_and_divergence_resolution(energy_range,normalizing_fom, isfirst):
+    energy, part_on_screen_screen_index, part_on_screen_part_index, part_on_screen_pos_x, part_on_screen_pos_y, part_on_screen_pos_z, posx = import_relevant_data()
+    energy_range_captured = check_energy_range_captured(part_on_screen_part_index, energy, energy_range, posx)
+    if len(part_on_screen_part_index) == 0:
+        number_of_screens = 0
+        #return sys.float_info.max
+        return 3.14159
+    else:
+        number_of_screens = int(max(part_on_screen_screen_index)+1)
+    if energy_range_captured == False and isfirst == False:
+        print("Energy range wasn't caputred.")
+        #energy_resolution = sys.float_info.max
+        energy_resolution = 3.14159
+        return energy_resolution
+    elif isfirst == True:
+        print("Is first run")
+        energy_resolution_sum = np.array([0.0])
+        for jj in range(number_of_screens):
+            long_cord = [np.sqrt(part_on_screen_pos_x[ii]**2 + part_on_screen_pos_y[ii]**2) for ii in range(len(part_on_screen_pos_x)) if part_on_screen_screen_index[ii] == jj];
+            indicies_kept = [ii for ii in range(len(part_on_screen_pos_x)) if part_on_screen_screen_index[ii] == jj]
+            indicies_of_div_7_0 = [ii for ii in range(len(indicies_kept)) if part_on_screen_part_index[indicies_kept[ii]]%7==0]
+            indicies_of_div_7_1 = [ii for ii in range(len(indicies_kept)) if part_on_screen_part_index[indicies_kept[ii]]%7==1]
+            indicies_of_div_7_2 = [ii for ii in range(len(indicies_kept)) if part_on_screen_part_index[indicies_kept[ii]]%7==2]
+            energies = [energy[int(part_on_screen_part_index[int(indicies_kept[ii])])][0] for ii in range(len(long_cord))]
+            dE_dx    = [abs(energies[indicies_of_div_7_0[ii+1]]-energies[indicies_of_div_7_0[ii-1]])/abs(long_cord[indicies_of_div_7_0[ii+1]]-long_cord[indicies_of_div_7_0[ii-1]]) for ii in (range(1, int(len(indicies_of_div_7_0))-1, 1))]
+            dE_dx_times_E = np.array(dE_dx)*np.array([energies[indicies_of_div_7_0[ii]] for ii in range(1, len(indicies_of_div_7_0)-1, 1)])
+            #print(dE_dx_times_E)
+            energy_resolution_sum = np.append(arr = energy_resolution_sum, values=np.array(dE_dx_times_E))
+            #print(energy_resolution_sum)
+        #print(dE_dx_times_E)
+        #print(energy_resolution_sum)
+        energy_res_fom = np.sum(energy_resolution_sum)/len(energy_resolution_sum)
+        if energy_res_fom == np.inf or energy_res_fom == 0:
+            import sys
+            sys.exit("Initial condition does not capture sufficient particles to continue. Exiting.")
+        return energy_res_fom
+    elif energy_range_captured == True and isfirst == False:
+        print("Energy range was caputred.")
+        energy_resolution_sum = np.array([])
+        for jj in range(number_of_screens):
+            long_cord = [np.sqrt(part_on_screen_pos_x[ii]**2 + part_on_screen_pos_y[ii]**2) for ii in range(len(part_on_screen_pos_x)) if part_on_screen_screen_index[ii] == jj];
+            indicies_kept = [ii for ii in range(len(part_on_screen_pos_x)) if part_on_screen_screen_index[ii] == jj]
+            indicies_of_div_7_0 = [ii for ii in range(len(indicies_kept)) if part_on_screen_part_index[indicies_kept[ii]]%7==0]
+            indicies_of_div_7_1 = [ii for ii in range(len(indicies_kept)) if part_on_screen_part_index[indicies_kept[ii]]%7==1]
+            indicies_of_div_7_2 = [ii for ii in range(len(indicies_kept)) if part_on_screen_part_index[indicies_kept[ii]]%7==2]
+            energies = [energy[int(part_on_screen_part_index[int(indicies_kept[ii])])][0] for ii in range(len(long_cord))]
+            dE_dx    = [abs(energies[indicies_of_div_7_0[ii+1]]-energies[indicies_of_div_7_0[ii-1]])/abs(long_cord[indicies_of_div_7_0[ii+1]]-long_cord[indicies_of_div_7_0[ii-1]]) for ii in (range(1, int(len(indicies_of_div_7_0))-1, 1))]
+            dE_dx_times_E = np.array(dE_dx)*np.array([energies[indicies_of_div_7_0[ii]] for ii in range(1, len(indicies_of_div_7_0)-1, 1)])
+            energy_resolution_sum = np.append(energy_resolution_sum, dE_dx_times_E)
+        #print(f"Energy res array is {energy_resolution_sum}")
+        energy_res_fom = np.sum(energy_resolution_sum)/len(energy_resolution_sum)
+        #print(f"average energy res is {energy_res_fom}")
+        energy_res_fom = energy_res_fom/normalizing_fom
+        #print(f"Normalized energy res is {energy_res_fom}")
         return energy_res_fom
     else:
         print("Something went wrong calculating energy resolution fom!")

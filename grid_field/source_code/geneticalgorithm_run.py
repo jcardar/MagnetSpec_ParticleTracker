@@ -20,6 +20,8 @@ from python_run_cpp_code_mac import *
 ####s0 = 3.5e-6
 ####x, y, phi0, I0 = shadowgraphy(zeff = z0, sigma = s0, Lx = 10*13e-6, EkeV = [5], Nx = 2048, Ny = 512)
 
+save_all_mag_spec_images = False
+
 access_file = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','algorithm_access.txt'), 'r')
 global_bounds = read_global_bounds(access_file)
 mutation_size, mag_access, screen_access = read_access_and_mutation_sizes(access_file)
@@ -37,8 +39,9 @@ run_spectrometer_code()
 normalizing_fom = 0
 energy_range = np.array([392.38, 3914.89])
 normalizing_fom = energy_resolution(energy_range, normalizing_fom, isfirst)
+print(f"Normalizing fom is {normalizing_fom}")
 isfirst = False
-
+best_fom = 1.0
 #Change these:
 #starting_point = [0.5, 1.5e-6]
 #Mutation size only two parameters - first changes first starting point, second changes second starting point
@@ -51,7 +54,8 @@ def main():
     
     # bound limit, zeff [0.05, 7], sigma [1e-6, 5e-6]
     lbound, ubound = read_bounds(mag_access, screen_access, global_bounds)
-    print(len(lbound))
+    best_fom = 1.0
+    #print(len(lbound))
     #lbound = (0.05, 1e-6) 
     #ubound = (1.0 , 7e-6)
 
@@ -63,9 +67,10 @@ def main():
     # Fom
     def synthetic_diagnostic(params):
         #energy_resolution(part_on_screen_part_index = params[0], energy = params[1], energy_range = params[2], posx = params[3], normalizing_fom = params[4], isfirst = isfirst)
-        fom = energy_resolution(energy_range, normalizing_fom, isfirst)
         edit_input_deck(params, mag_access, screen_access)
         run_spectrometer_code()
+        #fom = energy_weighted_resolution(energy_range, normalizing_fom, isfirst)
+        fom = energy_and_divergence_resolution(energy_range, normalizing_fom, isfirst)
         
         return fom
         ##x, y, phi, I = shadowgraphy(zeff = params[0], sigma = params[1], Lx = 10*13e-6, EkeV = [5], Nx = 2048, Ny = 512)
@@ -73,6 +78,7 @@ def main():
     
     def evaluate(params):
         #FOM here, synthetic diagnostic
+        global best_fom
         time.sleep(0.001)
 
         nonlocal population_id
@@ -81,13 +87,83 @@ def main():
             population_id = 1
 
         fom = synthetic_diagnostic(params)
+        #print(f"Best fom is {best_fom}")
+        if fom < best_fom:
+            writeout_best_fom_input()
+            best_fom = fom
 
         print('Iter No.: %d, Child: %d, Fom: %.1f'%
                 (ga.generation_number, population_id, fom))
+        if save_all_mag_spec_images == True:
+            import matplotlib.cm as cm
+            import scipy.constants as const
+            import csv
+            import matplotlib.patches as patches
+            import pandas as pd
+            with open("../data/XPOS.csv") as csvfile:    
+                csv_reader = csv.reader(csvfile, delimiter=',')
+                line_count = 0
+                posx = list(csv_reader)
+            #     print(posx)
+            #     posx = [[float(y) for y in x[0:-1]] for x in posx]
+                posx = [[float(y) for y in x] for x in posx]
 
+            with open("../data/YPOS.csv") as csvfile:
+                csv_reader = csv.reader(csvfile, delimiter=',',quoting=csv.QUOTE_NONNUMERIC)
+                line_count = 0
+                posy = list(csv_reader)
+                posy = [[float(y) for y in x] for x in posy]
+
+            with open("../data/ENERGY.csv") as csvfile:
+                csv_reader = csv.reader(csvfile, delimiter=',')
+                line_count = 0
+                energy = list(csv_reader)
+                energy = [[float(y) for y in x] for x in energy]
+            energy = [[energy[jj][ii]*0.511+0.511 for ii in range(len(energy[jj]))] for jj in range(len(energy))]
+
+            screen = pd.read_csv("../data/SCREENS.csv")
+            magnet = pd.read_csv("../data/MAGNETS.csv")
+
+            num_par    = len(posx)
+            B_Norm   = 1
+            omega_c0 = const.e*B_Norm / const.m_e
+
+            # rL_norm    = np.sqrt(-(1 - gamma*gamma)/(gamma*gamma))*gamma;
+
+            fig1, ax = plt.subplots(figsize = (10,10), num=3)
+            ax.clear()
+            colors = cm.rainbow(np.linspace(0, 1, float(num_par)/7+1))
+            indx = -1
+            for ii in range(num_par):
+                if ii%7==0:
+                    indx = indx + 1
+                    new_plot = ax.plot(np.array(posx[ii])*const.c/omega_c0, np.array(posy[ii])*const.c/omega_c0, color = colors[indx], label=f'energy = {energy[ii][0]:.1f} MeV', alpha = 1)
+                else:
+                    ax.plot(np.array(posx[ii])*const.c/omega_c0, np.array(posy[ii])*const.c/omega_c0, label='_nolegend_', color=new_plot[0].get_color(), alpha = 0.5)
+
+            num_mag = len(magnet.index)
+            for ii in range(num_mag):
+            #     rect = patches.Rectangle((magnet.iloc[ii][2]*const.c/omega_c0,(magnet.iloc[ii][3]-(magnet.iloc[ii][6]/2)))*const.c/omega_c0,magnet.iloc[ii][5]*const.c/omega_c0,magnet.iloc[ii][6]*const.c/omega_c0,linewidth=1,edgecolor='b',facecolor='b', fill=True, alpha=0.1)
+                rect = patches.Rectangle((magnet['mag_posx'][ii]*const.c/omega_c0,(magnet['mag_posy'][ii]-(magnet['width'][ii]/2.0))*const.c/omega_c0),magnet['length'][ii]*const.c/omega_c0,magnet['width'][ii]*const.c/omega_c0,linewidth=1,edgecolor='b',facecolor='b', fill=True, alpha=0.1)
+            #     plt.ylim((magnet.iloc[ii][3]-(magnet.iloc[ii][6]/2)-0.01),(magnet.iloc[ii][3]+(magnet.iloc[ii][6]/2)+0.01))
+                ax.add_patch(rect)
+
+            num_screen = len(screen.index)
+            for ii in range(num_screen):
+                screenX = np.array([screen['screen_low_energy_edgex'][ii],screen['screen_low_energy_edgex'][ii]+(screen['length'][ii]*np.cos(np.deg2rad(screen['degrees about z-axis'][ii])))])*const.c/omega_c0
+                screenY = np.array([screen['screen_low_energy_edgey'][ii],screen['screen_low_energy_edgey'][ii]+(screen['length'][ii]*np.sin(np.deg2rad(screen['degrees about z-axis'][ii])))])*const.c/omega_c0
+                plt.plot(screenX,screenY,'-k')
+            #     plt.xlim(0, screen.iloc[ii][1]+(screen.iloc[ii][5]*np.cos(np.deg2rad(screen.iloc[ii][4]))));
+            ax.set_xlabel('X-Position [m]')
+            ax.set_ylabel('Y-Position [m]')
+            ax.set_title('Particle Trajectories, 10 mrad Divergence, $B_0 =1$ T')
+            ax.axis('equal')
+            ax.legend()
+            #plt.show()
+            plt.savefig(rawpath+'mag_spec_system_raw_iter%d_pop%d.png'%(ga.generation_number, population_id))
         if save_raw_option.lower() == 'y':
             pass
-#             np.savetxt(rawpath+'raw_iter%d_people%d.txt'%(ga.generation_number, population_id), np.asarray(im))
+#            np.savetxt(rawpath+'raw_iter%d_people%d.txt'%(ga.generation_number, population_id), np.asarray(im))
         return fom
 
     ## TODO, detect keyboard
@@ -150,7 +226,7 @@ def main():
         ga['elitism']    = num_elitism
         ga['mutation_size'] = 1.0
         ga['mutation_probability'] = 1.0
-        ga.populate((starting_point[0],starting_point[1]), scale = 1)
+        ga.populate(tuple([starting_point[jj] for jj in range(len(starting_point))]), scale = 1)
         
     elif diffdriver.lower() == 'y':
         ga = DifferentialGaDriver(problem)
@@ -159,7 +235,7 @@ def main():
         ga['elitism']    = num_elitism
         ga['mutation_size'] = 2.0
         ga['mutation_probability'] = 1.0
-        ga.populate((starting_point[0],starting_point[1]), scale = mutation_size)  # for DifferentialGaDriver
+        ga.populate(tuple([starting_point[jj] for jj in range(len(starting_point))]), scale = mutation_size)  # for DifferentialGaDriver
     
     
     fig = plt.figure(figsize = (12,8))
@@ -180,14 +256,18 @@ def main():
     ax1.set_xlabel('Iterations')
 
     ax1.set_ylabel('Figures of merit')
-    ax2.set_ylabel('Zeff')
-    ax3.set_ylabel('Sigma (1e-6)')
+    ax2.set_ylabel('Gene[0] (Magnet y-position)')
+    ax3.set_ylabel('Gene[1] (Screen x-position)')
+    
 
     #ax2.axhline(z0, ls = '--', color = 'gray', lw = 2)
     #ax3.axhline(s0*1e6, ls = '--', color = 'gray', lw = 2)
 
-    ax4.set_title('Goal')
-    ax5.set_title('Current best')
+    ax4.set_title('Gene[2] (Screen y-position)')
+    ax5.set_title('Gene[3] (Screen yaw-angle)')
+
+    fig1, ax = plt.subplots(figsize = (10,10))
+    fig1.set_tight_layout(True)
 
     FOM =  []
     GENE = []
@@ -208,15 +288,25 @@ def main():
         gene_all = np.array(copy.copy(ga.population)).ravel()
         gene     = np.array(copy.copy(ga.selection )).ravel()
 
+        plt.figure(fig.number)
         ax1.plot([ga.generation_number] * ga['population'], fom_all, '+', color = 'gray')
         ax1.plot([ga.generation_number] * ga['selection'],  fom,     '*', color = 'r')
+        if max(fom_all)==3.14159:
+            ax1.set_ylim([(min(fom)-0.1),1.4])
+        else:
+            ax1.set_ylim([(min(fom)-0.1),1.2])
         ax2.plot([ga.generation_number] * ga['population'], gene_all.reshape((ga['population'], len(lbound)))[:,0], '+', color = 'gray')
         ax2.plot([ga.generation_number] * ga['selection'],  gene.reshape(    (ga['selection'],len(lbound))  )[:,0], 'r*')
-        ax3.plot([ga.generation_number] * ga['population'], 1e6*gene_all.reshape((ga['population'], len(lbound)))[:,1], '+', color = 'gray')
-        ax3.plot([ga.generation_number] * ga['selection'],  1e6*gene.reshape(    (ga['selection'],len(lbound))  )[:,1], 'r*')
-        
-        #####_, _, _, I_best = shadowgraphy(zeff = gene[0], sigma = gene[1], Lx = 10*13e-6, EkeV = [5], Nx =  2048, Ny = 512)
+        ax3.plot([ga.generation_number] * ga['population'], gene_all.reshape((ga['population'], len(lbound)))[:,1], '+', color = 'gray')
+        ax3.plot([ga.generation_number] * ga['selection'],  gene.reshape(    (ga['selection'],len(lbound))  )[:,1], 'r*')
+        ax4.plot([ga.generation_number] * ga['population'], gene_all.reshape((ga['population'], len(lbound)))[:,2], '+', color = 'gray')
+        ax4.plot([ga.generation_number] * ga['selection'],  gene.reshape(    (ga['selection'],len(lbound))  )[:,2], 'r*')
+        ax5.plot([ga.generation_number] * ga['population'], gene_all.reshape((ga['population'], len(lbound)))[:,3], '+', color = 'gray')
+        ax5.plot([ga.generation_number] * ga['selection'],  gene.reshape(    (ga['selection'],len(lbound))  )[:,3], 'r*')
 
+
+        #####_, _, _, I_best = shadowgraphy(zeff = gene[0], sigma = gene[1], Lx = 10*13e-6, EkeV = [5], Nx =  2048, Ny = 512)
+        #E_fom_best = energy_resolution()
         #####p4 = ax4.pcolormesh(x*1e6, y*1e6, I0, vmin = 0, vmax = 0.5, rasterized = True)
         #####p5 = ax5.pcolormesh(x*1e6, y*1e6, I_best, vmin = 0, vmax = 0.5, rasterized = True)
         # plt.colorbar(p4, ax = ax4)
@@ -224,7 +314,17 @@ def main():
 
         plt.savefig(progpath+'prog_iter%d.png'%(ga.generation_number), dpi = 300)
 
-
+        plt.figure(fig1.number)
+        ax.plot([ga.generation_number] * ga['population'], fom_all, '+', color = 'gray')
+        ax.plot([ga.generation_number] * ga['selection'],  fom,     '*', color = 'r')
+        ax.set_title(f"Figure of Merit Progression Up To Iteration {ga.generation_number}")
+        ax.set_ylabel("Figure of Merit")
+        ax.set_xlabel("Iteration")
+        if max(fom_all)==3.14159:
+            ax.set_ylim([(min(fom)-0.1),1.4])
+        else:
+            ax.set_ylim([(min(fom)-0.1),1.2])
+        plt.savefig(progpath+'prog_iter%d_JUST_FOM.png'%(ga.generation_number), dpi = 300)
 
         plt.draw()
         FOM.append(fom)
@@ -232,7 +332,7 @@ def main():
         FOM_ALL.append(fom_all)
         GENE_ALL.append(gene_all)
 
-        plt.pause(0.001)
+        #plt.pause(0.001)
 
 
         i+=1
@@ -266,8 +366,8 @@ def main():
             if not os.path.exists(newpath):
                 os.makedirs(newpath)
                 np.savetxt(newpath + 'fom.txt', np.array(FOM), header = 'Run %s, fom'%run_num )
-                np.savetxt(newpath + 'gene.txt', np.array(GENE), header = 'Run %s, gene'%run_num)
-                np.savetxt(newpath + 'gene_all.txt', np.array(GENE_ALL), header = 'Run %s, gene all'%run_num)
+                np.savetxt(newpath + 'gene.txt', np.array(GENE), header = 'Run %s, gene\n %i of genes'%(run_num, len(starting_point)))
+                np.savetxt(newpath + 'gene_all.txt', np.array(GENE_ALL), header = 'Run %s, gene all\n %i of genes'%(run_num, len(starting_point)))
                 np.savetxt(newpath + 'fom_all.txt', np.array(FOM_ALL), header = 'Run %s, fom all'%run_num)
                 plt.savefig(newpath + 'fom.pdf', dpi = 300, bbox_inches = 'tight')
                 break

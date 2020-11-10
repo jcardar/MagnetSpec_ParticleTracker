@@ -1,5 +1,5 @@
 import os
-
+#import numpy as np
 def read_global_bounds(access_infile):
     bounds_strings = access_infile.readline().split()
     x_max = float(bounds_strings[0])
@@ -143,6 +143,7 @@ def edit_input_deck(mutated_values, mag_access, screen_access):
         outfile.write(second_line[jj])
         outfile.write(' ')
     outfile.write(second_line[-1])
+    outfile.write('\n')
 
     third_line = infile.readline()
     outfile.write(third_line)
@@ -164,6 +165,7 @@ def edit_input_deck(mutated_values, mag_access, screen_access):
         outfile.write(fifth_line[jj])
         outfile.write(' ')
     outfile.write(fifth_line[-1])
+    outfile.write('\n')
 
     sixth_line = infile.readline()
     outfile.write(sixth_line)
@@ -178,8 +180,8 @@ def edit_input_deck(mutated_values, mag_access, screen_access):
 
 def read_bounds(mag_access, screen_access, global_bounds):
     infile = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','input_deck.txt'), 'r')
-    lbound = []
-    ubound = [] 
+    lbound = [0.0]
+    ubound = [0.0]
     first_line = infile.readline()
     #outfile.write(first_line)
 
@@ -191,12 +193,13 @@ def read_bounds(mag_access, screen_access, global_bounds):
     #print(global_bounds)
     #print(global_bounds[0])
     for ii in range(num_mag*3):
+        #print(f"i%3 is {i%3}")
         if mag_access[i] == -1 and i%3 == 0:
             #print("This is true")
-            print(global_bounds[0])
+            #print(global_bounds[1])
             lbound.append(global_bounds[1])
             ubound.append(global_bounds[0] - mag_dims[i])
-            print(global_bounds[0]-mag_dims[i])
+            #print(global_bounds[0]-mag_dims[i])
             #starting_points.append(starting_point_value)
         if mag_access[i] == -1 and i%3 == 1:
             lbound.append(global_bounds[3] + 0.5*mag_dims[i])
@@ -223,24 +226,25 @@ def read_bounds(mag_access, screen_access, global_bounds):
     screen_count = 0
     offset_5l = num_screen*2 + 1
     for ii in range(num_screen*6):
-        if screen_access[i] == -1 and i%6 == 0:
+        #print(f"j%6 is {j%6}")
+        if screen_access[j] == -1 and j%6 == 0:
             lbound.append(global_bounds[1] + screen_dims[0 + 2*screen_count])
             ubound.append(global_bounds[0] - screen_dims[0 + 2*screen_count])
             #starting_points.append(starting_point_value)
-        if screen_access[i] == -1 and i%6 == 1:
+        if screen_access[j] == -1 and j%6 == 1:
             lbound.append(global_bounds[3])
             ubound.append(global_bounds[2] - screen_dims[0 + 2*screen_count])
-        if screen_access[i] == -1 and i%6 == 2:
+        if screen_access[j] == -1 and j%6 == 2:
             lbound.append(global_bounds[5] + screen_dims[1 + 2*screen_count])
             ubound.append(global_bounds[4] - screen_dims[1 + 2*screen_count])
-        if screen_access[i] == -1 and i%6 == 3:
+        if screen_access[j] == -1 and j%6 == 3:
             lbound.append(0)
             ubound.append(3.14159)
             #starting_points.append(starting_point_value)
-        if screen_access[i] == -1 and i%6 == 4:
+        if screen_access[j] == -1 and j%6 == 4:
             lbound.append(0)
             ubound.append(3.14159)
-        if screen_access[i] == -1 and i%6 == 5:
+        if screen_access[j] == -1 and j%6 == 5:
             lbound.append(0)
             ubound.append(3.14159)
         j += 1
@@ -259,6 +263,41 @@ def read_bounds(mag_access, screen_access, global_bounds):
 
     infile.close()
     #outfile.close()
-    print(lbound)
-    print(ubound)
+    lbound.pop(0)
+    ubound.pop(0)
+    #print(lbound)
+    #print(ubound)
     return lbound, ubound
+
+def writeout_best_fom_input():
+    infile = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','input_deck.txt'), 'r')
+    outfile = open(os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','best_input_deck.txt'), 'w')
+
+    mutate_value_count = 0
+
+    first_line = infile.readline()
+    outfile.write(first_line)
+
+    second_line = infile.readline()
+    outfile.write(second_line)
+    #outfile.write('\n')
+
+    third_line = infile.readline()
+    outfile.write(third_line)
+
+    fourth_line = infile.readline()
+    outfile.write(fourth_line)
+
+    fifth_line = infile.readline()
+    outfile.write(fifth_line)
+    
+
+    sixth_line = infile.readline()
+    outfile.write(sixth_line)
+
+    seventh_line = infile.readline()
+    outfile.write(seventh_line)
+
+    infile.close()
+    outfile.close()
+
