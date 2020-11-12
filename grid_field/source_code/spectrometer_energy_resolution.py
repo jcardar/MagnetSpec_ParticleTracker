@@ -227,12 +227,13 @@ def energy_and_divergence_resolution(energy_range,normalizing_fom, isfirst):
             dE_dx_times_E = np.array(dE_dx)*np.array([energies[indicies_of_div_7_0[ii]] for ii in range(1, len(indicies_of_div_7_0)-1, 1)])
             div_length_diff = np.array([abs(long_cord[indicies_of_div_7_1[ii]]-long_cord[indicies_of_div_7_2[ii]]) for ii in range(len(indicies_of_div_7_1))])
             div_length_mean = np.mean(div_length_diff)
+            print(f"mean dx_div is {div_length_mean}")
             #print(dE_dx_times_E)
             energy_resolution_sum = np.append(arr = energy_resolution_sum, values=np.array(dE_dx_times_E))
             #print(energy_resolution_sum)
         #print(dE_dx_times_E)
         #print(energy_resolution_sum)
-        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))+div_length_mean
+        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))*div_length_mean
         if energy_res_fom == np.inf or energy_res_fom == 0 or energy_range_captured == False:
             import sys
             sys.exit("Initial condition does not capture sufficient particles to continue. Exiting.")
@@ -255,7 +256,7 @@ def energy_and_divergence_resolution(energy_range,normalizing_fom, isfirst):
             energy_resolution_sum = np.append(arr = energy_resolution_sum, values=dE_dx_times_E)
 
         #print(f"Energy res array is {energy_resolution_sum}")
-        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))+div_length_mean
+        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))*div_length_mean
         #print(f"average energy res is {energy_res_fom}")
         energy_res_fom = energy_res_fom/normalizing_fom
         #print(f"Normalized energy res is {energy_res_fom}")
