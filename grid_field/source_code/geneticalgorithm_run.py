@@ -48,7 +48,7 @@ best_fom = 1.0
 #Mutation size only two parameters - first changes first starting point, second changes second starting point
 #mutation_size = (0.01, 0.05e-6)
 
-iter_num = 10
+iter_num = 100
 
 
 def main():
