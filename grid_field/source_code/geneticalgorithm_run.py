@@ -256,15 +256,15 @@ def main():
     ax1.set_xlabel('Iterations')
 
     ax1.set_ylabel('Figures of merit')
-    ax2.set_ylabel('Gene[0] (Magnet y-position)')
-    ax3.set_ylabel('Gene[1] (Screen x-position)')
+    ax2.set_ylabel('Gene[0] (Magnet y-position, normalized)')
+    ax3.set_ylabel('Gene[1] (Screen x-position, normalized)')
     
 
     #ax2.axhline(z0, ls = '--', color = 'gray', lw = 2)
     #ax3.axhline(s0*1e6, ls = '--', color = 'gray', lw = 2)
 
-    ax4.set_title('Gene[2] (Screen y-position)')
-    ax5.set_title('Gene[3] (Screen yaw-angle)')
+    ax4.set_title('Gene[2] (Screen y-position, normalized)')
+    ax5.set_title('Gene[3] (Screen yaw-angle, radians)')
 
     fig1, ax = plt.subplots(figsize = (10,10))
     fig1.set_tight_layout(True)

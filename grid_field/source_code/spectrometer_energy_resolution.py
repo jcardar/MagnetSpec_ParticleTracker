@@ -108,8 +108,12 @@ def check_energy_range_captured(part_on_screen_part_index, energy, energy_range,
             if (min([energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]))>=energy_range[0] and (max([energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]))<=energy_range[1]:
                 captured = True
             else:
-                captured = False
-                return captured
+                return False
+            energies_on_screen = [energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]
+            if energies_on_screen.count(min(energy_range))==7 and energies_on_screen.count(max(energy_range))==7:
+                captured = True
+            else:
+                return False
         else:
             return False
         if len(part_on_screen_part_index) >= (0.90*len(posx)):
@@ -217,12 +221,14 @@ def energy_and_divergence_resolution(energy_range,normalizing_fom, isfirst):
             energies = [energy[int(part_on_screen_part_index[int(indicies_kept[ii])])][0] for ii in range(len(long_cord))]
             dE_dx    = [abs(energies[indicies_of_div_7_0[ii+1]]-energies[indicies_of_div_7_0[ii-1]])/abs(long_cord[indicies_of_div_7_0[ii+1]]-long_cord[indicies_of_div_7_0[ii-1]]) for ii in (range(1, int(len(indicies_of_div_7_0))-1, 1))]
             dE_dx_times_E = np.array(dE_dx)*np.array([energies[indicies_of_div_7_0[ii]] for ii in range(1, len(indicies_of_div_7_0)-1, 1)])
+            div_length_diff = np.array([abs(long_cord[indicies_of_div_7_1[ii]]-long_cord[indicies_of_div_7_2[ii]]) for ii in range(len(indicies_of_div_7_1))])
+            div_length_mean = np.mean(div_length_diff)
             #print(dE_dx_times_E)
             energy_resolution_sum = np.append(arr = energy_resolution_sum, values=np.array(dE_dx_times_E))
             #print(energy_resolution_sum)
         #print(dE_dx_times_E)
         #print(energy_resolution_sum)
-        energy_res_fom = np.sum(energy_resolution_sum)/len(energy_resolution_sum)
+        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))*div_length_mean
         if energy_res_fom == np.inf or energy_res_fom == 0:
             import sys
             sys.exit("Initial condition does not capture sufficient particles to continue. Exiting.")
@@ -239,9 +245,13 @@ def energy_and_divergence_resolution(energy_range,normalizing_fom, isfirst):
             energies = [energy[int(part_on_screen_part_index[int(indicies_kept[ii])])][0] for ii in range(len(long_cord))]
             dE_dx    = [abs(energies[indicies_of_div_7_0[ii+1]]-energies[indicies_of_div_7_0[ii-1]])/abs(long_cord[indicies_of_div_7_0[ii+1]]-long_cord[indicies_of_div_7_0[ii-1]]) for ii in (range(1, int(len(indicies_of_div_7_0))-1, 1))]
             dE_dx_times_E = np.array(dE_dx)*np.array([energies[indicies_of_div_7_0[ii]] for ii in range(1, len(indicies_of_div_7_0)-1, 1)])
-            energy_resolution_sum = np.append(energy_resolution_sum, dE_dx_times_E)
+            div_length_diff = np.array([abs(long_cord[indicies_of_div_7_1[ii]]-long_cord[indicies_of_div_7_2[ii]]) for ii in range(len(indicies_of_div_7_1))])
+            div_length_mean = np.mean(div_length_diff) 
+            #ax.plot([long_cord[indicies_of_div_7_1[ii]] for ii in range(len(indicies_of_div_7_1))], [energies[indicies_of_div_7_1[ii]] for ii in range(len(indicies_of_div_7_1))],c='blue', marker='.', label = 'Divergence Trajectory')
+            energy_resolution_sum = np.append(arr = energy_resolution_sum, values=dE_dx_times_E)
+
         #print(f"Energy res array is {energy_resolution_sum}")
-        energy_res_fom = np.sum(energy_resolution_sum)/len(energy_resolution_sum)
+        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))*div_length_mean
         #print(f"average energy res is {energy_res_fom}")
         energy_res_fom = energy_res_fom/normalizing_fom
         #print(f"Normalized energy res is {energy_res_fom}")
