@@ -103,73 +103,7 @@ def main():
 
         print('Iter No.: %d, Child: %d, Fom: %.1f'%
                 (ga.generation_number, population_id, fom))
-        if save_all_mag_spec_images == True:
-            import matplotlib.cm as cm
-            import scipy.constants as const
-            import csv
-            import matplotlib.patches as patches
-            import pandas as pd
-            with open("../data/XPOS.csv") as csvfile:    
-                csv_reader = csv.reader(csvfile, delimiter=',')
-                line_count = 0
-                posx = list(csv_reader)
-            #     print(posx)
-            #     posx = [[float(y) for y in x[0:-1]] for x in posx]
-                posx = [[float(y) for y in x] for x in posx]
-
-            with open("../data/YPOS.csv") as csvfile:
-                csv_reader = csv.reader(csvfile, delimiter=',',quoting=csv.QUOTE_NONNUMERIC)
-                line_count = 0
-                posy = list(csv_reader)
-                posy = [[float(y) for y in x] for x in posy]
-
-            with open("../data/ENERGY.csv") as csvfile:
-                csv_reader = csv.reader(csvfile, delimiter=',')
-                line_count = 0
-                energy = list(csv_reader)
-                energy = [[float(y) for y in x] for x in energy]
-            energy = [[energy[jj][ii]*0.511+0.511 for ii in range(len(energy[jj]))] for jj in range(len(energy))]
-
-            screen = pd.read_csv("../data/SCREENS.csv")
-            magnet = pd.read_csv("../data/MAGNETS.csv")
-
-            num_par    = len(posx)
-            B_Norm   = 1
-            omega_c0 = const.e*B_Norm / const.m_e
-
-            # rL_norm    = np.sqrt(-(1 - gamma*gamma)/(gamma*gamma))*gamma;
-
-            fig1, ax = plt.subplots(figsize = (10,10), num=3)
-            ax.clear()
-            colors = cm.rainbow(np.linspace(0, 1, float(num_par)/7+1))
-            indx = -1
-            for ii in range(num_par):
-                if ii%7==0:
-                    indx = indx + 1
-                    new_plot = ax.plot(np.array(posx[ii])*const.c/omega_c0, np.array(posy[ii])*const.c/omega_c0, color = colors[indx], label=f'energy = {energy[ii][0]:.1f} MeV', alpha = 1)
-                else:
-                    ax.plot(np.array(posx[ii])*const.c/omega_c0, np.array(posy[ii])*const.c/omega_c0, label='_nolegend_', color=new_plot[0].get_color(), alpha = 0.5)
-
-            num_mag = len(magnet.index)
-            for ii in range(num_mag):
-            #     rect = patches.Rectangle((magnet.iloc[ii][2]*const.c/omega_c0,(magnet.iloc[ii][3]-(magnet.iloc[ii][6]/2)))*const.c/omega_c0,magnet.iloc[ii][5]*const.c/omega_c0,magnet.iloc[ii][6]*const.c/omega_c0,linewidth=1,edgecolor='b',facecolor='b', fill=True, alpha=0.1)
-                rect = patches.Rectangle((magnet['mag_posx'][ii]*const.c/omega_c0,(magnet['mag_posy'][ii]-(magnet['width'][ii]/2.0))*const.c/omega_c0),magnet['length'][ii]*const.c/omega_c0,magnet['width'][ii]*const.c/omega_c0,linewidth=1,edgecolor='b',facecolor='b', fill=True, alpha=0.1)
-            #     plt.ylim((magnet.iloc[ii][3]-(magnet.iloc[ii][6]/2)-0.01),(magnet.iloc[ii][3]+(magnet.iloc[ii][6]/2)+0.01))
-                ax.add_patch(rect)
-
-            num_screen = len(screen.index)
-            for ii in range(num_screen):
-                screenX = np.array([screen['screen_low_energy_edgex'][ii],screen['screen_low_energy_edgex'][ii]+(screen['length'][ii]*np.cos(np.deg2rad(screen['degrees about z-axis'][ii])))])*const.c/omega_c0
-                screenY = np.array([screen['screen_low_energy_edgey'][ii],screen['screen_low_energy_edgey'][ii]+(screen['length'][ii]*np.sin(np.deg2rad(screen['degrees about z-axis'][ii])))])*const.c/omega_c0
-                plt.plot(screenX,screenY,'-k')
-            #     plt.xlim(0, screen.iloc[ii][1]+(screen.iloc[ii][5]*np.cos(np.deg2rad(screen.iloc[ii][4]))));
-            ax.set_xlabel('X-Position [m]')
-            ax.set_ylabel('Y-Position [m]')
-            ax.set_title('Particle Trajectories, 10 mrad Divergence, $B_0 =1$ T')
-            ax.axis('equal')
-            ax.legend()
-            #plt.show()
-            plt.savefig(rawpath+'mag_spec_system_raw_iter%d_pop%d.png'%(ga.generation_number, population_id))
+        
         if save_raw_option.lower() == 'y':
             pass
 #            np.savetxt(rawpath+'raw_iter%d_people%d.txt'%(ga.generation_number, population_id), np.asarray(im))
