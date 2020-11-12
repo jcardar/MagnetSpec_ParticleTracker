@@ -84,6 +84,7 @@ def read_starting_points(mag_access, screen_access):
         outfile.write(second_line[jj])
         outfile.write(' ')
     outfile.write(second_line[-1])
+    outfile.write('\n')
 
     third_line = infile.readline()
     outfile.write(third_line)
@@ -108,6 +109,7 @@ def read_starting_points(mag_access, screen_access):
         outfile.write(fifth_line[jj])
         outfile.write(' ')
     outfile.write(fifth_line[-1])
+    outfile.write('\n')
 
     sixth_line = infile.readline()
     outfile.write(sixth_line)

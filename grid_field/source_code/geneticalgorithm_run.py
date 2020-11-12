@@ -37,18 +37,18 @@ isfirst = True
 run_spectrometer_code()
 #import_relevant_data()
 normalizing_fom = 0
-energy_range = np.array([392.38, 3914.89])
+energy_range = np.array([500.51121400000005, 2501.53407])
 #normalizing_fom = energy_weighted_resolution(energy_range, normalizing_fom, isfirst)
 normalizing_fom = energy_and_divergence_resolution(energy_range, normalizing_fom, isfirst)
-#print(f"Normalizing fom is {normalizing_fom}")
-isfirst = False
+print(f"Normalizing fom is {normalizing_fom}")
+#isfirst = False
 best_fom = 1.0
 #Change these:
 #starting_point = [0.5, 1.5e-6]
 #Mutation size only two parameters - first changes first starting point, second changes second starting point
 #mutation_size = (0.01, 0.05e-6)
 
-iter_num = 100
+iter_num = 10
 
 
 def main():
@@ -68,10 +68,18 @@ def main():
     # Fom
     def synthetic_diagnostic(params):
         #energy_resolution(part_on_screen_part_index = params[0], energy = params[1], energy_range = params[2], posx = params[3], normalizing_fom = params[4], isfirst = isfirst)
+        global isfirst
+        if isfirst == True:
+            print("FIRST RUN")
+            isfirst = False
+            fom = energy_and_divergence_resolution(energy_range, normalizing_fom, isfirst)
+            return fom
+
         edit_input_deck(params, mag_access, screen_access)
         run_spectrometer_code()
         #fom = energy_weighted_resolution(energy_range, normalizing_fom, isfirst)
         fom = energy_and_divergence_resolution(energy_range, normalizing_fom, isfirst)
+
         
         return fom
         ##x, y, phi, I = shadowgraphy(zeff = params[0], sigma = params[1], Lx = 10*13e-6, EkeV = [5], Nx = 2048, Ny = 512)
@@ -357,13 +365,14 @@ def main():
     #             break
 
     while True:
-        save_option = input('Do you want to save data (y/n)?  ')
+        save_option = input('Do you want to save data (including best/original input decks) (y/n)?  ')
         if save_option.lower() == 'n':
             break
         elif save_option.lower() == 'y':
             run_num = input('Please input a run number or a file name, so I can make a new folder for you: ')
             date =  datetime.datetime.now().strftime('%Y-%m-%d-')
             newpath = './save/%srun-%s/'%(date, run_num)
+            from shutil import copy2
             if not os.path.exists(newpath):
                 os.makedirs(newpath)
                 np.savetxt(newpath + 'fom.txt', np.array(FOM), header = 'Run %s, fom'%run_num )
@@ -371,6 +380,11 @@ def main():
                 np.savetxt(newpath + 'gene_all.txt', np.array(GENE_ALL), header = 'Run %s, gene all\n %i of genes'%(run_num, len(starting_point)))
                 np.savetxt(newpath + 'fom_all.txt', np.array(FOM_ALL), header = 'Run %s, fom all'%run_num)
                 plt.savefig(newpath + 'fom.pdf', dpi = 300, bbox_inches = 'tight')
+                #nput_files = ['../data/analysis/original_input_deck.txt', '../data/analysis/best_input_deck.txt']
+                best_deck = os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','best_input_deck.txt')
+                first_deck = os.path.join(os.path.dirname(__file__),os.pardir,'data','analysis','original_input_deck.txt')
+                copy2(best_deck, newpath)
+                copy2(first_deck, newpath)
                 break
             else:
                 print('Path exists! Try again!')

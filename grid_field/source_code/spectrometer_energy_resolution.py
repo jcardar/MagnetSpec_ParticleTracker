@@ -110,6 +110,10 @@ def check_energy_range_captured(part_on_screen_part_index, energy, energy_range,
             else:
                 return False
             energies_on_screen = [energy[part_on_screen_part_index[ii]][0] for ii in range(len(part_on_screen_part_index))]
+            #print(energies_on_screen)
+            #print(min(energy_range))
+            #print(energies_on_screen.count(min(energy_range)))
+            #print(energies_on_screen.count(max(energy_range)))
             if energies_on_screen.count(min(energy_range))==7 and energies_on_screen.count(max(energy_range))==7:
                 captured = True
             else:
@@ -228,8 +232,8 @@ def energy_and_divergence_resolution(energy_range,normalizing_fom, isfirst):
             #print(energy_resolution_sum)
         #print(dE_dx_times_E)
         #print(energy_resolution_sum)
-        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))*div_length_mean
-        if energy_res_fom == np.inf or energy_res_fom == 0:
+        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))+div_length_mean
+        if energy_res_fom == np.inf or energy_res_fom == 0 or energy_range_captured == False:
             import sys
             sys.exit("Initial condition does not capture sufficient particles to continue. Exiting.")
         return energy_res_fom
@@ -251,7 +255,7 @@ def energy_and_divergence_resolution(energy_range,normalizing_fom, isfirst):
             energy_resolution_sum = np.append(arr = energy_resolution_sum, values=dE_dx_times_E)
 
         #print(f"Energy res array is {energy_resolution_sum}")
-        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))*div_length_mean
+        energy_res_fom = (np.sum(energy_resolution_sum)/len(energy_resolution_sum))+div_length_mean
         #print(f"average energy res is {energy_res_fom}")
         energy_res_fom = energy_res_fom/normalizing_fom
         #print(f"Normalized energy res is {energy_res_fom}")
