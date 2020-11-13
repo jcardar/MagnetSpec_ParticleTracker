@@ -42,7 +42,7 @@ energy_range = np.array([500.51121400000005, 2501.53407])
 normalizing_fom = energy_and_divergence_resolution(energy_range, normalizing_fom, isfirst)
 print(f"Normalizing fom is {normalizing_fom}")
 #isfirst = False
-#best_fom = 1.0
+best_fom = 1.5
 #Change these:
 #starting_point = [0.5, 1.5e-6]
 #Mutation size only two parameters - first changes first starting point, second changes second starting point
