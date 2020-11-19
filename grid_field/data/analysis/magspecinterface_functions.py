@@ -504,6 +504,12 @@ def normalizeMu0(num_mag, fld_vals):
 # Functions to aid in plotting
 
 def checkObjBounds(xyz_ranges, xmax, xmin, ymax, ymin, zmax, zmin, color, bound_check_bool):
+    """
+    xyz_ranges -> list of previously calculated ?min ?max values for non-intersecting objects [min, max]
+    ?min/max is the bounds for the current object being looked at
+    """
+    #screen_bool argument
+    ## xx = 0.0, yy = 0.0, zz = 0.0
     j = 0
     for i in range(len(xyz_ranges)//6):
         if (xmax>=xyz_ranges[j] and xmax<=xyz_ranges[j+1]) or (xmin>=xyz_ranges[j] and xmin<=xyz_ranges[j+1]) or \
@@ -512,6 +518,11 @@ def checkObjBounds(xyz_ranges, xmax, xmin, ymax, ymin, zmax, zmin, color, bound_
             (xyz_ranges[j+2]>=ymin and xyz_ranges[j+2]<=ymax and xyz_ranges[j+3]>=ymin and xyz_ranges[j+3]<=ymax):
                 if (zmax>=xyz_ranges[j+4] and zmax<=xyz_ranges[j+5]) or (zmin>=xyz_ranges[j+4] and zmin<=xyz_ranges[j+5]) or \
                 (xyz_ranges[j+4]>=zmin and xyz_ranges[j+4]<=zmax and xyz_ranges[j+5]>=zmin and xyz_ranges[j+5]<=zmax):
+                    #if screen_bool == True:
+                        #if xx (... check collision bounds like above conditional statements) and xx != np.nan:
+                            #if yy (...): 
+                        #check the point 
+                    #else:
                     color = 'r'
                     bound_check_bool = True
                     return color, bound_check_bool
@@ -718,9 +729,7 @@ np.cos(alpha)*np.sin(gamma)), -(np.cos(alpha)*(np.cos(beta)**2)*np.cos(gamma) + 
         szmin = min(corner1_z, corner2_z, corner3_z, corner4_z)
         
         clr = 'b'
-        clr, bound_check_bool = checkObjBounds(mag_xyz_ranges, sxmax, sxmin, symax, symin, szmax, szmin, clr, bound_check_bool)
-        if l > 0:
-            clr, bound_check_bool = checkObjBounds(scrn_xyz_ranges, sxmax, sxmin, symax, symin, szmax, szmin, clr, bound_check_bool)
+        
         
         if normal_vec[0] != 0:
             yy     = np.linspace(symin, symax, num=200)
@@ -776,6 +785,11 @@ abs(np.array(corner4 - corner3)@np.array(corner4 - corner3)))) for jj in range(l
             yy[(area12+ area13+ area24+ area34) > (area0)+(area0*0.001)] = np.nan
         elif normal_vec[2] == min(normal_vec):
             zz[(area12+ area13+ area24+ area34) > (area0)+(area0*0.001)] = np.nan
+            
+        clr, bound_check_bool = checkObjBounds(mag_xyz_ranges, sxmax, sxmin, symax, symin, szmax, szmin, clr, bound_check_bool)
+        if l > 0:
+            clr, bound_check_bool = checkObjBounds(scrn_xyz_ranges, sxmax, sxmin, symax, symin, szmax, szmin, clr, bound_check_bool)
+            
         ax.plot_surface(xx, yy, zz, alpha=0.4, color=clr)
         ax.scatter(scrn_pos[j].value,scrn_pos[j+1].value,scrn_pos[j+2].value, color='c')
         ax.scatter([corner1_x, corner2_x, corner3_x, corner4_x], [corner1_y, corner2_y, corner3_y, corner4_y], 
@@ -811,9 +825,9 @@ def createBoundsList(bounds_list, length_unit, num_mag, field_values):
     omega_div_c = (q_e * aveB_0) / (m_e * c)
     
     distance_multiplier = 1 # m
-    if units[0] == 'mm':
+    if length_unit == 'mm':
         distance_multiplier = math.pow(10,-3)
-    elif units[0] == 'cm':
+    elif length_unit == 'cm':
         distance_multiplier = math.pow(10,-2)
     
     for i in range(len(bounds_list)):
@@ -905,6 +919,18 @@ def genetic_algorithm_setup(global_bounds, num_mag, num_screen, length_unit, fie
     def on_save_button_clicked(b):
         outfile = open('algorithm_access.txt', 'w')
         
+        aveB_0 = averageB0(num_mag, field_values)
+        q_e = 1.602177 * math.pow(10,-19)
+        m_e = 9.109384 * math.pow(10,-31)
+        c = 2.997925 * math.pow(10,8)
+        omega_div_c = (q_e * aveB_0) / (m_e * c)
+
+        distance_multiplier = 1 # m
+        if length_unit == 'mm':
+            distance_multiplier = math.pow(10,-3)
+        elif length_unit == 'cm':
+            distance_multiplier = math.pow(10,-2)
+        
         bounds_info = createBoundsList(global_bounds, length_unit, num_mag, field_values)
         outfile.writelines(bounds_info)
         outfile.write('\n')
@@ -915,7 +941,7 @@ def genetic_algorithm_setup(global_bounds, num_mag, num_screen, length_unit, fie
                 bool_num = bool_output(mag_pos_checks[mag_pos_index+j].value)
                 outfile.write(f'{bool_num} ')
                 if bool_num == -1:
-                    outfile.write(f'{mag_pos_steps[mag_pos_index+j].value} ')
+                    outfile.write(f'{mag_pos_steps[mag_pos_index+j].value*distance_multiplier*omega_div_c} ')
             mag_pos_index += 3
         outfile.write('\n')
         
@@ -925,7 +951,7 @@ def genetic_algorithm_setup(global_bounds, num_mag, num_screen, length_unit, fie
                 bool_num = bool_output(screen_pos_checks[screen_pos_index+j].value)
                 outfile.write(f'{bool_num} ')
                 if bool_num == -1:
-                    outfile.write(f'{screen_pos_steps[screen_pos_index+j].value} ')
+                    outfile.write(f'{screen_pos_steps[screen_pos_index+j].value*distance_multiplier*omega_div_c} ')
             screen_pos_index += 3
         outfile.write('\n')
         
