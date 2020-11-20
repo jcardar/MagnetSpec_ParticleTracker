@@ -99,7 +99,7 @@ def find_nearest(array, value):
 
 def check_energy_range_captured(part_on_screen_part_index, energy, energy_range, posx):
     """
-    Can work with total energy range of energy_range = [min_energy, max_energy], where 90% of particles in the system should be captured, or with
+    Can work with total energy range of energy_range = [min_energy, max_energy], where 100% of particles in the system should be captured, or with
     subgroups of energy ranges energy_range = [[min_energy0, max_energy0],[min_energy1, max_energy1],[min_energy2, max_energy2],...]
     Subgroups meant to ensure no holes in energy at desired ranges.
     """
@@ -120,7 +120,7 @@ def check_energy_range_captured(part_on_screen_part_index, energy, energy_range,
                 return False
         else:
             return False
-        if len(part_on_screen_part_index) >= (0.90*len(posx)):
+        if len(part_on_screen_part_index) >= (0.99*len(posx)):
             captured = True
         else:
             captured = False
