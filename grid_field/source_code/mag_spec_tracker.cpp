@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     double time     {0.0};                            //Define a variable time in which will be stepped over
-    double del_time {0.2};                           //Define a time step
+    double del_time {0.1};                           //Define a time step
     //Hard-coded:
     bool time_step_test = false;
 

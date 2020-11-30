@@ -120,7 +120,7 @@ def check_energy_range_captured(part_on_screen_part_index, energy, energy_range,
                 return False
         else:
             return False
-        if len(part_on_screen_part_index) >= (0.99*len(posx)):
+        if len(part_on_screen_part_index) >= (0.90*len(posx)):
             captured = True
         else:
             captured = False
@@ -237,7 +237,7 @@ def energy_and_divergence_resolution(energy_range,normalizing_fom, isfirst):
         print(f"energy_res_fom is {energy_res_fom}")
         if energy_res_fom == np.inf or energy_res_fom == 0 or energy_range_captured == False:
             import sys
-            sys.exit("Initial condition does not capture sufficient particles to continue. Exiting.")
+            sys.exit("Initial condition does not capture sufficient particles to continue. Please edit input parameters to make initial condition capture 90 percent of particles being simulated. Exiting.")
         return energy_res_fom
     elif energy_range_captured == True and isfirst == False:
         print("Energy range was caputred.")
