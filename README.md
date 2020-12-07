@@ -1,5 +1,5 @@
 # Magnetic Spectrometer Particle Tracker
-This project is a fully 3D, relativistic simulation of a magnetic spectrometer often used in Laser Wakefield Acceleration experiments. It simulates user-defined particle beams traversing through user defined magnetic dipole geometries, and landing on imaging screens as set up by the user. A genetic algorithm is implimented to manipulate input parameters of the genetic algorithm and converge on an local optimal setup for a given figure of merit.
+This project is a fully 3D, relativistic simulation of a magnetic spectrometer often used in Laser Wakefield Acceleration experiments. It simulates user-defined particle beams traversing through user defined magnetic dipole geometries, and landing on imaging screens as set up by the user. A genetic algorithm is implimented to manipulate input parameters of the magnetic spectrometer simulation and converge on an local optimal setup for a given figure of merit.
 
 UNDER DEVELOPMENT.
 
