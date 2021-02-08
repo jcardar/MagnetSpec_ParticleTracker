@@ -49,9 +49,9 @@ void step_through_magnet_mag_leap(Particle &electron, Magnet &magnet, ThreeVec v
 
 void step_through_magnet_mag_leap(Particle *electron, Magnet &magnet, double& time, const double& del_time);
 
-void boris(Particle &electron_t, Magnet &magnet_t, const double del_t, double mu_0);
+void boris_analytic(Particle &electron_t, Magnet &magnet_t, const double del_t, double mu_0);
 
-void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out = (2*M_PI*1000), bool supress_output=true);
+void step_through_magnet_mag_boris_analytic(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out = (2*M_PI*1000), bool supress_output=true);
 
 void first_half_position_step(Particle &electron_t, const double del_t);
 

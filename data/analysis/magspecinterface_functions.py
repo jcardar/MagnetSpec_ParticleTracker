@@ -51,8 +51,8 @@ init_energy = widgets.Dropdown(
 )
 
 init_divergence = widgets.Dropdown(
-    options=[('Gaussian',0) , ('Uniform',1) , ('Scan',2)],
-    value=2,
+    options=[('Gaussian',0) , ('Uniform',1) , ('Scan',2) , ('1/Gamma',3)],
+    value=3,
     description='Divergence',
     disabled=False,
 )

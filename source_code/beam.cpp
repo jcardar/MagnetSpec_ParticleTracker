@@ -75,6 +75,10 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
                  * First particle will have central - FWHM energy
                  */
                 m_particle.set_energy(abs(m_energy_central - m_energy_spread));
+                if(m_particle.get_energy() == 0.0)
+                {
+                    m_particle.set_energy((m_energy_central - m_energy_spread + m_energy_spread/m_num_particles)*0.5);
+                }
                 //std::cerr << abs(m_energy_central) << "\n";
                 //std::cerr << abs(m_energy_spread) << "\n";
                 //std::cerr << abs(m_energy_central - m_energy_spread) << "\n";
@@ -98,6 +102,7 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
         {
             case DivergenceInitializationTypes::INITIALIZE_GAUSSIAN_DIV:
             {
+                m_num_particles = m_num_particles*10.0;
                 double angle_x = gaussian_init(m_angle_central.getX(), m_angle_spread.getX());
                 double angle_y = gaussian_init(m_angle_central.getY(), m_angle_spread.getY());
                 double angle_z = gaussian_init(m_angle_central.getZ(), m_angle_spread.getZ());
@@ -151,9 +156,9 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
 
 
 
-double Beam::gaussian_init( double initializiation_central_value, double initialization_radius_of_values )
+double Beam::gaussian_init( double initializiation_central_value, double initialization_diameter_of_values )
 {
-    double value = gaussian()*initialization_radius_of_values + initializiation_central_value;
+    double value = gaussian()*initialization_diameter_of_values + initializiation_central_value;
     return value;
 }
 
@@ -233,15 +238,22 @@ void Beam::next_particle(int& particle_counter,
 
             case EnergyInitializationTypes::INITIALIZE_UNIFORM_EN:
             {
-                if(pos_init != PositionInitializationTypes::INITIALIZE_SCAN_POS && diverge_init != DivergenceInitializationTypes::INITIALIZE_SCAN_DIV)
+                if(pos_init != PositionInitializationTypes::INITIALIZE_SCAN_POS && diverge_init != DivergenceInitializationTypes::INITIALIZE_SCAN_DIV && diverge_init != DivergenceInitializationTypes::INITIALIZE_GAUSSIAN_DIV)
                     {
-                        m_particle.set_energy(m_energy_central - m_energy_spread + particle_counter+m_energy_spread/m_num_particles);
+                        m_particle.set_energy(m_energy_central - m_energy_spread + particle_counter*2*m_energy_spread/m_num_particles);
                     }
                 else if(diverge_init == DivergenceInitializationTypes::INITIALIZE_SCAN_DIV)
                     {
                         if((particle_counter) % 7 == 0)
                         {
                             m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/7)*2*m_energy_spread/((m_num_particles-7)/7));
+                        }
+                    }
+                else if(diverge_init == DivergenceInitializationTypes::INITIALIZE_GAUSSIAN_DIV)
+                    {
+                        if((particle_counter) % 10 == 0)
+                        {
+                            m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/10)*2*m_energy_spread/((m_num_particles-10)/10));
                         }
                     }
                 break;

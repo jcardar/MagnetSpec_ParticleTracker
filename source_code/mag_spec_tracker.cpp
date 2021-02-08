@@ -1,9 +1,8 @@
-/*Leap Frog Numerical Method Code
- *for tracking a particle in static B field
- *Author: Jason Cardarelli
+/*
+ *Main code for tracking a particle in analytic dipole B field
+ *Author: Jason Cardarelli, Evan Mahler
  *Prof. Alexander Thomas
  */
-/////Development notes: currently the code assumes that particle beam starts in the region of the magnet. Got to fix that!
 
 #include <iostream>
 #include <fstream>
@@ -24,7 +23,7 @@
 int main(int argc, char *argv[])
 {
     double time     {0.0};                           //Define a variable time in which will be stepped over
-    double del_time {0.002};                           //Define a time step
+    double del_time {0.03};                           //Define a time step
     //Hard-coded:
     bool time_step_test = false;
 

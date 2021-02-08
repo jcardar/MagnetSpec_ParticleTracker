@@ -380,7 +380,7 @@ double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis
 void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter, double mu_0)
+void boris_analytic(Particle &electron_t, Magnet &magnet_t, double del_t, int counter, double mu_0)
 {
     //std::cerr << "Magnet x-Position " << magnet_t.get_pos(0) << '\n';
     //Rotation of momentum vector in uniform field
@@ -482,7 +482,7 @@ void boris(Particle &electron_t, Magnet &magnet_t, double del_t, int counter, do
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out, bool supress_output)
+void step_through_magnet_mag_boris_analytic(Particle &electron, Magnet &magnet, double& time, const double &del_time, double mu_0, double time_out, bool supress_output)
 {
     //TESTING CHANING TIME STEP:
     //const double del_time = del_time_1 * 0.5;
@@ -492,7 +492,7 @@ void step_through_magnet_mag_boris(Particle &electron, Magnet &magnet, double& t
     int counter = 0;
     do
         {
-            boris(electron, magnet, del_time, counter, mu_0); //updates particle velocity & position in magnetic field 
+            boris_analytic(electron, magnet, del_time, counter, mu_0); //updates particle velocity & position in magnetic field 
             counter++;
 
             time += del_time;
@@ -561,9 +561,9 @@ void first_half_position_step(Particle &electron_t, const double del_t)
 bool inside_of_mag(Magnet magnet_t, Particle particle_t)
 {
     bool inside_of_mag;
-
+    
     bool inside_x_limits = (particle_t.get_pos(0) >= magnet_t.get_pos(0)) && (particle_t.get_pos(0) <= (magnet_t.get_pos(0)+magnet_t.get_length()));
-    bool inside_y_limits = (particle_t.get_pos(1) >= (magnet_t.get_pos(1) - (magnet_t.get_width()/2.0)))  && (particle_t.get_pos(1) <= (magnet_t.get_pos(1) + (magnet_t.get_width()/2.0)));
+    bool inside_y_limits = (particle_t.get_pos(1) >= (magnet_t.get_pos(1) - (magnet_t.get_width()/2.0)*100))  && (particle_t.get_pos(1) <= (magnet_t.get_pos(1) + (magnet_t.get_width()/2.0)*100));
     bool inside_z_limits = (particle_t.get_pos(2) >= (magnet_t.get_pos(2) - (magnet_t.get_height()/2.0))) && (particle_t.get_pos(2) <= (magnet_t.get_pos(2) + (magnet_t.get_height()/2.0)));
     if(inside_x_limits && inside_y_limits && inside_z_limits)
     {
@@ -599,8 +599,9 @@ double time_to_magnet_boundary(Magnet magnet_t, Particle particle_t)
     double time_btwn_mags_y_bottom;
     if(particle_t.get_vel(1) !=0)
         { 
-            time_btwn_mags_y_top     = (magnet_t.get_pos(1)+(magnet_t.get_width()/2.0) - particle_t.get_pos(1))/particle_t.get_vel(1); 
-            time_btwn_mags_y_bottom  = (magnet_t.get_pos(1)-(magnet_t.get_width()/2.0) - particle_t.get_pos(1))/particle_t.get_vel(1);
+            ///CHANGE BACK, REMOVE *10
+            time_btwn_mags_y_top     = (magnet_t.get_pos(1)+((magnet_t.get_width()/2.0)*100) - particle_t.get_pos(1))/particle_t.get_vel(1); 
+            time_btwn_mags_y_bottom  = (magnet_t.get_pos(1)-((magnet_t.get_width()/2.0)*100) - particle_t.get_pos(1))/particle_t.get_vel(1);
         }
     else
         {
@@ -664,7 +665,8 @@ bool intersect_mag(Magnet magnet_t, Particle particle_t)
     pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_magnet * particle_t.get_vel(2)));
 
     bool within_x_bounds = (pos_at_shortest_time.getX() >= magnet_t.get_pos(0)) && (pos_at_shortest_time.getX() <= (magnet_t.get_pos(0)+magnet_t.get_length()));
-    bool within_y_bounds = (pos_at_shortest_time.getY() >= (magnet_t.get_pos(1)-(magnet_t.get_width()/2.0)))  && (pos_at_shortest_time.getY() <= (magnet_t.get_pos(1)+(magnet_t.get_width()/2.0)));
+    //edited to make width region 5*width away from center instead of 0.5*width.
+    bool within_y_bounds = (pos_at_shortest_time.getY() >= (magnet_t.get_pos(1)-(magnet_t.get_width()/2.0)*100))  && (pos_at_shortest_time.getY() <= (magnet_t.get_pos(1)+(magnet_t.get_width()/2.0)*100));
     bool within_z_bounds = (pos_at_shortest_time.getZ() >= (magnet_t.get_pos(2)-(magnet_t.get_height()/2.0))) && (pos_at_shortest_time.getZ() <= (magnet_t.get_pos(2)+(magnet_t.get_height()/2.0)));
 
     if(within_x_bounds && within_y_bounds && within_z_bounds)
@@ -737,7 +739,7 @@ void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
         {
             //std::cerr << "Inside of magnet " << ii+1 << '\n';
             //outfile_part_comma(particle_t);
-            step_through_magnet_mag_boris(particle_t, magnet_t[ii], time, del_time, time_limit);
+            step_through_magnet_mag_boris_analytic(particle_t, magnet_t[ii], time, del_time, time_limit);
             boris_counter++;
             ii = -1; //restart loop (which will iterate ii by 1, to zero)
             continue;

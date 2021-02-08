@@ -50,11 +50,13 @@ best_fom = 1.5
 
 iter_num = 100
 
-
+print("Done with pre- main()")
 def main():
     
     # bound limit, zeff [0.05, 7], sigma [1e-6, 5e-6]
+    print("main(). About to read bounds")
     lbound, ubound = read_bounds(mag_access, screen_access, global_bounds)
+    print("Bounds read. About to set beset_fom = 1.5")
     best_fom = 1.5
     #print(len(lbound))
     #lbound = (0.05, 1e-6) 
@@ -162,14 +164,21 @@ def main():
     diffdriver = input('\nDo you want to use Differential Driver? \n y/n?')
 
     if diffdriver.lower() == 'n':
-        
+        print("setting diff driver settings, setting basic problem including mutation size")
         ga = BasicGaDriver(problem , mutation_size)
+        print("about to set num_parents")
         ga['population'] = num_parent
+        print("about to set num_children")
         ga['selection']  = num_children
+        print("about to set num_elitism")
         ga['elitism']    = num_elitism
+        print("about to set mutation_size for diff dirver")
         ga['mutation_size'] = 1.0
         ga['mutation_probability'] = 1.0
+        print("about to populate diff dirver")
+        print(f"starting point is {[starting_point[ii] for ii in range(len(starting_point))]}")
         ga.populate(tuple([starting_point[jj] for jj in range(len(starting_point))]), scale = 1)
+        print("diff driver populated")
         
     elif diffdriver.lower() == 'y':
         ga = DifferentialGaDriver(problem)
@@ -180,7 +189,7 @@ def main():
         ga['mutation_probability'] = 1.0
         ga.populate(tuple([starting_point[jj] for jj in range(len(starting_point))]), scale = mutation_size)  # for DifferentialGaDriver
     
-    
+    print("Figures for iteration tracking about to create")
     fig = plt.figure(figsize = (12,8))
     plt.subplots_adjust(wspace = 0.45 , hspace = 0.35, left =0.1 , right = 0.95, top = 0.95, bottom = 0.07)
     plt.ion()
@@ -211,21 +220,24 @@ def main():
 
     fig1, ax = plt.subplots(figsize = (10,10))
     fig1.set_tight_layout(True)
-
+    print("Figures created. Lists for GA values being instantiated")
     FOM =  []
     GENE = []
     FOM_ALL = []
     GENE_ALL =[]
+    print("Going into iteration loop.")
 
 
     i = 0
     while i <= iter_num:
+        print("running through iterations. about to ga.generate()")
         #if i == 1:
         #    isfirst = False
     # while True:
 
         ga.generate()
         # time.sleep(3)
+        print("fom_generate done")
         fom_all  = copy.copy(ga.fitness) 
         fom      = copy.copy(ga.selection_fitness)
         gene_all = np.array(copy.copy(ga.population)).ravel()
