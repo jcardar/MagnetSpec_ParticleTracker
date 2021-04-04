@@ -185,12 +185,14 @@ void outfile_part_on_screen(Screen& screen_t, int particle_number_t, Particle& p
 // Gaussian random distribution function
 double gaussian()
 {
-	double gaussian_width=3.0; // +/- 3 sigma range
+    //Produces sample of value between -gaussian_width and + gaussian width with FWHM of 1.0
+    double c = 1.0/2.35485;
+	double gaussian_width=0.12; // +/- 3 sigma range
 	double x, y;
 	do
 	{
-		x = (2.0*rand()/RAND_MAX-1.0)*gaussian_width;
-		y = exp(-x*x*0.5);
+		x = ((2.0*rand()/RAND_MAX)-1.0)*gaussian_width;
+		y = exp(-x*x*0.5/(c*c));
 	}
 	while (1.0*rand()/RAND_MAX > y);
 	return x;
@@ -220,22 +222,24 @@ void uniform_en_dist(double& initial_x, double& initial_y, double& initial_z, do
     double length_on_screen = sqrt(initial_y*initial_y + initial_z*initial_z);
     double half_divergence;
     if(length_on_screen != 0)
-    { half_divergence = atan(length_before/length_on_screen);}
-    else { half_divergence = 0; }
+        { half_divergence = atan(length_before/length_on_screen);}
+    else 
+        { half_divergence = 0; }
     double angle_on_yz_plane;
     if(initial_y != 0)
-    { angle_on_yz_plane = atan(initial_z/initial_y); }
-    else { angle_on_yz_plane = M_PI/2.0; }
+        { angle_on_yz_plane = atan(initial_z/initial_y); }
+    else
+        { angle_on_yz_plane = M_PI/2.0; }
     initial_enx = tot_energy*cos(half_divergence);
     double remaining_energy = sqrt(tot_energy*tot_energy - initial_enx*initial_enx);
     if(initial_y >= 0.0)
-    { initial_eny = remaining_energy*cos(angle_on_yz_plane);}
+        { initial_eny = remaining_energy*cos(angle_on_yz_plane);}
     else
-    { initial_eny = -remaining_energy*cos(angle_on_yz_plane);}
+        { initial_eny = -remaining_energy*cos(angle_on_yz_plane);}
     if(initial_z >= 0.0)
-    { initial_enz = remaining_energy*sin(angle_on_yz_plane);}
+        { initial_enz = remaining_energy*sin(angle_on_yz_plane);}
     else
-    { initial_enz = -remaining_energy*sin(angle_on_yz_plane); }            
+        { initial_enz = -remaining_energy*sin(angle_on_yz_plane); }            
 }
 
 
@@ -354,14 +358,14 @@ void stepThroughMagnet_Leap(Particle *electron, Magnet &magnet, double& time, co
     do
         {
             vn_plus = vn_minus + ((electron->get_vel())^(magnet.get_B0()))*2*del_time;    //leapfrog algarithm vn for uniform B0
-            rn_plus = rn_minus + (electron->get_vel())*2*del_time;         //leapfrog algarithm rn for uniform B0
+            rn_plus = rn_minus + (electron->get_vel())*2*del_time;                        //leapfrog algarithm rn for uniform B0
 
-            rn_minus = electron->get_pos();                          //iterate xn_minus up a timestep
-            electron->set_pos(rn_plus);                              //do the same to xn
+            rn_minus = electron->get_pos();                                               //iterate xn_minus up a timestep
+            electron->set_pos(rn_plus);                                                   //do the same to xn
 
-            vn_minus = (electron->get_vel());                        //iterate vn_minus up a timestep
-            electron->set_vel(vn_plus);                              //do the same to vn
-
+            vn_minus = (electron->get_vel());                                             //iterate vn_minus up a timestep
+            electron->set_vel(vn_plus);                                                   //do the same to vn
+      
             time += del_time;
 
             check = ((electron->get_pos(0) >= (magnet.get_pos(0))) && (electron->get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0)))) && (electron->get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0))) && (electron->get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0)));
@@ -433,7 +437,8 @@ void boris_analytic(Particle &electron_t, Magnet &magnet_t, double del_t, int co
     //{
         for (x1=0; x1<3; ++x1)
             {
-            tt[x1]     = (B_at_position.get(x1) )*del_t*0.5*igamma;
+            tt[x1]     = electron_t.get_charge()*(B_at_position.get(x1) )*del_t*0.5*igamma;
+            //tt[x1]     = 1.0*(B_at_position.get(x1) )*del_t*0.5*igamma;
             ttsquared += (tt[x1]*tt[x1]);
             }
         
@@ -504,8 +509,8 @@ void step_through_magnet_mag_boris_analytic(Particle &electron, Magnet &magnet, 
             //check_x = (electron.get_pos(0) >= (magnet.get_pos(0))) && (electron.get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0))));
             //check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0));
             //check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
-            check_x = (electron.get_pos(0) >= (magnet.get_pos(0)-magnet.get_length())) && (electron.get_pos(0) <= (magnet.get_length()+(magnet.get_pos(0))));
-            check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0));
+            check_x = (electron.get_pos(0) >= (magnet.get_pos(0)-1.0*magnet.get_length())) && (electron.get_pos(0) <= (2.0*magnet.get_length()+(magnet.get_pos(0))));
+            check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((100.0*magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(100.0*magnet.get_width())/2.0));
             check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
             //if(counter%10==0)
             //    {std::cerr << counter << '\n'; std::cerr << electron.get_p(0) << '\n';}
@@ -562,7 +567,7 @@ bool inside_of_mag(Magnet magnet_t, Particle particle_t)
 {
     bool inside_of_mag;
     
-    bool inside_x_limits = (particle_t.get_pos(0) >= magnet_t.get_pos(0)) && (particle_t.get_pos(0) <= (magnet_t.get_pos(0)+magnet_t.get_length()));
+    bool inside_x_limits = (particle_t.get_pos(0) >= (magnet_t.get_pos(0) - 1.0*magnet_t.get_length())) && (particle_t.get_pos(0) <= (magnet_t.get_pos(0)+2.0*magnet_t.get_length()));
     bool inside_y_limits = (particle_t.get_pos(1) >= (magnet_t.get_pos(1) - (magnet_t.get_width()/2.0)*100))  && (particle_t.get_pos(1) <= (magnet_t.get_pos(1) + (magnet_t.get_width()/2.0)*100));
     bool inside_z_limits = (particle_t.get_pos(2) >= (magnet_t.get_pos(2) - (magnet_t.get_height()/2.0))) && (particle_t.get_pos(2) <= (magnet_t.get_pos(2) + (magnet_t.get_height()/2.0)));
     if(inside_x_limits && inside_y_limits && inside_z_limits)
@@ -586,8 +591,8 @@ double time_to_magnet_boundary(Magnet magnet_t, Particle particle_t)
     double time_btwn_mags_x_back;
     if(particle_t.get_vel(0) !=0)
         { 
-            time_btwn_mags_x_front = (magnet_t.get_pos(0) - particle_t.get_pos(0))/particle_t.get_vel(0); 
-            time_btwn_mags_x_back  = (magnet_t.get_pos(0)+magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0);
+            time_btwn_mags_x_front = (magnet_t.get_pos(0)-1.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0); 
+            time_btwn_mags_x_back  = (magnet_t.get_pos(0)+2.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0);
         }
     else
         {
@@ -664,7 +669,7 @@ bool intersect_mag(Magnet magnet_t, Particle particle_t)
     pos_at_shortest_time.setY(particle_t.get_pos(1) + (time_to_magnet * particle_t.get_vel(1)));
     pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_magnet * particle_t.get_vel(2)));
 
-    bool within_x_bounds = (pos_at_shortest_time.getX() >= magnet_t.get_pos(0)) && (pos_at_shortest_time.getX() <= (magnet_t.get_pos(0)+magnet_t.get_length()));
+    bool within_x_bounds = (pos_at_shortest_time.getX() >= magnet_t.get_pos(0)-1.0*magnet_t.get_length()) && (pos_at_shortest_time.getX() <= (magnet_t.get_pos(0)+2.0*magnet_t.get_length()));
     //edited to make width region 5*width away from center instead of 0.5*width.
     bool within_y_bounds = (pos_at_shortest_time.getY() >= (magnet_t.get_pos(1)-(magnet_t.get_width()/2.0)*100))  && (pos_at_shortest_time.getY() <= (magnet_t.get_pos(1)+(magnet_t.get_width()/2.0)*100));
     bool within_z_bounds = (pos_at_shortest_time.getZ() >= (magnet_t.get_pos(2)-(magnet_t.get_height()/2.0))) && (pos_at_shortest_time.getZ() <= (magnet_t.get_pos(2)+(magnet_t.get_height()/2.0)));
@@ -726,8 +731,9 @@ void move_particle_to_magnet(Magnet magnet_t, Particle &particle_t)
 
 
 
-void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time,double mu_0, double time_limit)
+bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time,double mu_0, double time_limit)
 {
+    //if particle lands on screen in this process, return true. else, return false.
     bool check_inside_magnet = false;
     bool check_intersect_magnet = false;
     double distance_to_mag_ii[num_mags];
@@ -785,6 +791,7 @@ void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
             }
         }
     }
+    return false;
 }
 
 void half_time_step(double &time_step)
@@ -1164,6 +1171,15 @@ double ReadMu0(std::ifstream &input_stream) {
     //std::cerr << "mu0 read\n";
 
     return mu_0;
+}
+
+double ReadSpeciesCharge(std::ifstream &input_stream) {
+    std::string tempStr;
+    input_stream >> tempStr;
+    double charge = std::stod(tempStr);
+    //std::cerr << "mu0 read\n";
+
+    return charge;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -36,14 +36,16 @@ public:
     {
         INITIALIZE_GAUSSIAN_POS = 0,
         INITIALIZE_UNIFORM_POS  = 1,
-        INITIALIZE_SCAN_POS  = 2,
+        INITIALIZE_SCAN_POS     = 2,
     };
 
     enum DivergenceInitializationTypes
     {
-        INITIALIZE_GAUSSIAN_DIV = 0,
-        INITIALIZE_UNIFORM_DIV  = 1,
-        INITIALIZE_SCAN_DIV     = 2,
+        INITIALIZE_GAUSSIAN_DIV       = 0,
+        INITIALIZE_UNIFORM_DIV        = 1,
+        INITIALIZE_SCAN_DIV           = 2,
+        INITIALIZE_GAMMA_SCAN_DIV     = 3,
+        INITIALIZE_GAMMA_GAUSSIAN_DIV = 4,
     };
 
     EnergyInitializationTypes     m_energy_initialization_type     = INITIALIZE_GAUSSIAN_EN;

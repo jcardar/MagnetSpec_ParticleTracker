@@ -6,6 +6,8 @@
 #include <cmath>
 #include <iostream>
 
+double num_par_gaussian_multiplier = 20;
+
 Beam::Beam(int num_particle, double particle_charge, double particle_mass, double energy_central, double energy_spread, ThreeVec position_initial,
                 ThreeVec position_spread, ThreeVec angle_initial, ThreeVec angle_spread,
                 PositionInitializationTypes pos_init, EnergyInitializationTypes energy_init, DivergenceInitializationTypes diverge_init)
@@ -75,13 +77,10 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
                  * First particle will have central - FWHM energy
                  */
                 m_particle.set_energy(abs(m_energy_central - m_energy_spread));
-                if(m_particle.get_energy() == 0.0)
+                if(m_particle.get_energy() < 1.0)
                 {
-                    m_particle.set_energy((m_energy_central - m_energy_spread + m_energy_spread/m_num_particles)*0.5);
+                    m_particle.set_energy(1.0);
                 }
-                //std::cerr << abs(m_energy_central) << "\n";
-                //std::cerr << abs(m_energy_spread) << "\n";
-                //std::cerr << abs(m_energy_central - m_energy_spread) << "\n";
                 break;
             }
             case EnergyInitializationTypes::INITIALIZE_LOG_EN:
@@ -102,7 +101,7 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
         {
             case DivergenceInitializationTypes::INITIALIZE_GAUSSIAN_DIV:
             {
-                m_num_particles = m_num_particles*10.0;
+                m_num_particles = m_num_particles*num_par_gaussian_multiplier;
                 double angle_x = gaussian_init(m_angle_central.getX(), m_angle_spread.getX());
                 double angle_y = gaussian_init(m_angle_central.getY(), m_angle_spread.getY());
                 double angle_z = gaussian_init(m_angle_central.getZ(), m_angle_spread.getZ());
@@ -145,6 +144,40 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
                 m_particle.set_p(px, py, pz);
                 break;
             }
+
+            case DivergenceInitializationTypes::INITIALIZE_GAMMA_SCAN_DIV:
+            {
+                m_num_particles = m_num_particles*7.0;
+                double angle_x  = m_angle_central.getX();
+                double angle_y  = m_angle_central.getY();
+                double angle_z  = m_angle_central.getZ();
+                
+                double p_mag    = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
+                double py       = p_mag*cos(angle_y);
+                double pz       = p_mag*cos(angle_z);
+                double px       = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                m_particle.set_p(px, py, pz);
+                break;
+            }
+
+            case DivergenceInitializationTypes::INITIALIZE_GAMMA_GAUSSIAN_DIV:
+            {
+                m_num_particles = m_num_particles*num_par_gaussian_multiplier;
+                //FIRST ASSUMING TRAVEL ALONG X AXIS, WILL CHANGE
+                m_angle_spread.setX(1/m_particle.get_energy());
+                m_angle_spread.setY(1/m_particle.get_energy());
+                double angle_x = gaussian_init(m_angle_central.getX(), m_angle_spread.getX());
+                double angle_y = gaussian_init(m_angle_central.getY(), m_angle_spread.getY());
+                double angle_z = gaussian_init(m_angle_central.getZ(), m_angle_spread.getZ());
+                
+                double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
+                double pz      = p_mag*cos(angle_z);
+                double py      = p_mag*cos(angle_y);
+                double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                //double pz      = p_mag*cos(angle_z);
+                m_particle.set_p(px, py, pz);
+                break;
+            }
 }
 }
 
@@ -156,9 +189,9 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
 
 
 
-double Beam::gaussian_init( double initializiation_central_value, double initialization_diameter_of_values )
+double Beam::gaussian_init( double initializiation_central_value, double initialization_fwhm )
 {
-    double value = gaussian()*initialization_diameter_of_values + initializiation_central_value;
+    double value = gaussian()*initialization_fwhm + initializiation_central_value;
     return value;
 }
 
@@ -247,11 +280,12 @@ void Beam::next_particle(int& particle_counter,
                         if((particle_counter) % 7 == 0)
                         {
                             m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/7)*2*m_energy_spread/((m_num_particles-7)/7));
+                            std::cout << "Energy of this particle is " << m_particle.get_energy() << '\n';
                         }
                     }
                 else if(diverge_init == DivergenceInitializationTypes::INITIALIZE_GAUSSIAN_DIV)
                     {
-                        if((particle_counter) % 10 == 0)
+                        if((particle_counter) % int(num_par_gaussian_multiplier) == 0)
                         {
                             m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/10)*2*m_energy_spread/((m_num_particles-10)/10));
                         }
@@ -326,7 +360,7 @@ void Beam::next_particle(int& particle_counter,
                 else if((particle_counter) % 7 == 1)// && particle_counter+1 % 4 != 0)
                     {
                         double angle_x = m_angle_central.getX();
-                        double angle_y = m_angle_central.getY() - m_angle_spread.getY();
+                        double angle_y = m_angle_central.getY() - m_angle_spread.getY()/2.0;
                         double angle_z = m_angle_central.getZ();
                         
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
@@ -350,7 +384,7 @@ void Beam::next_particle(int& particle_counter,
                 else if(particle_counter % 7 == 2)// && particle_counter+1 % 6 != 0)
                     {
                         double angle_x = m_angle_central.getX();
-                        double angle_y = m_angle_central.getY() + m_angle_spread.getY();
+                        double angle_y = m_angle_central.getY() + m_angle_spread.getY()/2.0;
                         double angle_z = m_angle_central.getZ();
                         
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
@@ -375,7 +409,7 @@ void Beam::next_particle(int& particle_counter,
                     {
                         double angle_x = m_angle_central.getX();
                         double angle_y = m_angle_central.getY();
-                        double angle_z = m_angle_central.getZ() - m_angle_spread.getZ();
+                        double angle_z = m_angle_central.getZ() - m_angle_spread.getZ()/2.0;
                      
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
                         //double px      = p_mag*cos(angle_x);
@@ -400,7 +434,7 @@ void Beam::next_particle(int& particle_counter,
                     {
                         double angle_x = m_angle_central.getX();
                         double angle_y = m_angle_central.getY();
-                        double angle_z = m_angle_central.getZ() + m_angle_spread.getZ();
+                        double angle_z = m_angle_central.getZ() + m_angle_spread.getZ()/2.0;
                      
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
                         //double px      = p_mag*cos(angle_x);
@@ -423,7 +457,7 @@ void Beam::next_particle(int& particle_counter,
                     }
                 else if((particle_counter) % 7 == 5)
                     {
-                        double angle_x = m_angle_central.getX() - m_angle_spread.getX();
+                        double angle_x = m_angle_central.getX() - m_angle_spread.getX()/2.0;
                         double angle_y = m_angle_central.getY();
                         double angle_z = m_angle_central.getZ();
                      
@@ -448,7 +482,7 @@ void Beam::next_particle(int& particle_counter,
                     }
                 else if((particle_counter) % 7 == 6)
                     {
-                        double angle_x = m_angle_central.getX() + m_angle_spread.getX();
+                        double angle_x = m_angle_central.getX() + m_angle_spread.getX()/2.0;
                         double angle_y = m_angle_central.getY();
                         double angle_z = m_angle_central.getZ();
                      

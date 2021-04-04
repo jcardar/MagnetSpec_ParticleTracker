@@ -65,7 +65,7 @@ double dist_to_mag(Magnet magnet_t, Particle particle_t);
 
 void move_particle_to_magnet(Magnet magnet_t, Particle &particle_t);
 
-void move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit);
+bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit);
 
 void half_time_step(double &time_step);
 
@@ -90,6 +90,8 @@ void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::ve
 void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types);
 
 double ReadMu0(std::ifstream &input_stream);
+
+double ReadSpeciesCharge(std::ifstream &input_stream);
 
 double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis);
 

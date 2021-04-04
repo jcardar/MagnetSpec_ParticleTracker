@@ -19,3 +19,9 @@ line 6: (position) (energy) (divergence)
 
  -Normalized mu_0
 line 7: (mu_0)
+
+ -Particle Species Information:
+line 8: (normalized charge)
+
+ -Magnetic field type
+line 9: (uniform/dipole)
