@@ -510,7 +510,9 @@ void step_through_magnet_mag_boris_analytic(Particle &electron, Magnet &magnet, 
             //check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(magnet.get_width())/2.0));
             //check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
             check_x = (electron.get_pos(0) >= (magnet.get_pos(0)-1.0*magnet.get_length())) && (electron.get_pos(0) <= (2.0*magnet.get_length()+(magnet.get_pos(0))));
+            //^ LENGTH TAG
             check_y = (electron.get_pos(1) >= ((magnet.get_pos(1))-((100.0*magnet.get_width())/2.0)))  && (electron.get_pos(1) <= ((magnet.get_pos(1))+(100.0*magnet.get_width())/2.0));
+            //^ WIDTH TAG
             check_z = (electron.get_pos(2) >= ((magnet.get_pos(2))-((magnet.get_height())/2.0))) && (electron.get_pos(2) <= ((magnet.get_pos(2))+(magnet.get_height())/2.0));
             //if(counter%10==0)
             //    {std::cerr << counter << '\n'; std::cerr << electron.get_p(0) << '\n';}
@@ -568,7 +570,9 @@ bool inside_of_mag(Magnet magnet_t, Particle particle_t)
     bool inside_of_mag;
     
     bool inside_x_limits = (particle_t.get_pos(0) >= (magnet_t.get_pos(0) - 1.0*magnet_t.get_length())) && (particle_t.get_pos(0) <= (magnet_t.get_pos(0)+2.0*magnet_t.get_length()));
+    //^ LENGTH TAG
     bool inside_y_limits = (particle_t.get_pos(1) >= (magnet_t.get_pos(1) - (magnet_t.get_width()/2.0)*100))  && (particle_t.get_pos(1) <= (magnet_t.get_pos(1) + (magnet_t.get_width()/2.0)*100));
+    //^ WIDTH TAG
     bool inside_z_limits = (particle_t.get_pos(2) >= (magnet_t.get_pos(2) - (magnet_t.get_height()/2.0))) && (particle_t.get_pos(2) <= (magnet_t.get_pos(2) + (magnet_t.get_height()/2.0)));
     if(inside_x_limits && inside_y_limits && inside_z_limits)
     {
@@ -591,6 +595,7 @@ double time_to_magnet_boundary(Magnet magnet_t, Particle particle_t)
     double time_btwn_mags_x_back;
     if(particle_t.get_vel(0) !=0)
         { 
+            //LENGTH TAG
             time_btwn_mags_x_front = (magnet_t.get_pos(0)-1.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0); 
             time_btwn_mags_x_back  = (magnet_t.get_pos(0)+2.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0);
         }
@@ -604,7 +609,7 @@ double time_to_magnet_boundary(Magnet magnet_t, Particle particle_t)
     double time_btwn_mags_y_bottom;
     if(particle_t.get_vel(1) !=0)
         { 
-            ///CHANGE BACK, REMOVE *10
+            ///WIDTH TAG
             time_btwn_mags_y_top     = (magnet_t.get_pos(1)+((magnet_t.get_width()/2.0)*100) - particle_t.get_pos(1))/particle_t.get_vel(1); 
             time_btwn_mags_y_bottom  = (magnet_t.get_pos(1)-((magnet_t.get_width()/2.0)*100) - particle_t.get_pos(1))/particle_t.get_vel(1);
         }
@@ -670,8 +675,9 @@ bool intersect_mag(Magnet magnet_t, Particle particle_t)
     pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_magnet * particle_t.get_vel(2)));
 
     bool within_x_bounds = (pos_at_shortest_time.getX() >= magnet_t.get_pos(0)-1.0*magnet_t.get_length()) && (pos_at_shortest_time.getX() <= (magnet_t.get_pos(0)+2.0*magnet_t.get_length()));
-    //edited to make width region 5*width away from center instead of 0.5*width.
+    //^ LENGTH TAG: edited to make width region 5*width away from center instead of 0.5*width.
     bool within_y_bounds = (pos_at_shortest_time.getY() >= (magnet_t.get_pos(1)-(magnet_t.get_width()/2.0)*100))  && (pos_at_shortest_time.getY() <= (magnet_t.get_pos(1)+(magnet_t.get_width()/2.0)*100));
+    //^ WIDTH TAG
     bool within_z_bounds = (pos_at_shortest_time.getZ() >= (magnet_t.get_pos(2)-(magnet_t.get_height()/2.0))) && (pos_at_shortest_time.getZ() <= (magnet_t.get_pos(2)+(magnet_t.get_height()/2.0)));
 
     if(within_x_bounds && within_y_bounds && within_z_bounds)

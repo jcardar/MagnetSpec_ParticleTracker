@@ -5,12 +5,15 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 # Define units
+style = {'description_width': 'initial'}
 
 units_length = widgets.Dropdown(
     options=['mm', 'cm', 'm'],
     value='cm',
     description='Length Unit',
     disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 units_energy = widgets.Dropdown(
@@ -18,6 +21,8 @@ units_energy = widgets.Dropdown(
     value='MeV',
     description='Energy Unit',
     disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 units_angles = widgets.Dropdown(
@@ -25,6 +30,8 @@ units_angles = widgets.Dropdown(
     value='mrad',
     description='Angle Unit',
     disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 units_magnetic_field = widgets.Dropdown(
@@ -32,15 +39,19 @@ units_magnetic_field = widgets.Dropdown(
     value='Tesla',
     description='Field Unit',
     disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 # Define initialization types
 
 init_position = widgets.Dropdown(
-    options=[('Gaussian',0) , ('Uniform',1) , ('Scan',2)],
+    options=[('Gaussian',0) , ('Uniform',1) , ('Scan',2) , ('Point Source',3)],
     value=2,
     description='Position',
     disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 init_energy = widgets.Dropdown(
@@ -48,51 +59,76 @@ init_energy = widgets.Dropdown(
     value=1,
     description='Energy',
     disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 init_divergence = widgets.Dropdown(
-    options=[('Gaussian',0) , ('Uniform',1) , ('Scan',2) , ('1/Gamma',3)],
+    options=[('Gaussian',0) , ('Uniform',1) , ('Scan',2) , ('Scan, 1/Gamma',3), ('Gaussian, 1/Gamma',4)],
     value=3,
     description='Divergence',
     disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
+)
+
+particle_species = widgets.Dropdown(
+    options=['Electrons', 'Positrons'],
+    value='Electrons',
+    description='Particle Species',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 # Define Coordinate System attributes
 
 global_max_x = widgets.FloatText(
-    value=100,
-    description='global x max',
-    disabled=False
+    value=200,
+    description='Global x max',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 global_min_x = widgets.FloatText(
-    value=-100,
-    description='global x min',
-    disabled=False
+    value=-10,
+    description='Global x min',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 global_max_y = widgets.FloatText(
     value=100,
-    description='global y max',
-    disabled=False
+    description='Global y max',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 global_min_y = widgets.FloatText(
     value=-100,
-    description='global y min',
-    disabled=False
+    description='Global y min',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 global_max_z = widgets.FloatText(
     value=100,
-    description='global z max',
-    disabled=False
+    description='Global z max',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 global_min_z = widgets.FloatText(
     value=-100,
-    description='global z min',
-    disabled=False
+    description='Global z min',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 global_bounds = [global_max_x, global_min_x, global_max_y, global_min_y, global_max_z, global_min_z]
@@ -101,32 +137,40 @@ global_bounds = [global_max_x, global_min_x, global_max_y, global_min_y, global_
 
 number_of_magnets = widgets.BoundedIntText(
     value=1,
-    min=1,
+    min=0,
     step=1,
-    description='# of Magnets',
-    disabled=False
+    description='Number of Magnets',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
 )
 
 def dynamicFloatValue_Magnet_Dimensions(num_of_magnets, global_bounds):
     listOfWidgets = []
     for i in range(num_of_magnets):
         widget1 = widgets.BoundedFloatText(
-            value=0,
+            value=10,
             max=global_bounds[2].value,
             min=0,
-            description=f'width {i+1}',
+            description=f'Width {i+1}',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         widget2 = widgets.BoundedFloatText(
-            value=0,
+            value=30,
             max=global_bounds[0].value,
             min=0,
-            description=f'length {i+1}',
+            description=f'Length {i+1}',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         widget3 = widgets.BoundedFloatText(
-            value=0,
+            value=5,
             max=global_bounds[4].value,
             min=0,
-            description=f'height {i+1}',
+            description=f'Height {i+1}',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         listOfWidgets.extend([widget1, widget2, widget3])
     return listOfWidgets
@@ -135,10 +179,12 @@ def dynamicFloatValue_Permanent_Magnet_Dimension(num_of_magnets):
     listOfWidgets = []
     for i in range(num_of_magnets):
         widget = widgets.FloatText(
-            value=0,
+            value=10,
             max=999999,
             min=0,
-            description=f'dimension {i+1}',
+            description=f'Dimension {i+1}',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         listOfWidgets.append(widget)
     return listOfWidgets
@@ -151,19 +197,25 @@ def dynamicFloatValue_Magnet_Position(num_of_magnets, magnet_dimensions, global_
             value=0,
             max=(global_bounds[0].value - magnet_dimensions[j+1].value),
             min=(global_bounds[1].value ),
-            description=f'x pos {i+1}',
+            description=f'X-Position {i+1}',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         widget2 = widgets.BoundedFloatText(
             value=0,
             max=(global_bounds[2].value - 0.5*magnet_dimensions[j].value),
             min=(global_bounds[3].value + 0.5*magnet_dimensions[j].value),
-            description=f'y pos {i+1}',
+            description=f'Y-Position {i+1}',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         widget3 = widgets.BoundedFloatText(
             value=0,
             max=(global_bounds[4].value - 0.5*magnet_dimensions[j+2].value),
             min=(global_bounds[5].value + 0.5*magnet_dimensions[j+2].value),
-            description=f'z pos {i+1}',
+            description=f'Z-Position {i+1}',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         listOfWidgets.extend([widget1, widget2, widget3])
         j += 3
@@ -175,6 +227,8 @@ def dynamicFloatValue_Magnetic_Field_Value(num_of_magnets):
         widget = widgets.FloatText(
             value=1,
             description=f'B field {i+1}',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         listOfWidgets.append(widget)
     return listOfWidgets
@@ -185,7 +239,9 @@ def dynamicFloatValue_Magnetic_Field_Axis(num_of_magnets):
         widget = widgets.Dropdown(
             options=[('x-axis','x') ,('y-axis','y') , ('z-axis','z')],
             value='z',
-            description='along the',
+            description='Along the',
+            layout= widgets.Layout(width='250px'),
+            style=style,
         )
         listOfWidgets.append(widget)
     return listOfWidgets
@@ -193,12 +249,14 @@ def dynamicFloatValue_Magnetic_Field_Axis(num_of_magnets):
 # Define Beam attributes
 
 number_of_particles = widgets.BoundedIntText(
-    value=1,
+    value=10,
     max=999999,
     min=1,
     step=1,
-    description='# of Particles',
-    disabled=False
+    description='Number of Particles',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style,
 )
 
 def dynamicFloatValue_Beam_Start_Position(global_bounds):
@@ -207,28 +265,36 @@ def dynamicFloatValue_Beam_Start_Position(global_bounds):
         value=0,
         max=global_bounds[0].value,
         min=global_bounds[1].value,
-        description='x start pos',
+        description='Initial X-Position',
+        layout= widgets.Layout(width='250px'),
+        style=style,
     )
     widget2 = widgets.BoundedFloatText(
         value=0,
         max=global_bounds[2].value,
         min=global_bounds[3].value,
-        description='y start pos',
+        description='Initial Y-Position',
+        layout= widgets.Layout(width='250px'),
+        style=style,
     )
     widget3 = widgets.BoundedFloatText(
         value=0,
         max=global_bounds[4].value,
         min=global_bounds[5].value,
-        description='z start pos',
+        description='Initial Z-Position',
+        layout= widgets.Layout(width='250px'),
+        style=style,
     )
     listOfWidgets.extend([widget1, widget2, widget3])
     return listOfWidgets
 
 beam_energy = widgets.BoundedFloatText(
-    value=1,
+    value=100,
     min=0,
     max=9999999,
-    description='beam energy'
+    description='Central KE',
+    layout= widgets.Layout(width='250px'),
+    style=style,
 )
 
 def dynamicFloatValue_Beam_Direction(angle_unit):
@@ -241,15 +307,21 @@ def dynamicFloatValue_Beam_Direction(angle_unit):
     
     widget1 = widgets.FloatText(
         value=0,
-        description='x angle',
+        description='Angle with Respect to X-Axis',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     widget2 = widgets.FloatText(
         value=init_val,
-        description='y angle',
+        description='Angle with Respect to Y-Axis',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     widget3 = widgets.FloatText(
         value=init_val,
-        description='z angle',
+        description='Angle with Respect to Z-Axis',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     listOfWidgets.extend([widget1, widget2, widget3])
     return listOfWidgets
@@ -260,15 +332,21 @@ def dynamicFloatValue_Beam_Position_Spread():
     listOfWidgets = []
     widget1 = widgets.FloatText(
         value=0,
-        description='x pos spread',
+        description='Spread in Initial X-Position',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     widget2 = widgets.FloatText(
         value=0,
-        description='y pos spread',
+        description='Spread in Initial Y-Position',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     widget3 = widgets.FloatText(
         value=0,
-        description='z pos spread',
+        description='Spread in Initial Z-Position',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     listOfWidgets.extend([widget1, widget2, widget3])
     return listOfWidgets
@@ -277,22 +355,30 @@ beam_energy_spread = widgets.BoundedFloatText(
     value=0,
     min=0,
     max=9999999,
-    description='nrg spread'
+    description='Energy Spread',
+    layout= widgets.Layout(width='500px'),
+    style=style,
 )
 
 def dynamicFloatValue_Beam_Divergence_Spread():
     listOfWidgets = []
     widget1 = widgets.FloatText(
         value=0,
-        description='x divergence',
+        description='X-Divergence Angle',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     widget2 = widgets.FloatText(
-        value=0,
-        description='y divergence',
+        value=10,
+        description='Y-Divergence Angle',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     widget3 = widgets.FloatText(
-        value=0,
-        description='z divergence',
+        value=10,
+        description='Z-Divergence Angle',
+        layout= widgets.Layout(width='500px'),
+        style=style,
     )
     listOfWidgets.extend([widget1, widget2, widget3])
     return listOfWidgets
@@ -303,24 +389,30 @@ number_of_screens = widgets.BoundedIntText(
     value=1,
     min=0,
     step=1,
-    description='# of Screens',
-    disabled=False
+    description='Number of Screens',
+    disabled=False,
+    layout= widgets.Layout(width='500px'),
+    style=style,
 )
 
 def dynamicFloatValue_Screen_Dimensions(num_of_screens, global_bounds):
     listOfWidgets = []
     for i in range(num_of_screens):
         widget1 = widgets.BoundedFloatText(
-            value=0,
+            value=50,
             max=global_bounds[0].value,
             min=0,
-            description=f'length {i+1}',
+            description=f'Length of Screen {i+1}',
+            layout= widgets.Layout(width='500px'),
+            style=style,
         )
         widget2 = widgets.BoundedFloatText(
-            value=0,
+            value=10,
             max=global_bounds[4].value,
             min=0,
-            description=f'height {i+1}',
+            description=f'Height of Screen {i+1}',
+            layout= widgets.Layout(width='500px'),
+            style=style,
         )
         listOfWidgets.extend([widget1, widget2])
     return listOfWidgets
@@ -329,16 +421,22 @@ def dynamicFloatValue_Screen_Angles(num_of_screens):
     listOfWidgets = []
     for i in range(num_of_screens):
         widget1 = widgets.FloatText(
-            value=0,
-            description=f'yaw angle {i+1}',
+            value=1570.8,
+            description=f'Yaw (About Z-Axis) Angle of Screen {i+1}',
+            layout= widgets.Layout(width='500px'),
+            style=style,
         )
         widget2 = widgets.FloatText(
             value=0,
-            description=f'pitch angle {i+1}',
+            description=f'Pitch (About Y-Axis) Angle of Screen {i+1}',
+            layout= widgets.Layout(width='500px'),
+            style=style,
         )
         widget3 = widgets.FloatText(
             value=0,
-            description=f'roll angle {i+1}',
+            description=f'Roll (About X-Axis) Angle of Screen {i+1}',
+            layout= widgets.Layout(width='500px'),
+            style=style,
         )
         listOfWidgets.extend([widget1, widget2, widget3])
     return listOfWidgets
@@ -379,22 +477,22 @@ np.cos(alpha)*np.sin(gamma))
         zmax = max(c12z, c3z, c4z)
         zmin = min(c12z, c3z, c4z)
         widget1 = widgets.BoundedFloatText(
-            value=0,
+            value=50,
             max=global_bounds[0].value - xmax,
             min=global_bounds[1].value + xmin,
-            description=f'x pos {i+1}',
+            description=f'X-Position of Screen {i+1}',
         )
         widget2 = widgets.BoundedFloatText(
-            value=0,
+            value=-25,
             max=global_bounds[2].value - ymax,
             min=global_bounds[3].value + ymin,
-            description=f'y pos {i+1}',
+            description=f'Y-Position of Screen {i+1}',
         )
         widget3 = widgets.BoundedFloatText(
             value=0,
             max=global_bounds[4].value - zmax,
             min=global_bounds[5].value + zmin,
-            description=f'z pos {i+1}',
+            description=f'Z-Position of Screen {i+1}',
         )
         listOfWidgets.extend([widget1, widget2, widget3])
         j += 3
@@ -406,9 +504,11 @@ np.cos(alpha)*np.sin(gamma))
 def averageB0(num_of_magnets, field_values):
     all_fields_total = 0.0
     for i in range(num_of_magnets):
-        all_fields_total += field_values[i].value
+        all_fields_total += np.abs(field_values[i].value)
     aveB_0 = all_fields_total / num_of_magnets
-    
+    if aveB_0 == 0:
+        aveB_0 = 1
+        
     return aveB_0
 
 def convertAngles(units, beam_direction, divergence_spread, screen_angles):
@@ -445,7 +545,7 @@ def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_p
     aveB_0 = averageB0(num_mag, fld_vals)
     q_e = 1.602177 * math.pow(10,-19)
     m_e = 9.109384 * math.pow(10,-31)
-    c = 2.997925 * math.pow(10,8)
+    c   = 2.997925 * math.pow(10,8)
     omega_div_c = (q_e * aveB_0) / (m_e * c)
     
     # distances
@@ -545,8 +645,14 @@ def createAxesList(axes_list):
         newlist.append(' ')
     return newlist
 
+def particle_charge(part_species):
+    if part_species.value == 'Electrons':
+        return -1
+    elif part_species.value == 'Positrons':
+        return 1
+
 def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, 
-                 energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl):
+                 energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, part_species):
     mag_num = [f'{num_mag}', ' ']
     dim_mag = createList(mag_dim)
     pos_mag = createList(mag_pos)
@@ -571,11 +677,13 @@ def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_par
     screen_pos = createList(scrn_pos)
     screen_angles = createList(scrn_angl)
     screen_info = screen_num + screen_dim + screen_pos + screen_angles
+
+    species_info = particle_charge(part_species)
     
-    return mag_info, beam_info, spread_info, screen_info
+    return mag_info, beam_info, spread_info, screen_info, species_info
 
 def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, 
-                energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types):
+                energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species):
     
     outfile = open('input_deck.txt', 'w')
     
@@ -584,10 +692,11 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
                                                                         beam_energy, pos_sprd, energy_sprd, scrn_dim, scrn_pos)
     mu_0 = normalizeMu0(num_mag, fld_vals)
     
-    mag_info, beam_info, spread_info, screen_info = createOutput(num_mag, n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, fld_axs, 
+    mag_info, beam_info, spread_info, screen_info, species_info = createOutput(num_mag, n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, fld_axs, 
                                                                  num_particles, n_beam_pos, n_beam_energy, beam_dir, n_pos_sprd, 
-                                                                 n_energy_sprd, div_sprd, num_scrn, n_scrn_dim, n_scrn_pos, scrn_angl)
+                                                                 n_energy_sprd, div_sprd, num_scrn, n_scrn_dim, n_scrn_pos, scrn_angl, part_species)
     outfile.writelines(units)
+    print(units)
     outfile.write('\n')
     outfile.writelines(mag_info)
     outfile.write('\n')
@@ -600,13 +709,16 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
     outfile.writelines(init_types)
     outfile.write('\n')
     outfile.write(f'{mu_0}')
-    
+    outfile.write('\n')
+    outfile.write(f'{species_info}')
+    print(species_info)
+
     outfile.close()
 
 # Plots and outputs
 
 def DisplayAndOutput(global_bounds, units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy,
-                     beam_dir, pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types):
+                     beam_dir, pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel(f'x position ({units[0]})')
@@ -809,7 +921,7 @@ abs(np.array(corner4 - corner3)@np.array(corner4 - corner3)))) for jj in range(l
     
     def on_button_clicked(b):
         writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, 
-                    pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types)
+                    pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species)
         print('Inputs saved and exported!')
     button.on_click(on_button_clicked)
 
