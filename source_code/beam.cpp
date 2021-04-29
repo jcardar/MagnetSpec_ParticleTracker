@@ -280,7 +280,7 @@ void Beam::next_particle(int& particle_counter,
                         if((particle_counter) % 7 == 0)
                         {
                             m_particle.set_energy(m_energy_central - m_energy_spread + (particle_counter/7)*2*m_energy_spread/((m_num_particles-7)/7));
-                            std::cout << "Energy of this particle is " << m_particle.get_energy() << '\n';
+                            //std::cout << "Energy of this particle is " << m_particle.get_energy() << '\n';
                         }
                     }
                 else if(diverge_init == DivergenceInitializationTypes::INITIALIZE_GAUSSIAN_DIV)

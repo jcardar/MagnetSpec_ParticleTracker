@@ -84,7 +84,7 @@ particle_species = widgets.Dropdown(
 # Define Coordinate System attributes
 
 global_max_x = widgets.FloatText(
-    value=200,
+    value=300,
     description='Global x max',
     disabled=False,
     layout= widgets.Layout(width='250px'),
@@ -220,6 +220,15 @@ def dynamicFloatValue_Magnet_Position(num_of_magnets, magnet_dimensions, global_
         listOfWidgets.extend([widget1, widget2, widget3])
         j += 3
     return listOfWidgets
+
+dipole_field_type_widget = widgets.Dropdown(
+    options=['Analytic Dipole Field', 'Uniform Field'],
+    value='Analytic Dipole Field',
+    description='Dipole Field Type',
+    disabled=False,
+    layout= widgets.Layout(width='250px'),
+    style=style
+)
 
 def dynamicFloatValue_Magnetic_Field_Value(num_of_magnets):
     listOfWidgets = []
@@ -651,8 +660,14 @@ def particle_charge(part_species):
     elif part_species.value == 'Positrons':
         return 1
 
+def dipole_field_type(d_field_type):
+    if d_field_type.value == 'Analytic Dipole Field':
+        return 'd'
+    elif d_field_type.value == 'Uniform Field':
+        return 'u'
+
 def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, 
-                 energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, part_species):
+                 energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, part_species, d_field_type):
     mag_num = [f'{num_mag}', ' ']
     dim_mag = createList(mag_dim)
     pos_mag = createList(mag_pos)
@@ -679,11 +694,13 @@ def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_par
     screen_info = screen_num + screen_dim + screen_pos + screen_angles
 
     species_info = particle_charge(part_species)
+
+    dipole_field_type_info = dipole_field_type(d_field_type)
     
-    return mag_info, beam_info, spread_info, screen_info, species_info
+    return mag_info, beam_info, spread_info, screen_info, species_info, dipole_field_type_info
 
 def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, 
-                energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species):
+                energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, dipole_type):
     
     outfile = open('input_deck.txt', 'w')
     
@@ -692,11 +709,11 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
                                                                         beam_energy, pos_sprd, energy_sprd, scrn_dim, scrn_pos)
     mu_0 = normalizeMu0(num_mag, fld_vals)
     
-    mag_info, beam_info, spread_info, screen_info, species_info = createOutput(num_mag, n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, fld_axs, 
+    mag_info, beam_info, spread_info, screen_info, species_info, field_type_info = createOutput(num_mag, n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, fld_axs, 
                                                                  num_particles, n_beam_pos, n_beam_energy, beam_dir, n_pos_sprd, 
-                                                                 n_energy_sprd, div_sprd, num_scrn, n_scrn_dim, n_scrn_pos, scrn_angl, part_species)
+                                                                 n_energy_sprd, div_sprd, num_scrn, n_scrn_dim, n_scrn_pos, scrn_angl, part_species, dipole_type)
     outfile.writelines(units)
-    print(units)
+    #print(units)
     outfile.write('\n')
     outfile.writelines(mag_info)
     outfile.write('\n')
@@ -711,14 +728,17 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
     outfile.write(f'{mu_0}')
     outfile.write('\n')
     outfile.write(f'{species_info}')
-    print(species_info)
+    outfile.write('\n')
+    #print(field_type_info)
+    outfile.write(f'{field_type_info}')
+    #print(species_info)
 
     outfile.close()
 
 # Plots and outputs
 
 def DisplayAndOutput(global_bounds, units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy,
-                     beam_dir, pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species):
+                     beam_dir, pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, dipole_field_type_flag):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel(f'x position ({units[0]})')
@@ -921,7 +941,7 @@ abs(np.array(corner4 - corner3)@np.array(corner4 - corner3)))) for jj in range(l
     
     def on_button_clicked(b):
         writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, 
-                    pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species)
+                    pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, dipole_field_type_flag)
         print('Inputs saved and exported!')
     button.on_click(on_button_clicked)
 

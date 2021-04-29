@@ -24,4 +24,4 @@ line 7: (mu_0)
 line 8: (normalized charge)
 
  -Magnetic field type
-line 9: (uniform/dipole)
+line 9: ((u)niform/(d)ipole)
