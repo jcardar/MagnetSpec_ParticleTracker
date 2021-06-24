@@ -55,7 +55,9 @@ void step_through_magnet_mag_boris_analytic(Particle &electron, Magnet &magnet, 
 
 void first_half_position_step(Particle &electron_t, const double del_t);
 
-bool inside_of_mag(Magnet magnet_t, Particle particle_t);
+bool inside_of_mag_general(Magnet magnet_t, Particle particle_t);
+
+bool inside_of_mag_dipole(Magnet magnet_t, Particle particle_t);
 
 double time_to_magnet_boundary(Magnet magnet_t, Particle particle_t);
 
@@ -65,7 +67,9 @@ double dist_to_mag(Magnet magnet_t, Particle particle_t);
 
 void move_particle_to_magnet(Magnet magnet_t, Particle &particle_t);
 
-bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit, Screen screen_t[], int num_screens);
+bool move_through_magnets_general(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit, Screen screen_t[], int num_screens);
+
+bool move_through_magnets_dipole(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit, Screen screen_t[], int num_screens);
 
 bool move_through_magnets_uniform(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit, Screen screen_t[], int num_screens);;
 //bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit);
@@ -77,6 +81,8 @@ void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t, int
 void readUnits(std::ifstream &input_stream, std::vector<std::string> &desired_units);
 
 int readNumOf(std::ifstream &input_stream);
+
+void readMagnetType(std::ifstream &input_stream, int magNum, std::vector<char> &PmagType);
 
 void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vector<std::vector<double>>> &magInfo);
 
@@ -105,5 +111,9 @@ void calc_grid_B_comps(double factor, double a, double b, double c, double x, do
 bool B_within_margin(double B_center_val, double B1, double B2, double B3);
 
 ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization);
+
+ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge);
+
+ThreeVec calc_halbach_B(ThreeVec &grid_point, Magnet &magnet, double charge);
 
 #endif

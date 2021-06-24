@@ -4,7 +4,7 @@ Reference for meaning of values in input_deck.txt
 line 1: (length units) (energy units) (angle units) (magnetic field units)
 
  -Magnet associated values	*repeat values in [] for every number of magnets*
-line 2: (# magnets) [(width) (length) (height)][(x pos) (y pos) (z pos)] [(mag field val)] [(permanent mag height)] [(mag field axis)]
+line 2: (# magnets) [(width / quad r1) (length) (height / quad r2)][(x pos) (y pos) (z pos)] [(mag field val / quad remanence val)] [(permanent mag height)] [(mag field axis / quad focus axis)] [((u)niform/(d)ipole/(q)uadrupole/(h)albach)]
 
  -Beam associated values
 line 3: (# particles) (x pos) (y pos) (z pos) (beam energy) (x angle) (y angle) (z angle)
@@ -22,6 +22,3 @@ line 7: (mu_0)
 
  -Particle Species Information:
 line 8: (normalized charge)
-
- -Magnetic field type
-line 9: ((u)niform/(d)ipole)

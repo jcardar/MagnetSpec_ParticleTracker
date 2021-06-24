@@ -27,16 +27,18 @@ public:
     
     enum EnergyInitializationTypes
     {
-        INITIALIZE_GAUSSIAN_EN = 0,
-        INITIALIZE_UNIFORM_EN  = 1,
-        INITIALIZE_LOG_EN      = 2,
+        INITIALIZE_GAUSSIAN_EN   = 0,
+        INITIALIZE_UNIFORM_EN    = 1,
+        INITIALIZE_LOG_EN        = 2,
+        INITIALIZE_INPUT_FILE_EN = 3,
     };
 
     enum PositionInitializationTypes
     {
-        INITIALIZE_GAUSSIAN_POS = 0,
-        INITIALIZE_UNIFORM_POS  = 1,
-        INITIALIZE_SCAN_POS     = 2,
+        INITIALIZE_GAUSSIAN_POS   = 0,
+        INITIALIZE_UNIFORM_POS    = 1,
+        INITIALIZE_SCAN_POS       = 2,
+        INITIALIZE_INPUT_FILE_POS = 3,
     };
 
     enum DivergenceInitializationTypes
@@ -46,6 +48,7 @@ public:
         INITIALIZE_SCAN_DIV           = 2,
         INITIALIZE_GAMMA_SCAN_DIV     = 3,
         INITIALIZE_GAMMA_GAUSSIAN_DIV = 4,
+        INITIALIZE_INPUT_FILE_DIV     = 5,
     };
 
     EnergyInitializationTypes     m_energy_initialization_type     = INITIALIZE_GAUSSIAN_EN;

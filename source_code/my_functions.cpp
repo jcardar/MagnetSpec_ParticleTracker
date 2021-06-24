@@ -382,7 +382,7 @@ void stepThroughMagnet_Leap(Particle *electron, Magnet &magnet, double& time, co
 double ReadMu0(std::ifstream &input_stream);
 double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis);
 void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3);
-ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization);
+ThreeVec calc_dipole_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void boris_analytic(Particle &electron_t, Magnet magnet_t[], double del_t, int counter, double mu_0, bool inside_array[], int num_mags)
@@ -424,8 +424,11 @@ void boris_analytic(Particle &electron_t, Magnet magnet_t[], double del_t, int c
     double magnetization, factor, x_pos, y_pos, z_pos;
     for(int jj = 0; jj < num_mags; jj++)
     {
+        char mag_type = magnet_t[jj].get_type();
         if(inside_array[jj] == true)
         {
+            if(mag_type == 'd')
+            {
                 magnetization = find_magnetization(magnet_t[jj], magnet_t[jj].get_height_of_dipole_block(), mu_0, magnet_t[jj].get_axis_of_magnetization());
                 //std::cerr << "Magnitization is " << magnetization << '\n';
                 factor = (mu_0 * magnetization)/(4 * M_PI);
@@ -436,17 +439,73 @@ void boris_analytic(Particle &electron_t, Magnet magnet_t[], double del_t, int c
                 //z_pos = electron_t.get_pos(2) - magnet_t[jj].get_pos(2);
                 //calc_grid_B_comps(factor, 0.5*magnet_t[jj].get_length(), 0.5*magnet_t[jj].get_width(), 0.5*magnet_t[jj].get_height(), x_pos, y_pos, z_pos, B1_atPosition, B2_atPosition, B3_atPosition);
                 //ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization);
-                B_field_temp = calc_grid_point_B(particle_position, magnet_t[jj], magnet_t[jj].get_height_of_dipole_block(), mu_0, magnet_t[jj].get_axis_of_magnetization(), magnetization);
+                B_field_temp = calc_dipole_B(particle_position, magnet_t[jj], magnet_t[jj].get_height_of_dipole_block(), mu_0, magnet_t[jj].get_axis_of_magnetization(), magnetization);
                 B1_atPosition = B1_atPosition + B_field_temp.getX();
                 B2_atPosition = B2_atPosition + B_field_temp.getY();
                 B3_atPosition = B3_atPosition + B_field_temp.getZ();
                 //std::cerr << "The B1 field at this position was updated as " << B1_atPosition << ", from magnet number " << jj << "\n";
                 //std::cerr << "The magnitude B field at this position was updated as " << sqrt(B1_atPosition*B1_atPosition + B2_atPosition*B2_atPosition + B3_atPosition*B3_atPosition) << ", and jj is " << jj << "\n";
+            }
+            else if(mag_type == 'u')
+            {
+                if(magnet_t[jj].get_axis_of_magnetization() == 'z')
+                {
+                    B3_atPosition = B3_atPosition + magnet_t[jj].get_B0(2);
+                }
+                else if(magnet_t[jj].get_axis_of_magnetization() == 'y')
+                {
+                    B2_atPosition = B2_atPosition + magnet_t[jj].get_B0(1);
+                }
+                else if(magnet_t[jj].get_axis_of_magnetization() == 'x')
+                {
+                    B1_atPosition = B1_atPosition + magnet_t[jj].get_B0(0);
+                }
+            }
+            else if(mag_type == 'q')
+            {
+                //magnetization = find_magnetization(magnet_t[jj], magnet_t[jj].get_height_of_dipole_block(), mu_0, magnet_t[jj].get_axis_of_magnetization());
+                //std::cerr << "Magnitization is " << magnetization << '\n';
+                //factor = (mu_0 * magnetization)/(4 * M_PI);
+                //std::cerr << "factor is " << factor << '\n';
+                //Magnitization and factor are staying the same across magnets: they're not the problem
+                //x_pos = electron_t.get_pos(0) - (magnet_t[jj].get_pos(0)+0.5*magnet_t[jj].get_length());
+                //y_pos = electron_t.get_pos(1) - magnet_t[jj].get_pos(1);
+                //z_pos = electron_t.get_pos(2) - magnet_t[jj].get_pos(2);
+                
+                //calc_grid_B_comps(factor, 0.5*magnet_t[jj].get_length(), 0.5*magnet_t[jj].get_width(), 0.5*magnet_t[jj].get_height(), x_pos, y_pos, z_pos, B1_atPosition, B2_atPosition, B3_atPosition);
+                //ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization);
+                B_field_temp = calc_quadrupole_B(particle_position, magnet_t[jj], electron_t.get_charge());
+                //B_field_temp = calc_dipole_B(particle_position, magnet_t[jj], magnet_t[jj].get_height_of_dipole_block(), mu_0, magnet_t[jj].get_axis_of_magnetization(), magnetization);
+                B1_atPosition = B1_atPosition + B_field_temp.getX();
+                B2_atPosition = B2_atPosition + B_field_temp.getY();
+                B3_atPosition = B3_atPosition + B_field_temp.getZ();
+            }
+            else if(mag_type == 'h')
+            {
+                //magnetization = find_magnetization(magnet_t[jj], magnet_t[jj].get_height_of_dipole_block(), mu_0, magnet_t[jj].get_axis_of_magnetization());
+                //std::cerr << "Magnitization is " << magnetization << '\n';
+                //factor = (mu_0 * magnetization)/(4 * M_PI);
+                //std::cerr << "factor is " << factor << '\n';
+                //Magnitization and factor are staying the same across magnets: they're not the problem
+                //x_pos = electron_t.get_pos(0) - (magnet_t[jj].get_pos(0)+0.5*magnet_t[jj].get_length());
+                //y_pos = electron_t.get_pos(1) - magnet_t[jj].get_pos(1);
+                //z_pos = electron_t.get_pos(2) - magnet_t[jj].get_pos(2);
+                //calc_grid_B_comps(factor, 0.5*magnet_t[jj].get_length(), 0.5*magnet_t[jj].get_width(), 0.5*magnet_t[jj].get_height(), x_pos, y_pos, z_pos, B1_atPosition, B2_atPosition, B3_atPosition);
+                //ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization);
+                B_field_temp = calc_halbach_B(particle_position, magnet_t[jj], electron_t.get_charge());
+                //B_field_temp = calc_dipole_B(particle_position, magnet_t[jj], magnet_t[jj].get_height_of_dipole_block(), mu_0, magnet_t[jj].get_axis_of_magnetization(), magnetization);
+                B1_atPosition = B1_atPosition + B_field_temp.getX();
+                B2_atPosition = B2_atPosition + B_field_temp.getY();
+                B3_atPosition = B3_atPosition + B_field_temp.getZ();
+                
+            }
         }
     }
     Bsquared = ( B1_atPosition*B1_atPosition ) + (B2_atPosition * B2_atPosition) + (B3_atPosition * B3_atPosition);
     double old_px, old_py, old_pz;
     ThreeVec B_at_position(B1_atPosition, B2_atPosition, B3_atPosition);
+    std::cerr << electron_t.get_pos() << '\n';
+    std::cerr << B_at_position << '\n';
 
         ttsquared = 0.0;
     //if(counter!=0)
@@ -691,12 +750,12 @@ void boris_analytic_ONEMAGNET(Particle &electron_t, Magnet &magnet_t, double del
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool inside_of_mag(Magnet magnet_t, Particle particle_t);
+bool inside_of_mag_dipole(Magnet magnet_t, Particle particle_t);
 bool is_this_array_only_zeros(bool array[], int num_elements);
 bool check_if_intersect_screen_in_next_dt(Screen screen_t, Particle particle_t, double del_t);
 
 
-bool step_through_magnet_mag_boris_analytic(Particle &electron, Magnet magnet[], double& time, const double &del_time, double mu_0, double time_out, bool inside_of_magnet[], int num_mags, Screen screen[], int num_screens, bool supress_output)
+bool step_through_magnet_mag_boris_analytic_general(Particle &electron, Magnet magnet[], double& time, const double &del_time, double mu_0, double time_out, bool inside_of_magnet[], int num_mags, Screen screen[], int num_screens, bool supress_output=false)
 {
     //RETURNS TRUE IF PARTICLE EXITS MAGNET WITHOUT INTERSECTING A SCREEN
     //RETURNS FALSE IF PARTICLE INTERSECTS SCREEN WHILE INSIDE MAGNETIC REGION
@@ -734,7 +793,121 @@ bool step_through_magnet_mag_boris_analytic(Particle &electron, Magnet magnet[],
 
             for(int ii=0; ii<num_mags; ii++)
             {
-                inside_of_magnet[ii] = inside_of_mag(magnet[ii], electron);
+                inside_of_magnet[ii] = inside_of_mag_general(magnet[ii], electron);
+            }
+            
+            inside_of_magnet_check = !(is_this_array_only_zeros(inside_of_magnet, num_mags));
+
+            //if((inside_of_magnet_check) && !(time>=time_out))
+             //   { 
+            outfile_part_commaAndWrite(electron); 
+            //    }
+            //else if( ( !inside_of_magnet_check ) || (time >= time_out) )
+            //    {
+            //        outfile_part_commaAndWrite(electron); 
+            //    }
+            if(supress_output)
+            {
+                supress_output = true;
+            }
+            else
+            {
+                if(time >= time_out)
+                    { std::cout << "Particle Timed-Out.\n"; }
+                if( (inside_of_magnet_check) == false )
+                    {
+                        std::cout << "Particle Out of Magnet.\n";
+                        //if(check_x == false)
+                        //    { std::cout << "Out of bounds in x.\n"; } 
+                        //if(check_y == false)
+                        //    { std::cout << "Out of bounds in y.\n"; } 
+                        //if(check_z == false)
+                        //   { std::cout << "Out of bounds in z.\n"; } 
+                    }
+            }
+            
+        } while((inside_of_magnet_check) && (time < time_out));
+    if(inside_of_magnet_check == false)
+    {
+        for(int ii = 0; ii < num_mags; ii++)
+        {
+            char mag_type = magnet[ii].get_type();
+            if(mag_type == 'd')
+            {
+                bool inside_x_limits = (electron.get_pos(0) >= (magnet[ii].get_pos(0)- magnet[ii].get_length() )) && (electron.get_pos(0) <= (magnet[ii].get_pos(0)+2.0*magnet[ii].get_length()));
+                bool inside_y_limits = (electron.get_pos(1) >= (magnet[ii].get_pos(1) - (magnet[ii].get_width()*5.0)))  && (electron.get_pos(1) <= (magnet[ii].get_pos(1) + (magnet[ii].get_width()*5.0)));
+                bool inside_z_limits = (electron.get_pos(2) >= (magnet[ii].get_pos(2) - (magnet[ii].get_height()/2.0))) && (electron.get_pos(2) <= (magnet[ii].get_pos(2) + (magnet[ii].get_height()/2.0)));
+                if(inside_x_limits && inside_y_limits && (!inside_z_limits))
+                {
+                    return false;
+                }
+            }
+            else if(mag_type == 'u')
+            {
+                bool inside_x_limits = (electron.get_pos(0) >= (magnet[ii].get_pos(0) )) && (electron.get_pos(0) <= (magnet[ii].get_pos(0)+magnet[ii].get_length()));
+                bool inside_y_limits = (electron.get_pos(1) >= (magnet[ii].get_pos(1) - (magnet[ii].get_width()/2.0)))  && (electron.get_pos(1) <= (magnet[ii].get_pos(1) + (magnet[ii].get_width()*0.5)));
+                bool inside_z_limits = (electron.get_pos(2) >= (magnet[ii].get_pos(2) - (magnet[ii].get_height()/2.0))) && (electron.get_pos(2) <= (magnet[ii].get_pos(2) + (magnet[ii].get_height()/2.0)));
+                if(inside_x_limits && inside_y_limits && (!inside_z_limits))
+                {
+                    return false;
+                }
+            }
+            else if(mag_type == 'q' || mag_type == 'h')
+            {
+                bool inside_x_limits = (electron.get_pos(0) >= (magnet[ii].get_pos(0) - magnet[ii].get_length() )) && (electron.get_pos(0) <= (magnet[ii].get_pos(0)+2.0*magnet[ii].get_length()));
+                bool inside_y_limits = (electron.get_pos(1) >= (magnet[ii].get_pos(1) - (magnet[ii].get_width())))  && (electron.get_pos(1) <= (magnet[ii].get_pos(1) + (magnet[ii].get_width())));
+                bool inside_z_limits = (electron.get_pos(2) >= (magnet[ii].get_pos(2) - (magnet[ii].get_width()))) && (electron.get_pos(2) <= (magnet[ii].get_pos(2) + (magnet[ii].get_width())));
+                if(inside_x_limits && inside_y_limits && (!inside_z_limits))
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    return !(intersect_screen_check);
+}
+
+
+
+bool step_through_magnet_mag_boris_analytic_dipole(Particle &electron, Magnet magnet[], double& time, const double &del_time, double mu_0, double time_out, bool inside_of_magnet[], int num_mags, Screen screen[], int num_screens, bool supress_output=false)
+{
+    //RETURNS TRUE IF PARTICLE EXITS MAGNET WITHOUT INTERSECTING A SCREEN
+    //RETURNS FALSE IF PARTICLE INTERSECTS SCREEN WHILE INSIDE MAGNETIC REGION
+    //TESTING CHANING TIME STEP:
+    //const double del_time = del_time_1 * 0.5;
+
+    //bool check_x, check_y, check_z;
+    double psquared;
+    int counter = 0;
+    bool inside_of_magnet_check = true;
+    bool intersect_screen_array[num_screens];
+    bool intersect_screen_check = false;
+    do
+        {
+            //check if intersects screen in next dt first, then push particle, then determine if particle is still inside the magnetic field
+            for(int jj = 0; jj < num_screens; jj++)
+            {
+                intersect_screen_array[jj] = check_if_intersect_screen_in_next_dt(screen[jj], electron, del_time);
+                if(intersect_screen_array[jj] == true)
+                {
+                    intersect_screen_check = true;
+                    break;
+                }
+            }
+            if(intersect_screen_check == true)
+            {
+                break;
+            }
+
+            boris_analytic(electron, magnet, del_time, counter, mu_0, inside_of_magnet, num_mags); //updates particle velocity & position in magnetic field 
+            
+            counter++;
+            time += del_time;
+            electron.set_time(time);
+
+            for(int ii=0; ii<num_mags; ii++)
+            {
+                inside_of_magnet[ii] = inside_of_mag_dipole(magnet[ii], electron);
             }
             
             inside_of_magnet_check = !(is_this_array_only_zeros(inside_of_magnet, num_mags));
@@ -952,11 +1125,79 @@ void first_half_position_step(Particle &electron_t, const double del_t)
 }
 
 
+bool inside_of_mag_general(Magnet magnet_t, Particle particle_t)
+{
+    char mag_type = magnet_t.get_type();
+    if(mag_type == 'd')
+    {
+        bool inside_of_mag;
+
+        bool inside_x_limits = (particle_t.get_pos(0) >= (magnet_t.get_pos(0) - 1.0*magnet_t.get_length())) && (particle_t.get_pos(0) <= (magnet_t.get_pos(0)+2.0*magnet_t.get_length()));
+        //^ LENGTH TAG
+        bool inside_y_limits = (particle_t.get_pos(1) >= (magnet_t.get_pos(1) - (magnet_t.get_width()*5.0)))  && (particle_t.get_pos(1) <= (magnet_t.get_pos(1) + (magnet_t.get_width()*5.0)));
+        //^ WIDTH TAG
+        bool inside_z_limits = (particle_t.get_pos(2) >= (magnet_t.get_pos(2) - (magnet_t.get_height()/2.0))) && (particle_t.get_pos(2) <= (magnet_t.get_pos(2) + (magnet_t.get_height()/2.0)));
+        if(inside_x_limits && inside_y_limits && inside_z_limits)
+        {
+            inside_of_mag = true;
+            std::cerr << "Inside of magnet of type " << magnet_t.get_type() << std::endl; 
+        }
+        else
+        {
+            inside_of_mag = false;
+        }
+        
+        return inside_of_mag;
+    }
+    else if(mag_type == 'u')
+    {
+        bool inside_of_mag;
+
+        bool inside_x_limits = (particle_t.get_pos(0) >= (magnet_t.get_pos(0) )) && (particle_t.get_pos(0) <= (magnet_t.get_pos(0)+magnet_t.get_length()));
+        //^ LENGTH TAG
+        bool inside_y_limits = (particle_t.get_pos(1) >= (magnet_t.get_pos(1) - (magnet_t.get_width()*0.5)))  && (particle_t.get_pos(1) <= (magnet_t.get_pos(1) + (magnet_t.get_width()*0.5)));
+        //^ WIDTH TAG
+        bool inside_z_limits = (particle_t.get_pos(2) >= (magnet_t.get_pos(2) - (magnet_t.get_height()/2.0))) && (particle_t.get_pos(2) <= (magnet_t.get_pos(2) + (magnet_t.get_height()/2.0)));
+        if(inside_x_limits && inside_y_limits && inside_z_limits)
+        {
+            inside_of_mag = true;
+            std::cerr << "Inside of magnet of type " << magnet_t.get_type() << std::endl; 
+        }
+        else
+        {
+            inside_of_mag = false;
+        }
+        
+        return inside_of_mag;
+    }
+    else if(mag_type == 'q' || mag_type == 'h')
+    {
+        bool inside_of_mag;
+
+        bool inside_x_limits = (particle_t.get_pos(0) >= (magnet_t.get_pos(0) - 1.0*magnet_t.get_length())) && (particle_t.get_pos(0) <= (magnet_t.get_pos(0)+2.0*magnet_t.get_length()));
+        //^ LENGTH TAG
+        bool inside_y_limits = (particle_t.get_pos(1) >= (magnet_t.get_pos(1) - (magnet_t.get_width())))  && (particle_t.get_pos(1) <= (magnet_t.get_pos(1) + (magnet_t.get_width())));
+        //^ WIDTH TAG
+        bool inside_z_limits = (particle_t.get_pos(2) >= (magnet_t.get_pos(2) - (magnet_t.get_width()))) && (particle_t.get_pos(2) <= (magnet_t.get_pos(2) + (magnet_t.get_width())));
+        if(inside_x_limits && inside_y_limits && inside_z_limits)
+        {
+            inside_of_mag = true;
+        }
+        else
+        {
+            inside_of_mag = false;
+        }
+        return inside_of_mag;
+    }
+    else
+    {
+        std::cout << "No valid magnet type detected!\n";
+        return 0;
+    }
+}
 
 
-
-
-bool inside_of_mag(Magnet magnet_t, Particle particle_t)
+bool inside_of_mag_dipole(Magnet magnet_t, Particle particle_t)
 {
     bool inside_of_mag;
     
@@ -997,8 +1238,268 @@ bool inside_of_mag_uniform(Magnet magnet_t, Particle particle_t)
 }
 
 
+double time_to_magnet_boundary_general(Magnet magnet_t, Particle particle_t)
+{
+    //Assumes that particle has already been checked if it is at-or-within magnet's boundary
+    char mag_type = magnet_t.get_type();
+    if(mag_type == 'd')
+    {
+        double time_btwn_mags_x_front;
+        double time_btwn_mags_x_back;
+        if(particle_t.get_vel(0) !=0)
+            { 
+                //LENGTH TAG
+                time_btwn_mags_x_front = (magnet_t.get_pos(0)-1.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0); 
+                time_btwn_mags_x_back  = (magnet_t.get_pos(0)+2.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0);
+            }
+        else
+            {
+                time_btwn_mags_x_back  = DBL_MAX;
+                time_btwn_mags_x_front = DBL_MAX;
+            }
 
-double time_to_magnet_boundary(Magnet magnet_t, Particle particle_t)
+        double time_btwn_mags_y_top;
+        double time_btwn_mags_y_bottom;
+        if(particle_t.get_vel(1) !=0)
+            { 
+                ///WIDTH TAG
+                time_btwn_mags_y_top     = (magnet_t.get_pos(1)+((magnet_t.get_width()*5.0)) - particle_t.get_pos(1))/particle_t.get_vel(1); 
+                time_btwn_mags_y_bottom  = (magnet_t.get_pos(1)-((magnet_t.get_width()*5.0)) - particle_t.get_pos(1))/particle_t.get_vel(1);
+            }
+        else
+            {
+                time_btwn_mags_y_top    = DBL_MAX;
+                time_btwn_mags_y_bottom = DBL_MAX;
+            }
+
+        double time_btwn_mags_z_top;
+        double time_btwn_mags_z_bottom;
+        if(particle_t.get_vel(2) !=0)
+            { 
+                time_btwn_mags_z_top     = (magnet_t.get_pos(2)+(magnet_t.get_height()/2.0) - particle_t.get_pos(2))/particle_t.get_vel(2); 
+                time_btwn_mags_z_bottom  = (magnet_t.get_pos(2)-(magnet_t.get_height()/2.0) - particle_t.get_pos(2))/particle_t.get_vel(2);
+            }
+        else
+            {
+                time_btwn_mags_z_top    = DBL_MAX;
+                time_btwn_mags_z_bottom = DBL_MAX;
+            }
+
+        double shortest_time = DBL_MAX;
+        if((time_btwn_mags_x_front < shortest_time) && (time_btwn_mags_x_front>0.0))
+            { shortest_time = time_btwn_mags_x_front;  }
+        if((time_btwn_mags_x_back < shortest_time) && (time_btwn_mags_x_back>0.0))
+            { shortest_time = time_btwn_mags_x_back;   }
+        if((time_btwn_mags_y_top < shortest_time) && (time_btwn_mags_y_top>0.0))
+            { shortest_time = time_btwn_mags_y_top;    }
+        if((time_btwn_mags_y_bottom < shortest_time) && (time_btwn_mags_y_bottom>0.0))
+            { shortest_time = time_btwn_mags_y_bottom; }
+        if((time_btwn_mags_z_top < shortest_time) && (time_btwn_mags_z_top>0.0))
+            { shortest_time = time_btwn_mags_z_top;    }
+        if((time_btwn_mags_z_bottom < shortest_time) && (time_btwn_mags_z_bottom>0.0))
+            { shortest_time = time_btwn_mags_z_bottom; }
+
+        if(shortest_time == DBL_MAX)
+        {
+            return -1.0;
+        }
+        return shortest_time;
+    }
+    else if(mag_type == 'u')
+    {
+        double time_btwn_mags_x_front;
+        double time_btwn_mags_x_back;
+        if(particle_t.get_vel(0) !=0)
+            { 
+                //LENGTH TAG
+                time_btwn_mags_x_front = (magnet_t.get_pos(0) - particle_t.get_pos(0))/particle_t.get_vel(0); 
+                time_btwn_mags_x_back  = (magnet_t.get_pos(0)+magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0);
+            }
+        else
+            {
+                time_btwn_mags_x_back  = DBL_MAX;
+                time_btwn_mags_x_front = DBL_MAX;
+            }
+
+        double time_btwn_mags_y_top;
+        double time_btwn_mags_y_bottom;
+        if(particle_t.get_vel(1) !=0)
+            { 
+                ///WIDTH TAG
+                time_btwn_mags_y_top     = (magnet_t.get_pos(1)+((magnet_t.get_width()*0.5)) - particle_t.get_pos(1))/particle_t.get_vel(1); 
+                time_btwn_mags_y_bottom  = (magnet_t.get_pos(1)-((magnet_t.get_width()*0.5)) - particle_t.get_pos(1))/particle_t.get_vel(1);
+            }
+        else
+            {
+                time_btwn_mags_y_top    = DBL_MAX;
+                time_btwn_mags_y_bottom = DBL_MAX;
+            }
+
+        double time_btwn_mags_z_top;
+        double time_btwn_mags_z_bottom;
+        if(particle_t.get_vel(2) !=0)
+            { 
+                time_btwn_mags_z_top     = (magnet_t.get_pos(2)+(magnet_t.get_height()/2.0) - particle_t.get_pos(2))/particle_t.get_vel(2); 
+                time_btwn_mags_z_bottom  = (magnet_t.get_pos(2)-(magnet_t.get_height()/2.0) - particle_t.get_pos(2))/particle_t.get_vel(2);
+            }
+        else
+            {
+                time_btwn_mags_z_top    = DBL_MAX;
+                time_btwn_mags_z_bottom = DBL_MAX;
+            }
+
+        double shortest_time = DBL_MAX;
+        if((time_btwn_mags_x_front < shortest_time) && (time_btwn_mags_x_front>0.0))
+            { shortest_time = time_btwn_mags_x_front;  }
+        if((time_btwn_mags_x_back < shortest_time) && (time_btwn_mags_x_back>0.0))
+            { shortest_time = time_btwn_mags_x_back;   }
+        if((time_btwn_mags_y_top < shortest_time) && (time_btwn_mags_y_top>0.0))
+            { shortest_time = time_btwn_mags_y_top;    }
+        if((time_btwn_mags_y_bottom < shortest_time) && (time_btwn_mags_y_bottom>0.0))
+            { shortest_time = time_btwn_mags_y_bottom; }
+        if((time_btwn_mags_z_top < shortest_time) && (time_btwn_mags_z_top>0.0))
+            { shortest_time = time_btwn_mags_z_top;    }
+        if((time_btwn_mags_z_bottom < shortest_time) && (time_btwn_mags_z_bottom>0.0))
+            { shortest_time = time_btwn_mags_z_bottom; }
+
+        if(shortest_time == DBL_MAX)
+        {
+            return -1.0;
+        }
+        return shortest_time;
+    }
+    else if(mag_type == 'q')
+    {
+        double time_btwn_mags_x_front;
+        double time_btwn_mags_x_back;
+        if(particle_t.get_vel(0) !=0)
+            { 
+                //LENGTH TAG
+                time_btwn_mags_x_front = (magnet_t.get_pos(0)-1.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0); 
+                time_btwn_mags_x_back  = (magnet_t.get_pos(0)+2.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0);
+            }
+        else
+            {
+                time_btwn_mags_x_back  = DBL_MAX;
+                time_btwn_mags_x_front = DBL_MAX;
+            }
+
+        double time_btwn_mags_y_top;
+        double time_btwn_mags_y_bottom;
+        if(particle_t.get_vel(1) !=0)
+            { 
+                ///WIDTH TAG
+                time_btwn_mags_y_top     = (magnet_t.get_pos(1)+((magnet_t.get_width())) - particle_t.get_pos(1))/particle_t.get_vel(1); 
+                time_btwn_mags_y_bottom  = (magnet_t.get_pos(1)-((magnet_t.get_width())) - particle_t.get_pos(1))/particle_t.get_vel(1);
+            }
+        else
+            {
+                time_btwn_mags_y_top    = DBL_MAX;
+                time_btwn_mags_y_bottom = DBL_MAX;
+            }
+
+        double time_btwn_mags_z_top;
+        double time_btwn_mags_z_bottom;
+        if(particle_t.get_vel(2) !=0)
+            { 
+                time_btwn_mags_z_top     = (magnet_t.get_pos(2)+(magnet_t.get_width()) - particle_t.get_pos(2))/particle_t.get_vel(2); 
+                time_btwn_mags_z_bottom  = (magnet_t.get_pos(2)-(magnet_t.get_width()) - particle_t.get_pos(2))/particle_t.get_vel(2);
+            }
+        else
+            {
+                time_btwn_mags_z_top    = DBL_MAX;
+                time_btwn_mags_z_bottom = DBL_MAX;
+            }
+
+        double shortest_time = DBL_MAX;
+        if((time_btwn_mags_x_front < shortest_time) && (time_btwn_mags_x_front>0.0))
+            { shortest_time = time_btwn_mags_x_front;  }
+        if((time_btwn_mags_x_back < shortest_time) && (time_btwn_mags_x_back>0.0))
+            { shortest_time = time_btwn_mags_x_back;   }
+        if((time_btwn_mags_y_top < shortest_time) && (time_btwn_mags_y_top>0.0))
+            { shortest_time = time_btwn_mags_y_top;    }
+        if((time_btwn_mags_y_bottom < shortest_time) && (time_btwn_mags_y_bottom>0.0))
+            { shortest_time = time_btwn_mags_y_bottom; }
+        if((time_btwn_mags_z_top < shortest_time) && (time_btwn_mags_z_top>0.0))
+            { shortest_time = time_btwn_mags_z_top;    }
+        if((time_btwn_mags_z_bottom < shortest_time) && (time_btwn_mags_z_bottom>0.0))
+            { shortest_time = time_btwn_mags_z_bottom; }
+
+        if(shortest_time == DBL_MAX)
+        {
+            return -1.0;
+        }
+        return shortest_time;
+    }
+    else if(mag_type == 'h')
+    {
+        double time_btwn_mags_x_front;
+        double time_btwn_mags_x_back;
+        if(particle_t.get_vel(0) !=0)
+            { 
+                //LENGTH TAG
+                time_btwn_mags_x_front = (magnet_t.get_pos(0)-1.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0); 
+                time_btwn_mags_x_back  = (magnet_t.get_pos(0)+2.0*magnet_t.get_length() - particle_t.get_pos(0))/particle_t.get_vel(0);
+            }
+        else
+            {
+                time_btwn_mags_x_back  = DBL_MAX;
+                time_btwn_mags_x_front = DBL_MAX;
+            }
+
+        double time_btwn_mags_y_top;
+        double time_btwn_mags_y_bottom;
+        if(particle_t.get_vel(1) !=0)
+            { 
+                ///WIDTH TAG
+                time_btwn_mags_y_top     = (magnet_t.get_pos(1)+((magnet_t.get_width())) - particle_t.get_pos(1))/particle_t.get_vel(1); 
+                time_btwn_mags_y_bottom  = (magnet_t.get_pos(1)-((magnet_t.get_width())) - particle_t.get_pos(1))/particle_t.get_vel(1);
+            }
+        else
+            {
+                time_btwn_mags_y_top    = DBL_MAX;
+                time_btwn_mags_y_bottom = DBL_MAX;
+            }
+
+        double time_btwn_mags_z_top;
+        double time_btwn_mags_z_bottom;
+        if(particle_t.get_vel(2) !=0)
+            { 
+                time_btwn_mags_z_top     = (magnet_t.get_pos(2)+(magnet_t.get_width()) - particle_t.get_pos(2))/particle_t.get_vel(2); 
+                time_btwn_mags_z_bottom  = (magnet_t.get_pos(2)-(magnet_t.get_width()) - particle_t.get_pos(2))/particle_t.get_vel(2);
+            }
+        else
+            {
+                time_btwn_mags_z_top    = DBL_MAX;
+                time_btwn_mags_z_bottom = DBL_MAX;
+            }
+
+        double shortest_time = DBL_MAX;
+        if((time_btwn_mags_x_front < shortest_time) && (time_btwn_mags_x_front>0.0))
+            { shortest_time = time_btwn_mags_x_front;  }
+        if((time_btwn_mags_x_back < shortest_time) && (time_btwn_mags_x_back>0.0))
+            { shortest_time = time_btwn_mags_x_back;   }
+        if((time_btwn_mags_y_top < shortest_time) && (time_btwn_mags_y_top>0.0))
+            { shortest_time = time_btwn_mags_y_top;    }
+        if((time_btwn_mags_y_bottom < shortest_time) && (time_btwn_mags_y_bottom>0.0))
+            { shortest_time = time_btwn_mags_y_bottom; }
+        if((time_btwn_mags_z_top < shortest_time) && (time_btwn_mags_z_top>0.0))
+            { shortest_time = time_btwn_mags_z_top;    }
+        if((time_btwn_mags_z_bottom < shortest_time) && (time_btwn_mags_z_bottom>0.0))
+            { shortest_time = time_btwn_mags_z_bottom; }
+
+        if(shortest_time == DBL_MAX)
+        {
+            return -1.0;
+        }
+        return shortest_time;
+    }
+    else 
+    {std::cout << "No valid magnet type detected.\n"; return -1.0;}
+}
+
+
+double time_to_magnet_boundary_dipole(Magnet magnet_t, Particle particle_t)
 {
     //Assumes that particle has already been checked if it is at-or-within magnet's boundary
 
@@ -1132,7 +1633,91 @@ double time_to_magnet_boundary_uniform(Magnet magnet_t, Particle particle_t)
 
 
 
-bool intersect_mag(Magnet magnet_t, Particle particle_t)
+bool intersect_mag_general(Magnet magnet_t, Particle particle_t)
+{
+    char mag_type = magnet_t.get_type();
+    if(mag_type == 'd')
+    {
+        bool intersect;
+        double time_to_magnet = time_to_magnet_boundary_dipole(magnet_t, particle_t);
+        if(time_to_magnet < 0.0)
+        {
+            return false;
+        }
+        ThreeVec pos_at_shortest_time;
+        pos_at_shortest_time.setX(particle_t.get_pos(0) + (time_to_magnet * particle_t.get_vel(0)));
+        pos_at_shortest_time.setY(particle_t.get_pos(1) + (time_to_magnet * particle_t.get_vel(1)));
+        pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_magnet * particle_t.get_vel(2)));
+
+        bool within_x_bounds = (pos_at_shortest_time.getX() >= magnet_t.get_pos(0)-1.0*magnet_t.get_length()) && (pos_at_shortest_time.getX() <= (magnet_t.get_pos(0)+2.0*magnet_t.get_length()));
+        //^ LENGTH TAG: edited to make width region 5*width away from center instead of 0.5*width.
+        bool within_y_bounds = (pos_at_shortest_time.getY() >= (magnet_t.get_pos(1)-(magnet_t.get_width()*5.0)))  && (pos_at_shortest_time.getY() <= (magnet_t.get_pos(1)+(magnet_t.get_width()*5.0)));
+        //^ WIDTH TAG
+        bool within_z_bounds = (pos_at_shortest_time.getZ() >= (magnet_t.get_pos(2)-(magnet_t.get_height()/2.0))) && (pos_at_shortest_time.getZ() <= (magnet_t.get_pos(2)+(magnet_t.get_height()/2.0)));
+
+        if(within_x_bounds && within_y_bounds && within_z_bounds)
+        { intersect = true; }
+        else
+        { intersect = false; }
+    
+        return intersect;
+    }
+    else if(mag_type == 'u')
+    {
+        bool intersect;
+        double time_to_magnet = time_to_magnet_boundary_uniform(magnet_t, particle_t);
+        if(time_to_magnet < 0.0)
+        {
+            return false;
+        }
+        ThreeVec pos_at_shortest_time;
+        pos_at_shortest_time.setX(particle_t.get_pos(0) + (time_to_magnet * particle_t.get_vel(0)));
+        pos_at_shortest_time.setY(particle_t.get_pos(1) + (time_to_magnet * particle_t.get_vel(1)));
+        pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_magnet * particle_t.get_vel(2)));
+
+        bool within_x_bounds = (pos_at_shortest_time.getX() >= magnet_t.get_pos(0)) && (pos_at_shortest_time.getX() <= (magnet_t.get_pos(0)+magnet_t.get_length()));
+        //^ LENGTH TAG: edited to make width region 5*width away from center instead of 0.5*width.
+        bool within_y_bounds = (pos_at_shortest_time.getY() >= (magnet_t.get_pos(1)-(magnet_t.get_width()*0.5)))  && (pos_at_shortest_time.getY() <= (magnet_t.get_pos(1)+(magnet_t.get_width()*0.5)));
+        //^ WIDTH TAG
+        bool within_z_bounds = (pos_at_shortest_time.getZ() >= (magnet_t.get_pos(2)-(magnet_t.get_height()/2.0))) && (pos_at_shortest_time.getZ() <= (magnet_t.get_pos(2)+(magnet_t.get_height()/2.0)));
+
+        if(within_x_bounds && within_y_bounds && within_z_bounds)
+        { intersect = true; }
+        else
+        { intersect = false; }
+    
+        return intersect;
+    }
+    else if(mag_type == 'q' || mag_type =='h')
+    {
+        bool intersect;
+        double time_to_magnet = time_to_magnet_boundary_dipole(magnet_t, particle_t);
+        if(time_to_magnet < 0.0)
+        {
+            return false;
+        }
+        ThreeVec pos_at_shortest_time;
+        pos_at_shortest_time.setX(particle_t.get_pos(0) + (time_to_magnet * particle_t.get_vel(0)));
+        pos_at_shortest_time.setY(particle_t.get_pos(1) + (time_to_magnet * particle_t.get_vel(1)));
+        pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_magnet * particle_t.get_vel(2)));
+
+        bool within_x_bounds = (pos_at_shortest_time.getX() >= magnet_t.get_pos(0)-1.0*magnet_t.get_length()) && (pos_at_shortest_time.getX() <= (magnet_t.get_pos(0)+2.0*magnet_t.get_length()));
+        //^ LENGTH TAG: edited to make width region 5*width away from center instead of 0.5*width.
+        bool within_y_bounds = (pos_at_shortest_time.getY() >= (magnet_t.get_pos(1)-(magnet_t.get_width()))) && (pos_at_shortest_time.getY() <= (magnet_t.get_pos(1)+(magnet_t.get_width())));
+        //^ WIDTH TAG
+        bool within_z_bounds = (pos_at_shortest_time.getZ() >= (magnet_t.get_pos(2)-(magnet_t.get_width()))) && (pos_at_shortest_time.getZ() <= (magnet_t.get_pos(2)+(magnet_t.get_width())));
+
+        if(within_x_bounds && within_y_bounds && within_z_bounds)
+        { intersect = true; }
+        else
+        { intersect = false; }
+    
+        return intersect;
+    }
+}
+
+
+bool intersect_mag_dipole(Magnet magnet_t, Particle particle_t)
 {
     /* Will check if particle intersects with a magnet
      * Will NOT update particle's positions! We'll want to check if there's another
@@ -1140,7 +1725,7 @@ bool intersect_mag(Magnet magnet_t, Particle particle_t)
      */
     bool intersect;
 
-    double time_to_magnet = time_to_magnet_boundary(magnet_t, particle_t);
+    double time_to_magnet = time_to_magnet_boundary_dipole(magnet_t, particle_t);
     if(time_to_magnet < 0.0)
     {
         return false;
@@ -1199,10 +1784,61 @@ bool intersect_mag_uniform(Magnet magnet_t, Particle particle_t)
 }
 
 
-double dist_to_mag(Magnet magnet_t, Particle particle_t)
+double dist_to_mag_general(Magnet magnet_t, Particle particle_t)
+{
+    char mag_type = magnet_t.get_type();
+    if(mag_type == 'd')
+    {
+        double dist_to_mag;
+        double time_to_mag = time_to_magnet_boundary_general(magnet_t, particle_t);
+        if(time_to_mag <= 0.0)
+        {
+            return 0.0;
+        }
+        ThreeVec pos_at_shortest_time;
+        pos_at_shortest_time.setX(particle_t.get_pos(0) + (time_to_mag * particle_t.get_vel(0)));
+        pos_at_shortest_time.setY(particle_t.get_pos(1) + (time_to_mag * particle_t.get_vel(1)));
+        pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_mag * particle_t.get_vel(2)));
+        dist_to_mag = sqrt((pos_at_shortest_time.getX() - particle_t.get_pos(0))*(pos_at_shortest_time.getX() - particle_t.get_pos(0)) + (pos_at_shortest_time.getY() - particle_t.get_pos(1))*(pos_at_shortest_time.getY() - particle_t.get_pos(1)) + (pos_at_shortest_time.getZ() - particle_t.get_pos(2))*(pos_at_shortest_time.getZ() - particle_t.get_pos(2)));
+        return dist_to_mag;
+    }
+    else if(mag_type == 'u')
+    {
+        double dist_to_mag;
+        double time_to_mag = time_to_magnet_boundary_general(magnet_t, particle_t);
+        if(time_to_mag <= 0.0)
+        {
+            return 0.0;
+        }
+        ThreeVec pos_at_shortest_time;
+        pos_at_shortest_time.setX(particle_t.get_pos(0) + (time_to_mag * particle_t.get_vel(0)));
+        pos_at_shortest_time.setY(particle_t.get_pos(1) + (time_to_mag * particle_t.get_vel(1)));
+        pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_mag * particle_t.get_vel(2)));
+        dist_to_mag = sqrt((pos_at_shortest_time.getX() - particle_t.get_pos(0))*(pos_at_shortest_time.getX() - particle_t.get_pos(0)) + (pos_at_shortest_time.getY() - particle_t.get_pos(1))*(pos_at_shortest_time.getY() - particle_t.get_pos(1)) + (pos_at_shortest_time.getZ() - particle_t.get_pos(2))*(pos_at_shortest_time.getZ() - particle_t.get_pos(2)));
+        return dist_to_mag;
+    }
+    else if(mag_type == 'q' || mag_type =='h')
+    {
+        double dist_to_mag;
+        double time_to_mag = time_to_magnet_boundary_general(magnet_t, particle_t);
+        if(time_to_mag <= 0.0)
+        {
+            return 0.0;
+        }
+        ThreeVec pos_at_shortest_time;
+        pos_at_shortest_time.setX(particle_t.get_pos(0) + (time_to_mag * particle_t.get_vel(0)));
+        pos_at_shortest_time.setY(particle_t.get_pos(1) + (time_to_mag * particle_t.get_vel(1)));
+        pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_mag * particle_t.get_vel(2)));
+        dist_to_mag = sqrt((pos_at_shortest_time.getX() - particle_t.get_pos(0))*(pos_at_shortest_time.getX() - particle_t.get_pos(0)) + (pos_at_shortest_time.getY() - particle_t.get_pos(1))*(pos_at_shortest_time.getY() - particle_t.get_pos(1)) + (pos_at_shortest_time.getZ() - particle_t.get_pos(2))*(pos_at_shortest_time.getZ() - particle_t.get_pos(2)));
+        return dist_to_mag;
+    }
+}
+
+
+double dist_to_mag_dipole(Magnet magnet_t, Particle particle_t)
 {
     double dist_to_mag;
-    double time_to_mag = time_to_magnet_boundary(magnet_t, particle_t);
+    double time_to_mag = time_to_magnet_boundary_dipole(magnet_t, particle_t);
 
     if(time_to_mag <= 0.0)
     {
@@ -1243,9 +1879,27 @@ double dist_to_mag_uniform(Magnet magnet_t, Particle particle_t)
 
 
 
-void move_particle_to_magnet(Magnet magnet_t, Particle &particle_t)
+void move_particle_to_magnet_general(Magnet magnet_t, Particle &particle_t)
 {
-    double time_to_mag = time_to_magnet_boundary(magnet_t, particle_t);
+    double time_to_mag = time_to_magnet_boundary_general(magnet_t, particle_t);
+
+    ThreeVec pos_at_shortest_time;
+    pos_at_shortest_time.setX(particle_t.get_pos(0) + (time_to_mag * particle_t.get_vel(0)));
+    pos_at_shortest_time.setY(particle_t.get_pos(1) + (time_to_mag * particle_t.get_vel(1)));
+    pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_mag * particle_t.get_vel(2)));
+
+    particle_t.set_pos(0, pos_at_shortest_time.getX());
+    particle_t.set_pos(1, pos_at_shortest_time.getY());
+    particle_t.set_pos(2, pos_at_shortest_time.getZ());
+
+    double time_at_mag = particle_t.get_time() + time_to_mag;
+    
+    particle_t.set_time(time_at_mag);
+}
+
+void move_particle_to_magnet_dipole(Magnet magnet_t, Particle &particle_t)
+{
+    double time_to_mag = time_to_magnet_boundary_dipole(magnet_t, particle_t);
 
     ThreeVec pos_at_shortest_time;
     pos_at_shortest_time.setX(particle_t.get_pos(0) + (time_to_mag * particle_t.get_vel(0)));
@@ -1304,7 +1958,15 @@ bool is_this_array_only_zeros(bool array[], int num_elements)
 
 double dist_to_screen_ii(Screen screen_t, Particle particle_t);
 bool check_if_intersect_screen(Screen screen_t, Particle particle_t);
-bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit, Screen screen_t[], int num_screens)
+
+
+
+
+
+/////UNDER CONSTRUCTION
+/////
+/////
+bool move_through_magnets_general(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit, Screen screen_t[], int num_screens)
 {
     //if particle lands on screen in this process, return true. else, return false.
     
@@ -1319,12 +1981,12 @@ bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
 
     for(int ii=0; ii<num_mags; ii++)
     {
-        inside_magnet_array[ii] = inside_of_mag(magnet_t[ii], particle_t);
+        inside_magnet_array[ii] = inside_of_mag_general(magnet_t[ii], particle_t);
     }
     check_inside_any_magnet = !(is_this_array_only_zeros(inside_magnet_array, num_mags));
     for(int ii=0; ii<num_mags; ii++)
     {
-        check_intersect_magnet = intersect_mag(magnet_t[ii], particle_t);
+        check_intersect_magnet = intersect_mag_general(magnet_t[ii], particle_t);
         if(check_intersect_magnet == true)
         { break; }
     }
@@ -1334,7 +1996,7 @@ bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
     {
         if(check_inside_any_magnet==true)
         {
-            went_through_magnet_without_intersecting_screen = step_through_magnet_mag_boris_analytic(particle_t, magnet_t, time, del_time, mu_0, time_limit, inside_magnet_array, num_mags, screen_t, num_screens, false);
+            went_through_magnet_without_intersecting_screen = step_through_magnet_mag_boris_analytic_general(particle_t, magnet_t, time, del_time, mu_0, time_limit, inside_magnet_array, num_mags, screen_t, num_screens, true);
             boris_counter++;
             //ii = -1; //restart loop (which will iterate ii by 1, to zero)
         }
@@ -1344,10 +2006,10 @@ bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
         int index_of_shortest_magnet= -1;
         for(int ii = 0; ii < num_mags; ii++)
         {
-            check_intersect_magnet = intersect_mag(magnet_t[ii], particle_t);
+            check_intersect_magnet = intersect_mag_general(magnet_t[ii], particle_t);
             if(check_intersect_magnet==true)
             {
-                distance_to_mag_ii[ii] = dist_to_mag(magnet_t[ii], particle_t);
+                distance_to_mag_ii[ii] = dist_to_mag_general(magnet_t[ii], particle_t);
             }
             else
             {
@@ -1399,7 +2061,7 @@ bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
         }
             if(index_of_shortest_magnet != -1 && index_of_shortest_screen == -1)
             {
-                move_particle_to_magnet(magnet_t[index_of_shortest_magnet], particle_t);
+                move_particle_to_magnet_general(magnet_t[index_of_shortest_magnet], particle_t);
                 outfile_part_commaAndWrite(particle_t);
 
                 double particle_time = particle_t.get_time();
@@ -1416,7 +2078,7 @@ bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
             }
             else if(index_of_shortest_magnet != -1 && index_of_shortest_screen != -1 && (shortest_magnet_distance < shortest_screen_distance))
             {
-                move_particle_to_magnet(magnet_t[index_of_shortest_magnet], particle_t);
+                move_particle_to_magnet_general(magnet_t[index_of_shortest_magnet], particle_t);
                 outfile_part_commaAndWrite(particle_t);
 
                 double particle_time = particle_t.get_time();
@@ -1428,12 +2090,159 @@ bool move_through_magnets(Magnet magnet_t[], int num_mags, Particle &particle_t,
         
         for(int ii=0; ii<num_mags; ii++)
         {
-            inside_magnet_array[ii] = inside_of_mag(magnet_t[ii], particle_t);
+            inside_magnet_array[ii] = inside_of_mag_general(magnet_t[ii], particle_t);
         }
         check_inside_any_magnet = !(is_this_array_only_zeros(inside_magnet_array, num_mags));
         for(int ii=0; ii<num_mags; ii++)
         {
-            check_intersect_magnet = intersect_mag(magnet_t[ii], particle_t);
+            check_intersect_magnet = intersect_mag_general(magnet_t[ii], particle_t);
+            if(check_intersect_magnet == true)
+            { break; }
+        }
+    }
+    //}
+    return false;
+}
+/////
+/////
+/////UNDER CONSTRUCTION
+
+
+
+
+
+
+
+bool move_through_magnets_dipole(Magnet magnet_t[], int num_mags, Particle &particle_t, double &time, double del_time, double mu_0, double time_limit, Screen screen_t[], int num_screens)
+{
+    //if particle lands on screen in this process, return true. else, return false.
+    
+    bool check_inside_any_magnet = false;
+    bool check_intersect_magnet = false;
+    double distance_to_mag_ii[num_mags];
+    double distance_to_screen_ii[num_screens];
+    int boris_counter = 0;
+    bool inside_magnet_array[num_mags];
+    bool went_through_magnet_without_intersecting_screen = true;
+    double shortest_magnet_distance, shortest_screen_distance;
+
+    for(int ii=0; ii<num_mags; ii++)
+    {
+        inside_magnet_array[ii] = inside_of_mag_dipole(magnet_t[ii], particle_t);
+    }
+    check_inside_any_magnet = !(is_this_array_only_zeros(inside_magnet_array, num_mags));
+    for(int ii=0; ii<num_mags; ii++)
+    {
+        check_intersect_magnet = intersect_mag_dipole(magnet_t[ii], particle_t);
+        if(check_intersect_magnet == true)
+        { break; }
+    }
+    //for(int ii=0; ii<num_mags; ii++)
+    //{
+    while(check_inside_any_magnet || check_intersect_magnet)
+    {
+        if(check_inside_any_magnet==true)
+        {
+            went_through_magnet_without_intersecting_screen = step_through_magnet_mag_boris_analytic_dipole(particle_t, magnet_t, time, del_time, mu_0, time_limit, inside_magnet_array, num_mags, screen_t, num_screens, true);
+            boris_counter++;
+            //ii = -1; //restart loop (which will iterate ii by 1, to zero)
+        }
+        if(went_through_magnet_without_intersecting_screen == false)
+        { return true; }
+
+        int index_of_shortest_magnet= -1;
+        for(int ii = 0; ii < num_mags; ii++)
+        {
+            check_intersect_magnet = intersect_mag_dipole(magnet_t[ii], particle_t);
+            if(check_intersect_magnet==true)
+            {
+                distance_to_mag_ii[ii] = dist_to_mag_dipole(magnet_t[ii], particle_t);
+            }
+            else
+            {
+                distance_to_mag_ii[ii] = 0.0;
+            } 
+
+            if(ii == (num_mags - 1))
+            {
+                shortest_magnet_distance = DBL_MAX;
+                for(int jj = 0; jj<num_mags; jj++)
+                {
+                    if(distance_to_mag_ii[jj] != 0.0 && distance_to_mag_ii[jj] < shortest_magnet_distance)
+                    {
+                        //ii = -1;
+                        shortest_magnet_distance = distance_to_mag_ii[jj];
+                        index_of_shortest_magnet = jj;
+                    }
+                }
+            }
+        }
+
+        bool check_intersect_screen = false;
+        int index_of_shortest_screen = -1;
+        for(int ii = 0; ii<num_screens; ii++)
+        {
+            check_intersect_screen = check_if_intersect_screen(screen_t[ii], particle_t);
+            if(check_intersect_screen == true)
+            {
+                distance_to_screen_ii[ii] = dist_to_screen_ii(screen_t[ii], particle_t);
+            }
+            else
+            {
+                distance_to_screen_ii[ii] = 0.0;
+            }
+
+            if(ii == (num_screens - 1))
+            {
+                shortest_screen_distance = DBL_MAX;
+                for(int jj = 0; jj<num_screens; jj++)
+                {
+                    if(distance_to_screen_ii[jj] != 0.0 && distance_to_screen_ii[jj] < shortest_screen_distance)
+                    {
+                        //ii = -1;
+                        shortest_screen_distance = distance_to_screen_ii[jj];
+                        index_of_shortest_screen = jj;
+                    }
+                }
+            }
+        }
+            if(index_of_shortest_magnet != -1 && index_of_shortest_screen == -1)
+            {
+                move_particle_to_magnet_dipole(magnet_t[index_of_shortest_magnet], particle_t);
+                outfile_part_commaAndWrite(particle_t);
+
+                double particle_time = particle_t.get_time();
+                time = time + particle_time;
+                //continue;
+            }
+            else if(index_of_shortest_screen != -1 && index_of_shortest_magnet ==-1)
+            {
+                return true;
+            }
+            else if(index_of_shortest_magnet != -1 && index_of_shortest_screen != -1 && (shortest_screen_distance < shortest_magnet_distance))
+            {
+                return true;
+            }
+            else if(index_of_shortest_magnet != -1 && index_of_shortest_screen != -1 && (shortest_magnet_distance < shortest_screen_distance))
+            {
+                move_particle_to_magnet_dipole(magnet_t[index_of_shortest_magnet], particle_t);
+                outfile_part_commaAndWrite(particle_t);
+
+                double particle_time = particle_t.get_time();
+                time = time + particle_time;
+                //continue;
+            }
+        check_inside_any_magnet = false;
+        check_intersect_magnet = false;
+        
+        for(int ii=0; ii<num_mags; ii++)
+        {
+            inside_magnet_array[ii] = inside_of_mag_dipole(magnet_t[ii], particle_t);
+        }
+        check_inside_any_magnet = !(is_this_array_only_zeros(inside_magnet_array, num_mags));
+        for(int ii=0; ii<num_mags; ii++)
+        {
+            check_intersect_magnet = intersect_mag_dipole(magnet_t[ii], particle_t);
             if(check_intersect_magnet == true)
             { break; }
         }
@@ -1595,7 +2404,7 @@ bool move_through_magnets_OLD(Magnet magnet_t[], int num_mags, Particle &particl
     int boris_counter = 0;
     for(int ii=0; ii<num_mags; ii++)
     {
-        check_inside_magnet = inside_of_mag(magnet_t[ii], particle_t);
+        check_inside_magnet = inside_of_mag_dipole(magnet_t[ii], particle_t);
         if(check_inside_magnet==true)
         {
             //std::cerr << "Inside of magnet " << ii+1 << '\n';
@@ -1607,10 +2416,10 @@ bool move_through_magnets_OLD(Magnet magnet_t[], int num_mags, Particle &particl
             continue;
         }
 
-        check_intersect_magnet = intersect_mag(magnet_t[ii], particle_t);
+        check_intersect_magnet = intersect_mag_dipole(magnet_t[ii], particle_t);
         if(check_intersect_magnet==true)
         {
-            distance_to_mag_ii[ii] = dist_to_mag(magnet_t[ii], particle_t);
+            distance_to_mag_ii[ii] = dist_to_mag_dipole(magnet_t[ii], particle_t);
         }
         else
         {
@@ -1635,7 +2444,7 @@ bool move_through_magnets_OLD(Magnet magnet_t[], int num_mags, Particle &particl
             {                
                 //std::cerr << "current particle X-location is " << particle_t.get_pos(0) << std::endl;
                 //std::cerr << "distance to next magnet is " << shortest_distance << std::endl;
-                move_particle_to_magnet(magnet_t[index_of_shortest], particle_t);
+                move_particle_to_magnet_dipole(magnet_t[index_of_shortest], particle_t);
                 //std::cerr << "Sending to magnet " << index_of_shortest+1 << std::endl;
                 //std::cerr << "Sending to next magnet" << std::endl;
                 //std::cerr << "New particle X-location is " << particle_t.get_pos(0) << std::endl;
@@ -1769,7 +2578,8 @@ bool check_if_intersect_screen(Screen screen_t, Particle particle_t)
     double area34 = 0.5*screen_t.get_height()*dist_to_intersect;
 
     //std::cout << "area 0 = " << area0 << " and areas combined are " << (area12 + area13 + area24 + area34) << std::endl;
-    if((area0 + area0*0.001) >= (area12 + area13 + area24 + area34))
+    if((area0 + area0*0.00001) >= (area12 + area13 + area24 + area34))
+    //if((area0) >= (area12 + area13 + area24 + area34))
     {
         intersect = true;
     }
@@ -1830,7 +2640,8 @@ bool check_if_intersect_screen_in_next_dt(Screen screen_t, Particle particle_t, 
     double area34 = 0.5*screen_t.get_height()*dist_to_intersect;
 
     //std::cout << "area 0 = " << area0 << " and areas combined are " << (area12 + area13 + area24 + area34) << std::endl;
-    if((area0 + area0*0.01) >= (area12 + area13 + area24 + area34))
+    //if(area0 >= (area12 + area13 + area24 + area34))
+    if((area0 + area0*0.00001) >= (area12 + area13 + area24 + area34))
     {
         intersect = true;
     }
@@ -1915,6 +2726,7 @@ void move_to_screens(Screen screen_t[], int num_screen, Particle particle_t, int
                 particle_time += t_line;
                 particle_t.set_time(particle_time);
                 outfile_part_commaAndWrite(particle_t);
+                //std::cout<< "Particle " << particle_counter_t <<" read as hitting screen " << screen_t[index_of_shortest].get_index() << "\n";
                 outfile_part_on_screen(screen_t[index_of_shortest], particle_counter_t, particle_t);
                 continue;
             }
@@ -1940,6 +2752,17 @@ int readNumOf(std::ifstream &input_stream) {
     int numInt = std::stoi(numStr);
     
     return numInt;
+}
+
+void readMagnetType(std::ifstream &input_stream, int magNum, std::vector<char> &PmagType) {
+    //std::string tempStr;
+    char tempStr;
+    for(int i=0; i<magNum; ++i) {
+        input_stream >> tempStr;
+        //double tempDbl = std::stod(tempStr);
+        //std::cerr << "Magnet dim read\n";
+        PmagType.push_back(tempStr);
+    }
 }
 
 void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vector<std::vector<double>>> &magInfo) {
@@ -2205,7 +3028,7 @@ bool B_within_margin(double B_center_val, double B1, double B2, double B3)
     return in_margin;
 }
 
-ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization) {
+ThreeVec calc_dipole_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization) {
     ThreeVec grid_point_B;
     double grid_B1 = 0.0;  //B1 and B2 are components perpendicular to magnetization axis
     double grid_B2 = 0.0;  // for z-axis, B1 = x comp and B2 = y comp
@@ -2373,5 +3196,205 @@ ThreeVec calc_grid_point_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim,
         grid_point_B.setZ(grid_B1);
     }
     
+    return grid_point_B;
+}
+
+
+ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) {
+    ThreeVec grid_point_B;
+
+    // rotate coordinates 45 degrees
+    double rot_x = grid_point.getX();
+    double rot_y = grid_point.getY()/sqrt(2.) + grid_point.getZ()/sqrt(2.);
+    double rot_z = -grid_point.getY()/sqrt(2.) + grid_point.getZ()/sqrt(2.);
+    //double rot_x = grid_point.getX();
+    //double rot_y = grid_point.getY();
+    //double rot_z = grid_point.getZ();
+
+    // aperture = 2.0*magnet.get_width()
+    double block_side = magnet.get_height() - magnet.get_width();
+
+    double block_Bx = 0.0;
+    double block_By = 0.0;
+    double block_Bz = 0.0;
+
+    double offset = magnet.get_width() + 0.5*block_side;
+
+    double a = 0.5*magnet.get_length();  // half length for permanent magnet
+    double b = 0.5*magnet.get_width();   // half width for permanent magnet
+    double c = 0.5*block_side;  // half height for permanent magnet
+
+    int focus_direction;
+    if(magnet.get_axis_of_magnetization() == 'z') {
+        focus_direction = 1;
+    }
+    else {
+        focus_direction = -1;
+    }
+
+    double factor = charge * focus_direction * 1.333*magnet.get_Br()/(4 * M_PI);
+
+    // vertical mags [referenced from -z mag] (real z is formula z, real y is formula y, real x is formula x)
+    int i = 1;
+    while(i > -2) {
+        double x1 = rot_x - a - magnet.get_pos(0);
+        double y1 = i*(rot_y - magnet.get_pos(1));
+        double z1 = i*(rot_z + i*offset - magnet.get_pos(2));
+        
+        double temp1_B1;
+        double temp1_B2;
+        double temp1_B3;
+        calc_grid_B_comps(1.1*factor, a, b, c, x1, y1, z1, temp1_B1, temp1_B2, temp1_B3);
+        
+        block_Bx += temp1_B1;
+        block_By += i*temp1_B2;
+        block_Bz += i*temp1_B3;
+        
+        i -= 2;
+    }
+
+    // horizontal mags [referenced from -y mag] (real z is formula y, real y is formula -z, real x is formula x)
+    int j = 1;
+    while (j > -2) {
+        double x2 = rot_x - a - magnet.get_pos(0);
+        double z2 = j*(-rot_y - j*offset - magnet.get_pos(1));
+        double y2 = j*(rot_z - magnet.get_pos(2));
+        
+        double temp2_B1;
+        double temp2_B2;
+        double temp2_B3;
+        calc_grid_B_comps(1.1*factor, a, b, c, x2, y2, z2, temp2_B1, temp2_B2, temp2_B3);
+
+        block_Bx += -temp2_B1;
+        block_By += -j*temp2_B3;
+        block_Bz += j*temp2_B2;
+        
+        j -= 2;
+    }
+
+    // nearest corner of off-axis mags is a distance of radius, i.e. b
+
+    // offset for off-axis mags
+    //double offset_c30_s60 = 1.1*magnet.get_width()*(sqrt(3.)/2);
+    //double offset_s30_c60 = 1.1*magnet.get_width()/2;
+    double offset_c30_s60 = 1.2*magnet.get_width() * (1 + sqrt(5.))/4.;
+    double offset_s30_c60 = 1.2*magnet.get_width() * sqrt(10 - 2*sqrt(5.))/4.;
+
+    // z-axis rotated 30 mags [referenced to -z mag] (real z is formula y, real y is formula -z, real x is formula x)
+    int k = 1;
+    while(k > -2) {
+        double x3 = rot_x - a - magnet.get_pos(0);
+        double z3 = k*(-rot_y + k*(offset_s30_c60 + b) - magnet.get_pos(1));
+        double y3 = k*(rot_z + k*(offset_c30_s60 + c) - magnet.get_pos(2));
+        
+        double temp3_B1;
+        double temp3_B2;
+        double temp3_B3;
+        calc_grid_B_comps(factor, a, c, b, x3, y3, z3, temp3_B1, temp3_B2, temp3_B3);
+        
+        block_Bx += temp3_B1;
+        block_By += -k*temp3_B3;
+        block_Bz += k*temp3_B2;
+        
+        k -= 2;
+    }
+
+    // y-axis rotated 30 mags [referenced to -y mag] (real z is formula -z, real y is formula -y, real x is formula x)
+    int l = 1;
+    while(l > -2) {
+        double x4 = rot_x - a - magnet.get_pos(0);
+        double y4 = l*(-rot_y - l*(offset_c30_s60 + c) - magnet.get_pos(1));
+        double z4 = l*(-rot_z - l*(offset_s30_c60 + b) - magnet.get_pos(2));
+        
+        double temp4_B1;
+        double temp4_B2;
+        double temp4_B3;
+        calc_grid_B_comps(factor, a, c, b, x4, y4, z4, temp4_B1, temp4_B2, temp4_B3);
+        
+        block_Bx += -temp4_B1;
+        block_By += -l*temp4_B2;
+        block_Bz += -l*temp4_B3;
+        
+        l -= 2;
+    }
+
+    // z-axis rotated 60 mags [referenced to -z mag] (real z is formula -z, real y is formula -y, real x is formula x)
+    int m = 1;
+    while(m > -2) {
+        double x5 = rot_x - a - magnet.get_pos(0);
+        double y5 = m*(-rot_y + m*(offset_c30_s60 + c) - magnet.get_pos(1));
+        double z5 = m*(-rot_z - m*(offset_s30_c60 + b) - magnet.get_pos(2));
+        
+        double temp5_B1;
+        double temp5_B2;
+        double temp5_B3;
+        calc_grid_B_comps(factor, a, c, b, x5, y5, z5, temp5_B1, temp5_B2, temp5_B3);
+        
+        block_Bx += -temp5_B1;
+        block_By += -m*temp5_B2;
+        block_Bz += -m*temp5_B3;
+        
+        m -= 2;
+    }
+
+    // y-axis rotated 60 mags [referenced to -y mag] (real z is formula -y, real y is formula z, real x is formula x)
+    int n = 1;
+    while(n > -2) {
+        double x6 = rot_x - a - magnet.get_pos(0);
+        double z6 = n*(rot_y + n*(offset_s30_c60 + b) - magnet.get_pos(1));
+        double y6 = n*(-rot_z - n*(offset_c30_s60 + c) - magnet.get_pos(2));
+        
+        double temp6_B1;
+        double temp6_B2;
+        double temp6_B3;
+        calc_grid_B_comps(factor, a, c, b, x6, y6, z6, temp6_B1, temp6_B2, temp6_B3);
+        
+        block_Bx += temp6_B1;
+        block_By += n*temp6_B3;
+        block_Bz += -n*temp6_B2;
+        
+        n -= 2;
+    }
+
+    // rotate B coordinates back 45 degrees
+    double rot_By = block_By/sqrt(2.) - block_Bz/sqrt(2.);
+    double rot_Bz = block_By/sqrt(2.) + block_Bz/sqrt(2.);
+
+    grid_point_B.setX(block_Bx);
+    grid_point_B.setY(rot_By);
+    grid_point_B.setZ(rot_Bz);
+
+    return grid_point_B;
+}
+
+ThreeVec calc_halbach_B(ThreeVec &grid_point, Magnet &magnet, double charge) {
+    ThreeVec grid_point_B;
+    grid_point_B.setX(0.0);
+
+    // rotated
+    //double y = grid_point.getY()/sqrt(2.) + grid_point.getZ()/sqrt(2.) - magnet.get_pos(1);
+    //double z = -grid_point.getY()/sqrt(2.) + grid_point.getZ()/sqrt(2.) - magnet.get_pos(2);
+    // not rotated
+    double y = grid_point.getY() - magnet.get_pos(1);
+    double z = grid_point.getZ() - magnet.get_pos(2);
+
+    int focus_direction;
+    if(magnet.get_axis_of_magnetization() == 'z') {
+        focus_direction = 1;
+    }
+    else {
+        focus_direction = -1;
+    }
+
+    double k2 = charge * focus_direction * pow( cos(M_PI/12), 2.0 ) * sin(M_PI/6) * (6/M_PI);
+    double By = (z/magnet.get_width()) * magnet.get_Br() * 2 * (1 - (magnet.get_width()/magnet.get_height())) * k2;
+    double Bz = (y/magnet.get_width()) * magnet.get_Br() * 2 * (1 - (magnet.get_width()/magnet.get_height())) * k2;
+
+    //double rot_By = By/sqrt(2.) - Bz/sqrt(2.);
+    //double rot_Bz = By/sqrt(2.) + Bz/sqrt(2.);
+
+    grid_point_B.setY(By);
+    grid_point_B.setZ(Bz);
+
     return grid_point_B;
 }

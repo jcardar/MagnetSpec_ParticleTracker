@@ -4,16 +4,21 @@
 
 
 
-Magnet::Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, ThreeVec B0, std::ofstream& out_magnet)
-        : m_position(pos), m_length(length), m_width(width), m_height(height), m_height_of_dipole_block(height_of_dipole_block), m_Bfield(B0), m_out_magnet(&out_magnet)
+Magnet::Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, char type, double remanence, ThreeVec B0, std::ofstream& out_magnet)
+        : m_position(pos), m_length(length), m_width(width), m_height(height), m_height_of_dipole_block(height_of_dipole_block), m_type(type), m_remanence(remanence), m_Bfield(B0), m_out_magnet(&out_magnet)
 {
 
 }
 
-Magnet::Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, double* Bmap, std::ofstream& out_magnet)
-    : m_position(pos), m_length(length), m_width(width), m_height(height), m_height_of_dipole_block(height_of_dipole_block), m_Bfield_grid(Bmap), m_out_magnet(&out_magnet)
+Magnet::Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, char type, double remanence, double* Bmap, std::ofstream& out_magnet)
+    : m_position(pos), m_length(length), m_width(width), m_height(height), m_height_of_dipole_block(height_of_dipole_block), m_type(type), m_remanence(remanence), m_Bfield_grid(Bmap), m_out_magnet(&out_magnet)
 {
 
+}
+
+void Magnet::set_type(char type)
+{
+    m_type = type;
 }
 
 void Magnet::set_pos(ThreeVec pos)
@@ -104,4 +109,14 @@ double Magnet::get_height_of_dipole_block()
 char Magnet::get_axis_of_magnetization()
 {
     return m_axis_of_magnetization;
+}
+
+char Magnet::get_type()
+{
+    return m_type;
+}
+
+double Magnet::get_Br()
+{
+    return m_remanence;
 }

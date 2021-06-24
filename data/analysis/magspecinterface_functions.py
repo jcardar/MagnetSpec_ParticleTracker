@@ -145,6 +145,20 @@ number_of_magnets = widgets.BoundedIntText(
     style=style
 )
 
+def dropdown_Magnet_Type(num_of_magnets):
+    listOfWidgets = []
+    for i in range(num_of_magnets):
+        widget = widgets.Dropdown(
+            options=[('(D)ipole', 'd'), ('(U)niform Dipole', 'u'), ('(Q)uadrupole', 'q'), ('(H)albach Quadrupole', 'h')],
+            value='d',
+            description=f'Magnet {i+1} Type',
+            layout= widgets.Layout(width='250px'),
+            style=style,
+            diabled = False,
+        )
+        listOfWidgets.append(widget)
+    return listOfWidgets
+
 def dynamicFloatValue_Magnet_Dimensions(num_of_magnets, global_bounds):
     listOfWidgets = []
     for i in range(num_of_magnets):
@@ -595,7 +609,7 @@ def normalizeValues(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, beam_p
         rest_energy = 0.511 * math.pow(10,-3)
     
     n_beam_energy = (rest_energy + beam_energy.value)/rest_energy
-    n_energy_sprd = (rest_energy + energy_sprd.value)/rest_energy
+    n_energy_sprd = (energy_sprd.value)/rest_energy
     
     return n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, n_beam_pos, n_beam_energy, n_pos_sprd, n_energy_sprd, n_scrn_dim, n_scrn_pos
 
@@ -654,27 +668,39 @@ def createAxesList(axes_list):
         newlist.append(' ')
     return newlist
 
+def createTypeList(type_list):
+    newlist = []
+    for i in range(len(type_list)):
+        newlist.append(type_list[i].value)
+        newlist.append(' ')
+    return newlist
+
 def particle_charge(part_species):
     if part_species.value == 'Electrons':
         return -1
     elif part_species.value == 'Positrons':
         return 1
 
-def dipole_field_type(d_field_type):
-    if d_field_type.value == 'Analytic Dipole Field':
+def magnet_field_type(field_type):
+    if field_type.value == 'd':
         return 'd'
-    elif d_field_type.value == 'Uniform Field':
+    elif field_type.value == 'u':
         return 'u'
+    elif field_type.value == 'q':
+        return 'q'
+    elif field_type.value == 'h':
+        return 'h'
 
 def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, 
-                 energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, part_species, d_field_type):
+                energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, part_species, field_type):
     mag_num = [f'{num_mag}', ' ']
     dim_mag = createList(mag_dim)
     pos_mag = createList(mag_pos)
     mag_field = createList(fld_vals)
     pMag_dim = createList(Pmag_dim)
     field_axes = createAxesList(fld_axs)
-    mag_info = mag_num + dim_mag + pos_mag + mag_field + pMag_dim + field_axes
+    magnet_types = createTypeList(field_type)
+    mag_info = mag_num + dim_mag + pos_mag + mag_field + pMag_dim + field_axes + magnet_types
 
     particle_num = [f'{num_particles}', ' ']
     pos_beam = createList(beam_pos)
@@ -695,12 +721,12 @@ def createOutput(num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_par
 
     species_info = particle_charge(part_species)
 
-    dipole_field_type_info = dipole_field_type(d_field_type)
+    #dipole_field_type_info = field_type(field_type)
     
-    return mag_info, beam_info, spread_info, screen_info, species_info, dipole_field_type_info
+    return mag_info, beam_info, spread_info, screen_info, species_info
 
 def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, pos_sprd, 
-                energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, dipole_type):
+                energy_sprd, div_sprd, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, field_type):
     
     outfile = open('input_deck.txt', 'w')
     
@@ -709,9 +735,9 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
                                                                         beam_energy, pos_sprd, energy_sprd, scrn_dim, scrn_pos)
     mu_0 = normalizeMu0(num_mag, fld_vals)
     
-    mag_info, beam_info, spread_info, screen_info, species_info, field_type_info = createOutput(num_mag, n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, fld_axs, 
+    mag_info, beam_info, spread_info, screen_info, species_info = createOutput(num_mag, n_mag_dim, n_Pmag_dim, n_mag_pos, n_fld_vals, fld_axs, 
                                                                  num_particles, n_beam_pos, n_beam_energy, beam_dir, n_pos_sprd, 
-                                                                 n_energy_sprd, div_sprd, num_scrn, n_scrn_dim, n_scrn_pos, scrn_angl, part_species, dipole_type)
+                                                                 n_energy_sprd, div_sprd, num_scrn, n_scrn_dim, n_scrn_pos, scrn_angl, part_species, field_type)
     outfile.writelines(units)
     #print(units)
     outfile.write('\n')
@@ -730,7 +756,7 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
     outfile.write(f'{species_info}')
     outfile.write('\n')
     #print(field_type_info)
-    outfile.write(f'{field_type_info}')
+    #outfile.write(f'{field_type_info}')
     #print(species_info)
 
     outfile.close()
@@ -738,7 +764,7 @@ def writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, n
 # Plots and outputs
 
 def DisplayAndOutput(global_bounds, units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy,
-                     beam_dir, pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, dipole_field_type_flag):
+                     beam_dir, pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, field_type):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel(f'x position ({units[0]})')
@@ -933,15 +959,16 @@ abs(np.array(corner4 - corner3)@np.array(corner4 - corner3)))) for jj in range(l
     # output data
     dscrpt = 'Save Inputs'
     icn = 'check'
-    if bound_check_bool == True:
-        dscrpt = 'Objects Overlap'
-        icn = 'exclamation'
-    button = widgets.Button(description=dscrpt, icon=icn, disabled=bound_check_bool, layout=widgets.Layout(width='50%', height='80px'))
+#    if bound_check_bool == True:
+#        dscrpt = 'Objects Overlap'
+#        icn = 'exclamation'
+    #button = widgets.Button(description=dscrpt, icon=icn, disabled=bound_check_bool, layout=widgets.Layout(width='50%', height='80px'))
+    button = widgets.Button(description=dscrpt, icon=icn, disabled=False, layout=widgets.Layout(width='50%', height='80px'))
     display(button)
     
     def on_button_clicked(b):
         writeOutput(units, num_mag, mag_dim, Pmag_dim, mag_pos, fld_vals, fld_axs, num_particles, beam_pos, beam_energy, beam_dir, 
-                    pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, dipole_field_type_flag)
+                    pos_sprd, energy_sprd, div_spread, num_scrn, scrn_dim, scrn_pos, scrn_angl, init_types, part_species, field_type)
         print('Inputs saved and exported!')
     button.on_click(on_button_clicked)
 

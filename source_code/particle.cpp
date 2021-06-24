@@ -65,6 +65,7 @@ void Particle::set_p(double x, double y, double z)
 void Particle::set_energy(double t_energy)
 {
     m_energy = t_energy;
+    //std::cerr << "Particle energy is " << m_energy <<"\n";
 }
 
 void Particle::set_time(double& time)

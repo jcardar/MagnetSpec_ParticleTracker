@@ -16,13 +16,15 @@ private:
     double m_height;
     double m_height_of_dipole_block;
     char m_axis_of_magnetization;
+    char m_type;
+    double m_remanence;
 
 public:
     Magnet() {};
 
-    Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, ThreeVec B0, std::ofstream& out_magnet);     //uniform B
+    Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, char type, double remanence, ThreeVec B0, std::ofstream& out_magnet);
 
-    Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, double* Bmap, std::ofstream& out_magnet);    //discrete B
+    Magnet(ThreeVec pos, double length, double width, double height, double height_of_dipole_block, char type, double remanence,  double* Bmap, std::ofstream& out_magnet);
 
     void set_pos(ThreeVec pos);
 
@@ -62,6 +64,12 @@ public:
     double get_height_of_dipole_block();
 
     char get_axis_of_magnetization();
+
+    char get_type();
+
+    void set_type(char type);
+
+    double get_Br();
 
     void set_outfile(std::ofstream& out_mag);
 

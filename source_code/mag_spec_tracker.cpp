@@ -23,7 +23,7 @@
 int main(int argc, char *argv[])
 {
     double time     {0.0};                           //Define a variable time in which will be stepped over
-    double del_time {0.03};                           //Define a time step
+    double del_time {0.07};                           //Define a time step
     //Hard-coded:
     bool time_step_test = false;
 
@@ -60,6 +60,9 @@ int main(int argc, char *argv[])
     std::vector<char> magnet_axis_info;
     readMagAxis(infile, num_magnets, magnet_axis_info);
 
+    std::vector<char> magnet_type;
+    readMagnetType(infile, num_magnets, magnet_type);
+
     int num_par = readNumOf(infile);
     std::vector<std::vector<double>> beam_info;
     readBeam(infile, beam_info);
@@ -78,7 +81,7 @@ int main(int argc, char *argv[])
 
     double charge = ReadSpeciesCharge(infile);
 
-    char dipole_field_type = ReadDipoleMagnetFieldType(infile);
+    //char dipole_field_type = ReadDipoleMagnetFieldType(infile);
     
 ///////////////////
     //Define Particle Beam:
@@ -96,14 +99,15 @@ int main(int argc, char *argv[])
     ThreeVec initial_angular_direction(beam_info[2][0], beam_info[2][1], beam_info[2][2]);
     ThreeVec initial_angular_spread(beam_spread_info[2][0], beam_spread_info[2][1], beam_spread_info[2][2]);
     //std::cerr << initial_angular_spread << "\n";
-    
+
+
     Beam electron_beam(num_par, charge, mass, energy0, energy_spread, initial_position, initial_position_spread, initial_angular_direction, initial_angular_spread, static_cast<Beam::PositionInitializationTypes>(init_types[0]), static_cast<Beam::EnergyInitializationTypes>(init_types[1]), static_cast<Beam::DivergenceInitializationTypes>(init_types[2]));
     //std::cout << "Charge is " << charge << '\n';
     num_par = electron_beam.get_num_particles();
 
 /////////////////////
     //Define Magnets:
-   Magnet magnet[num_magnets];
+    Magnet magnet[num_magnets];
     for(int ii=0; ii<num_magnets; ++ii) {
         
         magnet[ii].set_B0(0, 0.0);
@@ -129,6 +133,7 @@ int main(int argc, char *argv[])
         magnet[ii].set_width(magnet_info[0][ii][0]);
         magnet[ii].set_height(magnet_info[0][ii][2]);
         magnet[ii].set_outfile(outfile_magnets);
+        magnet[ii].set_type(magnet_type[ii]);
         outfile_uniform_magnet(magnet[ii], ii);
     }   //<---END OF MAGNET 'FOR' LOOP//
 
@@ -179,12 +184,17 @@ int main(int argc, char *argv[])
 
         if(ii>0)
             {
+                //std::cout << "particle number " << (ii+1) << std::endl;
                 electron_beam.next_particle();
             }
         
         Particle electron = electron_beam.get_particle();
+        //std::cerr << "Energy after setting new electron is " << electron.get_energy() << std::endl;
         //std::cout << "Charge is " << electron.get_charge() << '\n';
-        //std::cerr << electron.get_pos(0) << std::endl;
+        //std::cerr << "X-Position is " << electron.get_pos(0) << std::endl;
+        //std::cerr << electron.get_pos(1) << std::endl;
+        //std::cerr << "Energy is " << electron.get_energy() << std::endl;
+        //std::cerr << "p is " << electron.get_p() << std::endl;
         electron.set_outfiles(outfile_time, outfile_xpos, outfile_ypos, outfile_zpos, outfile_px, outfile_py, outfile_pz, outfile_energy);
 
         electron.set_time(time);
@@ -193,14 +203,15 @@ int main(int argc, char *argv[])
 
         outfile_part_write(electron);
 
-        if(dipole_field_type=='d')
-        {
-            intersected_screen_while_in_magnet = move_through_magnets(magnet, num_magnets, electron, time, del_time, mu_0, particle_time_limit, screen, num_screens);
-        }
-        else if(dipole_field_type=='u')
-        {
-            intersected_screen_while_in_magnet = move_through_magnets_uniform(magnet, num_magnets, electron, time, del_time, mu_0, particle_time_limit, screen, num_screens);
-        }
+        intersected_screen_while_in_magnet = move_through_magnets_general(magnet, num_magnets, electron, time, del_time, mu_0, particle_time_limit, screen, num_screens);
+        //if(dipole_field_type=='d')
+        //{
+        //    intersected_screen_while_in_magnet = move_through_magnets_dipole(magnet, num_magnets, electron, time, del_time, mu_0, particle_time_limit, screen, num_screens);
+        //}
+        //else if(dipole_field_type=='u')
+        //{
+        //    intersected_screen_while_in_magnet = move_through_magnets_uniform(magnet, num_magnets, electron, time, del_time, mu_0, particle_time_limit, screen, num_screens);
+        //}
         if(!intersected_screen_while_in_magnet || intersected_screen_while_in_magnet) 
         {
             move_to_screens(screen, num_screens, electron, ii);
