@@ -66,6 +66,11 @@ void Magnet::set_B0(int index, double value)
     m_Bfield.set(index, value);
 }
 
+void Magnet::set_Br(double remanence)
+{
+    m_remanence = remanence;
+}
+
 void Magnet::set_outfile(std::ofstream& out_mag)
 {
     m_out_magnet = &out_mag;

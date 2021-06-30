@@ -134,6 +134,10 @@ int main(int argc, char *argv[])
         magnet[ii].set_height(magnet_info[0][ii][2]);
         magnet[ii].set_outfile(outfile_magnets);
         magnet[ii].set_type(magnet_type[ii]);
+        if(magnet_type[ii] == 'q' || magnet_type[ii] == 'h')
+        {
+            magnet[ii].set_Br(magnet_info[2][ii][0]);
+        }
         outfile_uniform_magnet(magnet[ii], ii);
     }   //<---END OF MAGNET 'FOR' LOOP//
 

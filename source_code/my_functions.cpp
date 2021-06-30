@@ -381,7 +381,7 @@ void stepThroughMagnet_Leap(Particle *electron, Magnet &magnet, double& time, co
 
 double ReadMu0(std::ifstream &input_stream);
 double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis);
-void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3);
+void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3, bool iterative_add);
 ThreeVec calc_dipole_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, double mu_0, char axis, double magnetization);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -504,8 +504,8 @@ void boris_analytic(Particle &electron_t, Magnet magnet_t[], double del_t, int c
     Bsquared = ( B1_atPosition*B1_atPosition ) + (B2_atPosition * B2_atPosition) + (B3_atPosition * B3_atPosition);
     double old_px, old_py, old_pz;
     ThreeVec B_at_position(B1_atPosition, B2_atPosition, B3_atPosition);
-    std::cerr << electron_t.get_pos() << '\n';
-    std::cerr << B_at_position << '\n';
+    //std::cerr << electron_t.get_pos() << '\n';
+    //std::cerr << B_at_position << '\n';
 
         ttsquared = 0.0;
     //if(counter!=0)
@@ -1714,6 +1714,11 @@ bool intersect_mag_general(Magnet magnet_t, Particle particle_t)
     
         return intersect;
     }
+    else
+    {
+        std::cout << "No valid magnet type detected in intersect mag function.\n";
+        return false;
+    }
 }
 
 
@@ -1831,6 +1836,11 @@ double dist_to_mag_general(Magnet magnet_t, Particle particle_t)
         pos_at_shortest_time.setZ(particle_t.get_pos(2) + (time_to_mag * particle_t.get_vel(2)));
         dist_to_mag = sqrt((pos_at_shortest_time.getX() - particle_t.get_pos(0))*(pos_at_shortest_time.getX() - particle_t.get_pos(0)) + (pos_at_shortest_time.getY() - particle_t.get_pos(1))*(pos_at_shortest_time.getY() - particle_t.get_pos(1)) + (pos_at_shortest_time.getZ() - particle_t.get_pos(2))*(pos_at_shortest_time.getZ() - particle_t.get_pos(2)));
         return dist_to_mag;
+    }
+    else
+    {
+        std::cout << "No valid magnet type detected in dist_to_mag function.\n";
+        return DBL_MAX;
     }
 }
 
@@ -3003,13 +3013,24 @@ double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis
     return magnetization;
 }
 
-void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3) 
+void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3, bool iterative_add) 
 {
-    temp_B1 = temp_B1 + factor*log( ( F2(a,b,c,-x,y,-z)*F2(a,b,c,x,y,z) )/( F2(a,b,c,x,y,-z)*F2(a,b,c,-x,y,z) )  );
+    if(iterative_add == true)
+    {
+        temp_B1 = temp_B1 + factor*log( ( F2(a,b,c,-x,y,-z)*F2(a,b,c,x,y,z) )/( F2(a,b,c,x,y,-z)*F2(a,b,c,-x,y,z) )  );
 
-    temp_B2 = temp_B2 + factor*log( ( F2(b,a,c,-y,x,-z)*F2(b,a,c,y,x,z) )/( F2(b,a,c,y,x,-z)*F2(b,a,c,-y,x,z) )  );
+        temp_B2 = temp_B2 + factor*log( ( F2(b,a,c,-y,x,-z)*F2(b,a,c,y,x,z) )/( F2(b,a,c,y,x,-z)*F2(b,a,c,-y,x,z) )  );
 
-    temp_B3 = temp_B3 - factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
+        temp_B3 = temp_B3 - factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
+    }
+    else
+    {
+        temp_B1 = factor*log( ( F2(a,b,c,-x,y,-z)*F2(a,b,c,x,y,z) )/( F2(a,b,c,x,y,-z)*F2(a,b,c,-x,y,z) )  );
+
+        temp_B2 = factor*log( ( F2(b,a,c,-y,x,-z)*F2(b,a,c,y,x,z) )/( F2(b,a,c,y,x,-z)*F2(b,a,c,-y,x,z) )  );
+
+        temp_B3 = factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
+    }
 }
 
 bool B_within_margin(double B_center_val, double B1, double B2, double B3) 
@@ -3116,9 +3137,9 @@ ThreeVec calc_dipole_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, dou
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;
             
-            double temp_B1;
-            double temp_B2;
-            double temp_B3;
+            double temp_B1 = 0.0;
+            double temp_B2 = 0.0;
+            double temp_B3 = 0.0;
             calc_grid_B_comps(factor, a, b, c, x, z, y, temp_B1, temp_B2, temp_B3);
 
             hold_B1 += temp_B1;
@@ -3172,9 +3193,9 @@ ThreeVec calc_dipole_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, dou
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;
             
-            double temp_B1;
-            double temp_B2;
-            double temp_B3;
+            double temp_B1 = 0.0;
+            double temp_B2 = 0.0;
+            double temp_B3 = 0.0;
             calc_grid_B_comps(factor, a, b, c, z, y, x, temp_B1, temp_B2, temp_B3);
 
             hold_B1 += temp_B1;
@@ -3244,11 +3265,15 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp1_B1;
         double temp1_B2;
         double temp1_B3;
-        calc_grid_B_comps(1.1*factor, a, b, c, x1, y1, z1, temp1_B1, temp1_B2, temp1_B3);
+        //std::cerr << temp1_B1 << std::endl;
+        calc_grid_B_comps(factor, a, b, c, x1, y1, z1, temp1_B1, temp1_B2, temp1_B3, false);
         
         block_Bx += temp1_B1;
         block_By += i*temp1_B2;
         block_Bz += i*temp1_B3;
+        //temp1_B1 = 0.0;
+        //temp1_B2 = 0.0;
+        //temp1_B3 = 0.0;
         
         i -= 2;
     }
@@ -3263,11 +3288,14 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp2_B1;
         double temp2_B2;
         double temp2_B3;
-        calc_grid_B_comps(1.1*factor, a, b, c, x2, y2, z2, temp2_B1, temp2_B2, temp2_B3);
+        calc_grid_B_comps(factor, a, b, c, x2, y2, z2, temp2_B1, temp2_B2, temp2_B3, false);
 
         block_Bx += -temp2_B1;
         block_By += -j*temp2_B3;
         block_Bz += j*temp2_B2;
+        //temp2_B1 = 0.0;
+        //temp2_B2 = 0.0;
+        //temp2_B3 = 0.0;
         
         j -= 2;
     }
@@ -3290,11 +3318,14 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp3_B1;
         double temp3_B2;
         double temp3_B3;
-        calc_grid_B_comps(factor, a, c, b, x3, y3, z3, temp3_B1, temp3_B2, temp3_B3);
+        calc_grid_B_comps(factor, a, c, b, x3, y3, z3, temp3_B1, temp3_B2, temp3_B3, false);
         
         block_Bx += temp3_B1;
         block_By += -k*temp3_B3;
         block_Bz += k*temp3_B2;
+        //temp3_B1 = 0.0;
+        //temp3_B2 = 0.0;
+        //temp3_B3 = 0.0;
         
         k -= 2;
     }
@@ -3309,11 +3340,14 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp4_B1;
         double temp4_B2;
         double temp4_B3;
-        calc_grid_B_comps(factor, a, c, b, x4, y4, z4, temp4_B1, temp4_B2, temp4_B3);
+        calc_grid_B_comps(factor, a, c, b, x4, y4, z4, temp4_B1, temp4_B2, temp4_B3, false);
         
         block_Bx += -temp4_B1;
         block_By += -l*temp4_B2;
         block_Bz += -l*temp4_B3;
+        //temp4_B1 = 0.0;
+        //temp4_B2 = 0.0;
+        //temp4_B3 = 0.0;
         
         l -= 2;
     }
@@ -3328,11 +3362,14 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp5_B1;
         double temp5_B2;
         double temp5_B3;
-        calc_grid_B_comps(factor, a, c, b, x5, y5, z5, temp5_B1, temp5_B2, temp5_B3);
+        calc_grid_B_comps(factor, a, c, b, x5, y5, z5, temp5_B1, temp5_B2, temp5_B3, false);
         
         block_Bx += -temp5_B1;
         block_By += -m*temp5_B2;
         block_Bz += -m*temp5_B3;
+        //temp5_B1 = 0.0;
+        //temp5_B2 = 0.0;
+        //temp5_B3 = 0.0;
         
         m -= 2;
     }
@@ -3347,11 +3384,14 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp6_B1;
         double temp6_B2;
         double temp6_B3;
-        calc_grid_B_comps(factor, a, c, b, x6, y6, z6, temp6_B1, temp6_B2, temp6_B3);
+        calc_grid_B_comps(factor, a, c, b, x6, y6, z6, temp6_B1, temp6_B2, temp6_B3, false);
         
         block_Bx += temp6_B1;
         block_By += n*temp6_B3;
         block_Bz += -n*temp6_B2;
+        //temp6_B1 = 0.0;
+        //temp6_B2 = 0.0;
+        //temp6_B3 = 0.0;
         
         n -= 2;
     }

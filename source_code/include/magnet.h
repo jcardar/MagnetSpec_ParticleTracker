@@ -71,6 +71,8 @@ public:
 
     double get_Br();
 
+    void set_Br(double remanence);
+
     void set_outfile(std::ofstream& out_mag);
 
     std::ofstream *m_out_magnet;
