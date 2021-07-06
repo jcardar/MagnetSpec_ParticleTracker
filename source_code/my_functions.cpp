@@ -3268,7 +3268,7 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         //std::cerr << temp1_B1 << std::endl;
         calc_grid_B_comps(factor, a, b, c, x1, y1, z1, temp1_B1, temp1_B2, temp1_B3, false);
         
-        block_Bx += temp1_B1;
+        block_Bx += i*temp1_B1;
         block_By += i*temp1_B2;
         block_Bz += i*temp1_B3;
         //temp1_B1 = 0.0;
@@ -3290,7 +3290,7 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp2_B3;
         calc_grid_B_comps(factor, a, b, c, x2, y2, z2, temp2_B1, temp2_B2, temp2_B3, false);
 
-        block_Bx += -temp2_B1;
+        block_Bx += -j*temp2_B1;
         block_By += -j*temp2_B3;
         block_Bz += j*temp2_B2;
         //temp2_B1 = 0.0;
@@ -3320,7 +3320,7 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp3_B3;
         calc_grid_B_comps(factor, a, c, b, x3, y3, z3, temp3_B1, temp3_B2, temp3_B3, false);
         
-        block_Bx += temp3_B1;
+        block_Bx += k*temp3_B1;
         block_By += -k*temp3_B3;
         block_Bz += k*temp3_B2;
         //temp3_B1 = 0.0;
@@ -3342,7 +3342,7 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp4_B3;
         calc_grid_B_comps(factor, a, c, b, x4, y4, z4, temp4_B1, temp4_B2, temp4_B3, false);
         
-        block_Bx += -temp4_B1;
+        block_Bx += -l*temp4_B1;
         block_By += -l*temp4_B2;
         block_Bz += -l*temp4_B3;
         //temp4_B1 = 0.0;
@@ -3364,7 +3364,7 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp5_B3;
         calc_grid_B_comps(factor, a, c, b, x5, y5, z5, temp5_B1, temp5_B2, temp5_B3, false);
         
-        block_Bx += -temp5_B1;
+        block_Bx += -m*temp5_B1;
         block_By += -m*temp5_B2;
         block_Bz += -m*temp5_B3;
         //temp5_B1 = 0.0;
@@ -3386,7 +3386,7 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         double temp6_B3;
         calc_grid_B_comps(factor, a, c, b, x6, y6, z6, temp6_B1, temp6_B2, temp6_B3, false);
         
-        block_Bx += temp6_B1;
+        block_Bx += n*temp6_B1;
         block_By += n*temp6_B3;
         block_Bz += -n*temp6_B2;
         //temp6_B1 = 0.0;
