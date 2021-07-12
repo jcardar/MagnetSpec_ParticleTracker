@@ -24,14 +24,6 @@ public:
     Beam (){};
 
     int m_particle_counter = 0;
-    
-    enum EnergyInitializationTypes
-    {
-        INITIALIZE_GAUSSIAN_EN   = 0,
-        INITIALIZE_UNIFORM_EN    = 1,
-        INITIALIZE_LOG_EN        = 2,
-        INITIALIZE_INPUT_FILE_EN = 3,
-    };
 
     enum PositionInitializationTypes
     {
@@ -39,6 +31,14 @@ public:
         INITIALIZE_UNIFORM_POS    = 1,
         INITIALIZE_SCAN_POS       = 2,
         INITIALIZE_INPUT_FILE_POS = 3,
+    };
+    
+    enum EnergyInitializationTypes
+    {
+        INITIALIZE_GAUSSIAN_EN   = 0,
+        INITIALIZE_UNIFORM_EN    = 1,
+        INITIALIZE_LOG_EN        = 2,
+        INITIALIZE_INPUT_FILE_EN = 3,
     };
 
     enum DivergenceInitializationTypes

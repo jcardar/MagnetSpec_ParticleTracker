@@ -1140,7 +1140,7 @@ bool inside_of_mag_general(Magnet magnet_t, Particle particle_t)
         if(inside_x_limits && inside_y_limits && inside_z_limits)
         {
             inside_of_mag = true;
-            std::cerr << "Inside of magnet of type " << magnet_t.get_type() << std::endl; 
+            //std::cerr << "Inside of magnet of type " << magnet_t.get_type() << std::endl; 
         }
         else
         {
@@ -1161,7 +1161,7 @@ bool inside_of_mag_general(Magnet magnet_t, Particle particle_t)
         if(inside_x_limits && inside_y_limits && inside_z_limits)
         {
             inside_of_mag = true;
-            std::cerr << "Inside of magnet of type " << magnet_t.get_type() << std::endl; 
+            //std::cerr << "Inside of magnet of type " << magnet_t.get_type() << std::endl; 
         }
         else
         {
