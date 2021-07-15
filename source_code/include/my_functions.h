@@ -84,17 +84,17 @@ int readNumOf(std::ifstream &input_stream);
 
 void readMagnetType(std::ifstream &input_stream, int magNum, std::vector<char> &PmagType);
 
-void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vector<std::vector<double>>> &magInfo);
+void readMagnet(std::ifstream &input_stream, int &magNum, std::vector<std::vector<std::vector<double> > > &magInfo);
 
 void readPermanentMagDim(std::ifstream &input_stream, int magNum, std::vector<double> &PmagDim);
 
 void readMagAxis(std::ifstream &input_stream, int magNum, std::vector<char> &axisInfo);
 
-void readBeam(std::ifstream &input_stream, std::vector<std::vector<double>> &beamInfo);
+void readBeam(std::ifstream &input_stream, std::vector<std::vector<double> > &beamInfo);
 
-void readSpread(std::ifstream &input_stream, std::vector<std::vector<double>> &spreadInfo);
+void readSpread(std::ifstream &input_stream, std::vector<std::vector<double> > &spreadInfo);
 
-void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::vector<std::vector<double>>> &screenInfo);
+void readScreen(std::ifstream &input_stream, int &screenNum, std::vector<std::vector<std::vector<double> > > &screenInfo);
 
 void ReadInitTypes(std::ifstream &input_stream, std::vector<int> &init_types);
 

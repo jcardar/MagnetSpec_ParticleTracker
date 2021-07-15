@@ -3029,7 +3029,7 @@ void calc_grid_B_comps(double factor, double a, double b, double c, double x, do
 
         temp_B2 = factor*log( ( F2(b,a,c,-y,x,-z)*F2(b,a,c,y,x,z) )/( F2(b,a,c,y,x,-z)*F2(b,a,c,-y,x,z) )  );
 
-        temp_B3 = factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
+        temp_B3 = -factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
     }
 }
 
@@ -3221,7 +3221,7 @@ ThreeVec calc_dipole_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, dou
 }
 
 
-ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) {
+ThreeVec calc_quadrupole_Bq(ThreeVec &grid_point, Magnet &magnet, double charge) {
     ThreeVec grid_point_B;
 
     // rotate coordinates 45 degrees
@@ -3229,8 +3229,8 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
     double rot_y = grid_point.getY()/sqrt(2.) + grid_point.getZ()/sqrt(2.);
     double rot_z = -grid_point.getY()/sqrt(2.) + grid_point.getZ()/sqrt(2.);
     //double rot_x = grid_point.getX();
-    //double rot_y = grid_point.getY();
-    //double rot_z = grid_point.getZ();
+    // double rot_y = grid_point.getY();
+    // double rot_z = grid_point.getZ();
 
     // aperture = 2.0*magnet.get_width()
     double block_side = magnet.get_height() - magnet.get_width();
@@ -3254,6 +3254,7 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
     }
 
     double factor = charge * focus_direction * 1.333*magnet.get_Br()/(4 * M_PI);
+    //std::cerr<<magnet.get_Br() << std::endl;
 
     // vertical mags [referenced from -z mag] (real z is formula z, real y is formula y, real x is formula x)
     int i = 1;
@@ -3268,12 +3269,13 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         //std::cerr << temp1_B1 << std::endl;
         calc_grid_B_comps(factor, a, b, c, x1, y1, z1, temp1_B1, temp1_B2, temp1_B3, false);
         
+        // block_Bx += i*temp1_B1;
         block_Bx += i*temp1_B1;
         block_By += i*temp1_B2;
         block_Bz += i*temp1_B3;
-        //temp1_B1 = 0.0;
-        //temp1_B2 = 0.0;
-        //temp1_B3 = 0.0;
+        // temp1_B1 = 0.0;
+        // temp1_B2 = 0.0;
+        // temp1_B3 = 0.0;
         
         i -= 2;
     }
@@ -3291,11 +3293,12 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         calc_grid_B_comps(factor, a, b, c, x2, y2, z2, temp2_B1, temp2_B2, temp2_B3, false);
 
         block_Bx += -j*temp2_B1;
+        // block_Bx += -temp2_B1;
         block_By += -j*temp2_B3;
         block_Bz += j*temp2_B2;
-        //temp2_B1 = 0.0;
-        //temp2_B2 = 0.0;
-        //temp2_B3 = 0.0;
+        // temp2_B1 = 0.0;
+        // temp2_B2 = 0.0;
+        // temp2_B3 = 0.0;
         
         j -= 2;
     }
@@ -3321,11 +3324,12 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         calc_grid_B_comps(factor, a, c, b, x3, y3, z3, temp3_B1, temp3_B2, temp3_B3, false);
         
         block_Bx += k*temp3_B1;
+        // block_Bx += temp3_B1;
         block_By += -k*temp3_B3;
         block_Bz += k*temp3_B2;
-        //temp3_B1 = 0.0;
-        //temp3_B2 = 0.0;
-        //temp3_B3 = 0.0;
+        // temp3_B1 = 0.0;
+        // temp3_B2 = 0.0;
+        // temp3_B3 = 0.0;
         
         k -= 2;
     }
@@ -3343,11 +3347,12 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         calc_grid_B_comps(factor, a, c, b, x4, y4, z4, temp4_B1, temp4_B2, temp4_B3, false);
         
         block_Bx += -l*temp4_B1;
+        // block_Bx += -temp4_B1;
         block_By += -l*temp4_B2;
         block_Bz += -l*temp4_B3;
-        //temp4_B1 = 0.0;
-        //temp4_B2 = 0.0;
-        //temp4_B3 = 0.0;
+        // temp4_B1 = 0.0;
+        // temp4_B2 = 0.0;
+        // temp4_B3 = 0.0;
         
         l -= 2;
     }
@@ -3365,11 +3370,12 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         calc_grid_B_comps(factor, a, c, b, x5, y5, z5, temp5_B1, temp5_B2, temp5_B3, false);
         
         block_Bx += -m*temp5_B1;
+        // block_Bx += -temp5_B1;
         block_By += -m*temp5_B2;
         block_Bz += -m*temp5_B3;
-        //temp5_B1 = 0.0;
-        //temp5_B2 = 0.0;
-        //temp5_B3 = 0.0;
+        // temp5_B1 = 0.0;
+        // temp5_B2 = 0.0;
+        // temp5_B3 = 0.0;
         
         m -= 2;
     }
@@ -3387,18 +3393,22 @@ ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) 
         calc_grid_B_comps(factor, a, c, b, x6, y6, z6, temp6_B1, temp6_B2, temp6_B3, false);
         
         block_Bx += n*temp6_B1;
+        // block_Bx += temp6_B1;
         block_By += n*temp6_B3;
         block_Bz += -n*temp6_B2;
-        //temp6_B1 = 0.0;
-        //temp6_B2 = 0.0;
-        //temp6_B3 = 0.0;
+        // // temp6_B1 = 0.0;
+        // temp6_B2 = 0.0;
+        // temp6_B3 = 0.0;
         
         n -= 2;
     }
 
     // rotate B coordinates back 45 degrees
-    double rot_By = block_By/sqrt(2.) - block_Bz/sqrt(2.);
+    double rot_By = -block_By/sqrt(2.) + block_Bz/sqrt(2.);
     double rot_Bz = block_By/sqrt(2.) + block_Bz/sqrt(2.);
+    // rot_By = block_By;
+    // rot_Bz = block_Bz;
+
 
     grid_point_B.setX(block_Bx);
     grid_point_B.setY(rot_By);
