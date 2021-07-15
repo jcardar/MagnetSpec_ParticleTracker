@@ -3221,7 +3221,7 @@ ThreeVec calc_dipole_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, dou
 }
 
 
-ThreeVec calc_quadrupole_Bq(ThreeVec &grid_point, Magnet &magnet, double charge) {
+ThreeVec calc_quadrupole_B(ThreeVec &grid_point, Magnet &magnet, double charge) {
     ThreeVec grid_point_B;
 
     // rotate coordinates 45 degrees
