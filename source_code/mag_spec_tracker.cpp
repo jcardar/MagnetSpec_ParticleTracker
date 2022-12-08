@@ -18,10 +18,12 @@
 #include "magnet.h"
 #include <iomanip>
 
-
+//#define THREAD_NUM 5
+#include <omp.h>
 
 int main(int argc, char *argv[])
 {
+    
     double time     {0.0};                           //Define a variable time in which will be stepped over
     double del_time {0.07};                           //Define a time step
     //Hard-coded:
@@ -175,20 +177,27 @@ int main(int argc, char *argv[])
         }   //<---END OF SCREEN 'FOR' LOOP//
     }
     outfile_part_on_screen_first_line(screen[0]);
-
+    
     double particle_time_limit = (2*M_PI*energy0)*10.0;
     bool intersected_screen_while_in_magnet;
     //MAIN LOOP FOR STEPPING PARTICLES THROUGH SYSTEM:
+    omp_set_dynamic(0);     // Explicitly disable dynamic teams
+    omp_set_num_threads(4); // Use 4 threads for all consecutive parallel regions
+    #pragma omp parallel for ordered
     for(int ii{0}; ii < num_par; ++ii)
     {
+        if(ii == 0){
+        std::cout << "Number of parallel threads created: " << omp_get_num_threads() << '\n';
+        }
         int magnet_counter = 0;
         int screen_counter = 0;
         time               = 0.0;
+    
         //std::cout << "particle number " << (ii+1) << std::endl;
 
         if(ii>0)
             {
-                //std::cout << "particle number " << (ii+1) << std::endl;
+                
                 electron_beam.next_particle();
             }
         
@@ -204,9 +213,10 @@ int main(int argc, char *argv[])
         electron.set_time(time);
 
         outfile_del_t << del_time << '\n';
-
-        outfile_part_write(electron);
-
+        #pragma omp ordered
+        {
+            outfile_part_write(electron);
+        }
         intersected_screen_while_in_magnet = move_through_magnets_general(magnet, num_magnets, electron, time, del_time, mu_0, particle_time_limit, screen, num_screens);
         //if(dipole_field_type=='d')
         //{
@@ -220,8 +230,10 @@ int main(int argc, char *argv[])
         {
             move_to_screens(screen, num_screens, electron, ii);
         }
-
-        outfile_part_newline(electron);
+        #pragma omp ordered
+        {
+            outfile_part_newline(electron);
+        }
         if(time_step_test)
             {half_time_step(del_time);}
     }   //<-END OF PARTICLE STEPPING 'FOR' LOOP

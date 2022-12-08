@@ -443,7 +443,9 @@ void boris_analytic(Particle &electron_t, Magnet magnet_t[], double del_t, int c
                 B1_atPosition = B1_atPosition + B_field_temp.getX();
                 B2_atPosition = B2_atPosition + B_field_temp.getY();
                 B3_atPosition = B3_atPosition + B_field_temp.getZ();
-                //std::cerr << "The B1 field at this position was updated as " << B1_atPosition << ", from magnet number " << jj << "\n";
+                // std::cerr << "The B1 field at this position was updated as " << B1_atPosition << ", from magnet number " << jj << "\n";
+                //std::cerr << "The B2 field at this position was updated as " << B2_atPosition << ", from magnet number " << jj << "\n";
+                // std::cerr << "The B3 field at this position was updated as " << B3_atPosition << ", from magnet number " << jj << "\n";
                 //std::cerr << "The magnitude B field at this position was updated as " << sqrt(B1_atPosition*B1_atPosition + B2_atPosition*B2_atPosition + B3_atPosition*B3_atPosition) << ", and jj is " << jj << "\n";
             }
             else if(mag_type == 'u')
@@ -2959,16 +2961,16 @@ char ReadDipoleMagnetFieldType(std::ifstream &input_stream) {
     return magtype;
 }
 
-double F2(double a, double b, double c, double x, double y, double z)
-{
-    double numerator = sqrt( ((x+a)*(x+a)) + ((y-b)*(y-b)) + ((z+c)*(z+c)) ) + b - y;
-    double denomenator = (sqrt( ((x+a)*(x+a)) + ((y+b)*(y+b)) + ((z+c)*(z+c)) ) - b - y);
-    return (numerator/denomenator);
-}
-
 double F1(double a, double b, double c, double x, double y, double z)
 {
     return atan( ( (x+a)*(y+b) )/( (z+c)*sqrt( ((x+a)*(x+a)) + ((y+b)*(y+b)) + ((z+c)*(z+c)) ) ) );
+}
+
+double F2(double a, double b, double c, double x, double y, double z)
+{
+    double numerator   = (sqrt( ((x+a)*(x+a)) + ((y-b)*(y-b)) + ((z+c)*(z+c)) ) + b - y);
+    double denomenator = (sqrt( ((x+a)*(x+a)) + ((y+b)*(y+b)) + ((z+c)*(z+c)) ) - b - y);
+    return (numerator/denomenator);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3015,21 +3017,30 @@ double find_magnetization(Magnet &magnet, double mag_dim, double mu_0, char axis
 
 void calc_grid_B_comps(double factor, double a, double b, double c, double x, double y, double z, double &temp_B1, double &temp_B2, double &temp_B3, bool iterative_add) 
 {
+    // std::cerr << iterative_add;
     if(iterative_add == true)
     {
-        temp_B1 = temp_B1 + factor*log( ( F2(a,b,c,-x,y,-z)*F2(a,b,c,x,y,z) )/( F2(a,b,c,x,y,-z)*F2(a,b,c,-x,y,z) )  );
+        temp_B1 = temp_B1 + factor*log( ( F2(a,b,c,-x,y,-z)* (a,b,c,x,y,z) )/( F2(a,b,c,x,y,-z)*F2(a,b,c,-x,y,z) )  );
 
+        //a&b switched
         temp_B2 = temp_B2 + factor*log( ( F2(b,a,c,-y,x,-z)*F2(b,a,c,y,x,z) )/( F2(b,a,c,y,x,-z)*F2(b,a,c,-y,x,z) )  );
+        //a&b not switched (likely wrong):
+        //temp_B2 = temp_B2 + factor*log( ( F2(a,b,c,-y,x,-z)*F2(a,b,c,y,x,z) )/( F2(a,b,c,y,x,-z)*F2(a,b,c,-y,x,z) )  );
 
         temp_B3 = temp_B3 - factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
     }
+    
     else
     {
         temp_B1 = factor*log( ( F2(a,b,c,-x,y,-z)*F2(a,b,c,x,y,z) )/( F2(a,b,c,x,y,-z)*F2(a,b,c,-x,y,z) )  );
 
+        //a&b switched:
         temp_B2 = factor*log( ( F2(b,a,c,-y,x,-z)*F2(b,a,c,y,x,z) )/( F2(b,a,c,y,x,-z)*F2(b,a,c,-y,x,z) )  );
+        //a&b not switched (likely wrong)
+        //temp_B2 = temp_B2 + factor*log( ( F2(a,b,c,-y,x,-z)*F2(a,b,c,y,x,z) )/( F2(a,b,c,y,x,-z)*F2(a,b,c,-y,x,z) )  );
 
         temp_B3 = -factor*( F1(a,b,c,-x,y,z) + F1(a,b,c,-x,y,-z) + F1(a,b,c,-x,-y,z) + F1(a,b,c,-x,-y,-z) + F1(a,b,c,x,y,z) + F1(a,b,c,x,y,-z) + F1(a,b,c,x,-y,z) + F1(a,b,c,x,-y,-z) );
+        //std::cerr << factor << '\n';
     }
 }
 
@@ -3082,25 +3093,26 @@ ThreeVec calc_dipole_B(ThreeVec &grid_point, Magnet &magnet, double mag_dim, dou
             double x = grid_point.getX() - mag_center_x;
             double y = grid_point.getY() - mag_center_y;
             double z = grid_point.getZ() - mag_center_z;  // distance from magnet to grid point
+
             
             double temp_B1 = 0.0;
             double temp_B2 = 0.0;
             double temp_B3 = 0.0;
-            calc_grid_B_comps(factor, a, b, c, x, y, z, temp_B1, temp_B2, temp_B3);
+            calc_grid_B_comps(factor, a, b, c, x, y, z, temp_B1, temp_B2, temp_B3, false);
             
             hold_B1 += temp_B1;
             hold_B2 += temp_B2;
             hold_B3 += temp_B3;
-            //std::cerr << "B1 calculation is " << temp_B1 << "\n";
-            //std::cerr << "B3 calculation is " << temp_B3 << "\n";
-            //std::cerr << "hold B3 is " << hold_B3 << "\n";
-            
+            // std::cerr << "B1 calculation is " << temp_B1 << "\n";
+            //std::cerr << "B3 at x= " << x << ",  z = " << z << " calculation is " << temp_B3 << "\n";
+            // std::cerr << "hold B3 is " << hold_B3 << "\n\n";
             i -= 2;
-            //if(i == -3)
-            //{
+            // if(i == -3)
+            // {
             //    std::cerr << "Field at magnetic position (" << x << ", " << y <<", " << z << ") is (" << hold_B1 << ", " << hold_B2 << ", " << hold_B3 << ")\n";
-            //}
+            // }
         }
+        
         //bool in_margin = B_within_margin(B_center_val, hold_B1, hold_B2, hold_B3);
         bool in_margin = true;
         if(in_margin) {

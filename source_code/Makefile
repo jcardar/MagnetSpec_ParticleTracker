@@ -1,5 +1,9 @@
 IDIR = include
-CXX = g++ 
+CXX = g++ #-lstdc++ 
+mpigXX = mpicxx
+# MPI_COMPILE_FLAGS = $(shell mpicc --showme:compile)
+MPI_LINK_FLAGS = $(shell mpicc --showme:link)
+MPI_COMPILE_FLAGS = -fopenmp 
 CXXFLAGS = -I$(IDIR) -std=c++17
 ODIR = obj
 _DEPS = my_functions.h particle.h beam.h threevector.h threematrix.h screen.h magnet.h
@@ -10,10 +14,10 @@ _OBJ = my_functions.o particle.o beam.o mag_spec_tracker.o screen.o magnet.o #qu
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.cpp $(DEPS)
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
+	$(mpigXX) -c -o $@ $< $(CXXFLAGS)
 
 run: $(OBJ)
-	$(CXX) -o $@ $^ $(CXXFLAGS)
+	$(mpigXX) $(MPI_COMPILE_FLAGS) -o $@ $^ $(CXXFLAGS)
 
 .PHONY: clean
 

@@ -176,9 +176,30 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
                 double angle_z = m_angle_central.getZ();
                 
                 double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                double py      = p_mag*cos(angle_y);
-                double pz      = p_mag*cos(angle_z);
-                double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                double px, py, pz;
+                px      = p_mag*cos(angle_x);
+                py      = p_mag*cos(angle_y);
+                pz      = p_mag*cos(angle_z);
+                if(px == p_mag)
+                {
+                    py = 0.0;
+                    pz = 0.0;
+                }
+                else if(py == p_mag)
+                {
+                    px = 0.0;
+                    pz = 0.0;
+                }
+                else if(pz == p_mag)
+                {
+                    px = 0.0;
+                    pz = 0.0;
+                }
+                else
+                {
+                    px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                }
+
                 if((angle_x>1.57079632679 && angle_x<4.71238898038) || (angle_x>-4.71238898038 && angle_x<-1.57079632679))
                 {
                     px = -px;
@@ -434,17 +455,40 @@ void Beam::next_particle(int& particle_counter,
             {
                 //std::cerr << "In scan divergence initialization\n";
                 //scans central, left, right, top, bottom of divergence extremes
+                //std::cerr << "(particle_counter)%7 = " << (particle_counter)%7 << "\n";
+                //std::cerr << "Particle energy is " << m_particle.get_energy() << "\n";
                 if((particle_counter)%7 == 0)
-                {
+                {//CENTRAL TRAJECTORY
                         double angle_x = m_angle_central.getX();
                         double angle_y = m_angle_central.getY();
                         double angle_z = m_angle_central.getZ();
                         
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                        //std::cerr << "Energy to set p is " << m_particle.get_energy() << std::endl;
-                        double py      = p_mag*cos(angle_y);
-                        double pz      = p_mag*cos(angle_z);
-                        double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        double px, py, pz;
+                        px      = p_mag*cos(angle_x);
+                        py      = p_mag*cos(angle_y);
+                        pz      = p_mag*cos(angle_z);
+                        if(px == p_mag)
+                        {
+                            py = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(py == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(pz == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else
+                        {
+                            px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        }
+
+
                         if((angle_x>1.57079632679 && angle_x<4.71238898038) || (angle_x>-4.71238898038 && angle_x<-1.57079632679))
                         {
                             px = -px;
@@ -461,15 +505,38 @@ void Beam::next_particle(int& particle_counter,
                         //std::cerr << "Energy after setting p is " << m_particle.get_energy() << std::endl;
                 }
                 else if((particle_counter) % 7 == 1)// && particle_counter+1 % 4 != 0)
-                    {
-                        double angle_x = m_angle_central.getX();
+                    {//TO THE SIDE DIVERGENCE TRAJECTORY
+                    //subtracting angle from 2 dimensions b/c it is a 3D grid that we're splitting 1 angle into
+                        double angle_x = m_angle_central.getX() - m_angle_spread.getY()/2.0;
                         double angle_y = m_angle_central.getY() + m_angle_spread.getY()/2.0;
                         double angle_z = m_angle_central.getZ();
                         
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                        double py      = p_mag*cos(angle_y);
-                        double pz      = p_mag*cos(angle_z);
-                        double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        double px, py, pz;
+                        px      = p_mag*cos(angle_x);
+                        py      = p_mag*cos(angle_y);
+                        pz      = p_mag*cos(angle_z);
+                        if(px == p_mag)
+                        {
+                            py = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(py == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(pz == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else
+                        {
+                            px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        }
+
+
                         if((angle_x>1.57079632679 && angle_x<4.71238898038) || (angle_x>-4.71238898038 && angle_x<-1.57079632679))
                         {
                             px = -px;
@@ -486,14 +553,35 @@ void Beam::next_particle(int& particle_counter,
                     }
                 else if(particle_counter % 7 == 2)// && particle_counter+1 % 6 != 0)
                     {
-                        double angle_x = m_angle_central.getX();
+                        double angle_x = m_angle_central.getX() + m_angle_spread.getY()/2.0;
                         double angle_y = m_angle_central.getY() - m_angle_spread.getY()/2.0;
                         double angle_z = m_angle_central.getZ();
                         
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                        double py      = p_mag*cos(angle_y);
-                        double pz      = p_mag*cos(angle_z);
-                        double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        double px, py, pz;
+                        px      = p_mag*cos(angle_x);
+                        py      = p_mag*cos(angle_y);
+                        pz      = p_mag*cos(angle_z);
+                        if(px == p_mag)
+                        {
+                            py = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(py == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(pz == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else{
+                            px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        }
+
+
                         if((angle_x>1.57079632679 && angle_x<4.71238898038) || (angle_x>-4.71238898038 && angle_x<-1.57079632679))
                         {
                             px = -px;
@@ -510,16 +598,36 @@ void Beam::next_particle(int& particle_counter,
                     }
                 else if((particle_counter) % 7 == 3)
                     {
-                        double angle_x = m_angle_central.getX();
+                        double angle_x = m_angle_central.getX() - m_angle_spread.getZ()/2.0;
                         double angle_y = m_angle_central.getY();
                         double angle_z = m_angle_central.getZ() + m_angle_spread.getZ()/2.0;
                      
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                        //double px      = p_mag*cos(angle_x);
-                        double py      = p_mag*cos(angle_y);
-                        double pz      = p_mag*cos(angle_z);
-                        //std::cerr << pz << '\n';
-                        double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        double px, py, pz;
+                        px      = p_mag*cos(angle_x);
+                        py      = p_mag*cos(angle_y);
+                        pz      = p_mag*cos(angle_z);
+                        if(px == p_mag)
+                        {
+                            py = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(py == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(pz == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else
+                        {
+                            px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        }
+                        
+                        
                         if((angle_x>1.57079632679 && angle_x<4.71238898038) || (angle_x>-4.71238898038 && angle_x<-1.57079632679))
                         {
                             px = -px;
@@ -536,15 +644,36 @@ void Beam::next_particle(int& particle_counter,
                     }
                 else if((particle_counter) % 7 == 4)
                     {
-                        double angle_x = m_angle_central.getX();
+                        double angle_x = m_angle_central.getX() + m_angle_spread.getZ()/2.0;
                         double angle_y = m_angle_central.getY();
                         double angle_z = m_angle_central.getZ() - m_angle_spread.getZ()/2.0;
                      
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                        //double px      = p_mag*cos(angle_x);
-                        double py      = p_mag*cos(angle_y);
-                        double pz      = p_mag*cos(angle_z);
-                        double px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        double px, py, pz;
+                        px      = p_mag*cos(angle_x);
+                        py      = p_mag*cos(angle_y);
+                        pz      = p_mag*cos(angle_z);
+                        if(px == p_mag)
+                        {
+                            py = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(py == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(pz == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else
+                        {
+                            px      = sqrt((p_mag*p_mag) - (py*py) - (pz*pz) );
+                        }
+
+
                         if((angle_x>1.57079632679 && angle_x<4.71238898038) || (angle_x>-4.71238898038 && angle_x<-1.57079632679))
                         {
                             px = -px;
@@ -557,19 +686,45 @@ void Beam::next_particle(int& particle_counter,
                         {
                             pz = -pz;
                         }
+                        //std::cerr << "(px, py, pz) = (" << ThreeVec(px,py,pz) << ")\n";
                         m_particle.set_p(px, py, pz);
                     }
                 else if((particle_counter) % 7 == 5)
                     {
-                        double angle_x = m_angle_central.getX() - m_angle_spread.getX()/2.0;
+                        double angle_x = m_angle_central.getX() + m_angle_spread.getX()/2.0;
                         double angle_y = m_angle_central.getY();
                         double angle_z = m_angle_central.getZ();
                      
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                        double px      = p_mag*cos(angle_x);
-                        double py      = p_mag*cos(angle_y);
+                        //std::cerr << "p_mag is " << p_mag << "\n";
+                        double px, py, pz;
+                        px      = p_mag*cos(angle_x);
+                        py      = p_mag*cos(angle_y);
+                        pz      = p_mag*cos(angle_z);
+                        if(px == p_mag)
+                        {
+                            py = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(py == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(pz == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else
+                        {
+                            py = p_mag*cos(angle_y);
+                        }
+                        
                         //double pz      = p_mag*cos(angle_z);
-                        double pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
+                        //std::cerr << "px = " << px << ", py = " << py << "\n"; 
+                        //std::cerr << "p_mag^2 = " << p_mag*p_mag << "\n";
+                        pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
                         if(angle_x < 0)
                         {
                             px = -px;
@@ -582,19 +737,41 @@ void Beam::next_particle(int& particle_counter,
                         {
                             pz = -pz;
                         }
+                        //std::cerr << "(px, py, pz) = " << ThreeVec(px,py,pz) << "\n";
                         m_particle.set_p(px, py, pz);
                     }
                 else if((particle_counter) % 7 == 6)
                     {
-                        double angle_x = m_angle_central.getX() + m_angle_spread.getX()/2.0;
+                        double angle_x = m_angle_central.getX() - m_angle_spread.getX()/2.0;
                         double angle_y = m_angle_central.getY();
                         double angle_z = m_angle_central.getZ();
                      
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
-                        double px      = p_mag*cos(angle_x);
-                        double py      = p_mag*cos(angle_y);
-                        //double pz      = p_mag*cos(angle_z);
-                        double pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
+                        double px, py, pz;
+                        px      = p_mag*cos(angle_x);
+                        py      = p_mag*cos(angle_y);
+                        pz      = p_mag*cos(angle_z);
+                        if(px == p_mag)
+                        {
+                            py = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(py == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else if(pz == p_mag)
+                        {
+                            px = 0.0;
+                            pz = 0.0;
+                        }
+                        else
+                        {
+                            pz = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
+                        }
+
+
                         if(angle_x < 0)
                         {
                             px = -px;
