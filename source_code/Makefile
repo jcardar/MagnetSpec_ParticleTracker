@@ -17,7 +17,8 @@ $(ODIR)/%.o: %.cpp $(DEPS)
 	$(mpigXX) -c -o $@ $< $(CXXFLAGS)
 
 run: $(OBJ)
-	$(mpigXX) $(MPI_COMPILE_FLAGS) -o $@ $^ $(CXXFLAGS)
+	$(CXX) $(MPI_COMPILE_FLAGS) -o $@ $^ $(CXXFLAGS)
+#$(MPI_COMPILE_FLAGS)
 
 .PHONY: clean
 

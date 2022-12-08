@@ -691,8 +691,8 @@ void Beam::next_particle(int& particle_counter,
                     }
                 else if((particle_counter) % 7 == 5)
                     {
-                        double angle_x = m_angle_central.getX() + m_angle_spread.getX()/2.0;
-                        double angle_y = m_angle_central.getY();
+                        double angle_x = m_angle_central.getX() + m_angle_spread.getX();
+                        double angle_y = m_angle_central.getY() - m_angle_spread.getX();
                         double angle_z = m_angle_central.getZ();
                      
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
@@ -703,28 +703,38 @@ void Beam::next_particle(int& particle_counter,
                         pz      = p_mag*cos(angle_z);
                         if(px == p_mag)
                         {
-                            py = 0.0;
-                            pz = 0.0;
+                            py = 0.0f;
+                            pz = 0.0f;
                         }
                         else if(py == p_mag)
                         {
-                            px = 0.0;
-                            pz = 0.0;
+                            px = 0.0f;
+                            pz = 0.0f;
                         }
                         else if(pz == p_mag)
                         {
-                            px = 0.0;
-                            pz = 0.0;
+                            px = 0.0f;
+                            pz = 0.0f;
                         }
                         else
                         {
-                            py = p_mag*cos(angle_y);
+                            pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
                         }
-                        
+                        if((px*px + py*py + pz*pz) > p_mag*p_mag)
+                        {
+                            std::cout << "momenta greater than p_mag: " << (px*px + py*py + pz*pz) << " > " << p_mag*p_mag << '\n';
+                            double diff = (px*px + py*py + pz*pz) - p_mag*p_mag;
+                            std::cout << "    Greater by difference of " << diff << '\n';
+                            std::cout << "        0.005*p_mag*p_mag = " << 0.005*p_mag*p_mag;
+                            if(diff < 0.005*p_mag*p_mag){
+                                std::cerr << "Correction to pz";
+                                pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) + diff);
+                            }
+                        }
                         //double pz      = p_mag*cos(angle_z);
                         //std::cerr << "px = " << px << ", py = " << py << "\n"; 
                         //std::cerr << "p_mag^2 = " << p_mag*p_mag << "\n";
-                        pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
+                        
                         if(angle_x < 0)
                         {
                             px = -px;
@@ -743,7 +753,7 @@ void Beam::next_particle(int& particle_counter,
                 else if((particle_counter) % 7 == 6)
                     {
                         double angle_x = m_angle_central.getX() - m_angle_spread.getX()/2.0;
-                        double angle_y = m_angle_central.getY();
+                        double angle_y = m_angle_central.getY() + m_angle_spread.getX();
                         double angle_z = m_angle_central.getZ();
                      
                         double p_mag   = sqrt(m_particle.get_energy()*m_particle.get_energy() - 1.0);
@@ -769,6 +779,15 @@ void Beam::next_particle(int& particle_counter,
                         else
                         {
                             pz = sqrt((p_mag*p_mag) - (py*py) - (px*px) );
+                        }
+                        if((px*px + py*py + pz*pz) > p_mag*p_mag)
+                        {
+                            //std::cout << "momenta greater than p_mag: " << (px*px + py*py + pz*pz) << " > " << p_mag*p_mag << '\n';
+                            double diff = (px*px + py*py + pz*pz) - p_mag*p_mag;
+                            //std::cout << "    Greater by difference of " << diff << '\n';
+                            if(diff < 0.005*p_mag*p_mag){
+                                pz      = sqrt((p_mag*p_mag) - (py*py) - (px*px) + diff);
+                            }
                         }
 
 
