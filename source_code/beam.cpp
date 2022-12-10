@@ -8,7 +8,7 @@
 //#include <fstream>
 #include <limits>
 
-double num_par_gaussian_multiplier = 30;
+double num_par_gaussian_multiplier = 100;
 int file_downsample_factor = 1000;
 
 std::ifstream& GotoLine(std::ifstream& file, unsigned int num){
@@ -95,7 +95,10 @@ Beam::Beam(int num_particle, double particle_charge, double particle_mass, doubl
                 /*
                  * First particle will have central energy
                  */
-                m_particle.set_energy(m_energy_central);
+                // do{
+                    m_particle.set_energy(m_energy_central);
+                // }
+                // while(m_particle.get_energy() > 1);
                 break;
             }
 
@@ -369,8 +372,11 @@ void Beam::next_particle(int& particle_counter,
         switch(energy_init)
         {
             case EnergyInitializationTypes::INITIALIZE_GAUSSIAN_EN:
-            {
-                m_particle.set_energy(gaussian_init(m_energy_central, m_energy_spread));
+            {  
+                do{
+                    m_particle.set_energy(gaussian_init(m_energy_central, m_energy_spread));
+                }
+                while(m_particle.get_energy() > 1);
                 break;
             }
 

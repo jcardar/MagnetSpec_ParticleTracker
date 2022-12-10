@@ -187,14 +187,16 @@ double gaussian()
 {
     //Produces sample of value between -gaussian_width and + gaussian width with FWHM of 1.0
     double c = 1.0/2.35485;
-	double gaussian_width=0.12; // +/- 3 sigma range
+	double gaussian_width=1.2738; // +/- 3 sigma range
+    double gaus_fac = 1/(c*sqrt(2*3.14159265359));
 	double x, y;
 	do
 	{
 		x = ((2.0*rand()/RAND_MAX)-1.0)*gaussian_width;
-		y = exp(-x*x*0.5/(c*c));
+		y = gaus_fac*exp(-x*x*0.5/(c*c));
 	}
 	while (1.0*rand()/RAND_MAX > y);
+    // std::cout
 	return x;
 }
 
